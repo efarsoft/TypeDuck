@@ -1,0 +1,16 @@
+{
+  "name": "typeduck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "排版鸭 —— 微信公众号 Markdown 排版与发布工具（本地优先、完全免费、AI 赋能）",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @typeduck/web dev",
+    "build:web": "pnpm --filter @typeduck/web build",
+    "dev:desktop": "echo \"desktop 版尚未实现，见 packages/desktop/README.md\"",
+    "build:desktop": "echo \"desktop 版尚未实现，见 packages/desktop/README.md\""
+  }
+}

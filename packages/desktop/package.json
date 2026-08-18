@@ -1,0 +1,6 @@
+{
+  "name": "@typeduck/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "排版鸭桌面版（Electron 封装）—— 本 MVP 阶段暂未实现，规划见 README.md"
+}
