@@ -94,6 +94,7 @@ packages/
 - [doocs/md](https://github.com/doocs/md) —— 微信公众号 Markdown 编辑器的标杆
 - [mdnice](https://mdnice.com) —— 主题系统的灵感来源之一
 - [文颜 CORE](https://github.com/caol64/wenyan-core) —— 公众号排版核心库
+- [WeiMD](https://github.com/maoruibin/WeiMD) —— 更优雅的 Markdown 公众号排版工具，本地优先 + 多图床 + 深色模式预览
 
 **友情推荐**：如果你想要「说一句话，AI 自动完成选题、写作、排版、配图到发布」的全自动流程，可以看看 [wechat-article-skills](https://github.com/aiworkskills/wechat-article-skills) —— 一款开源的公众号 AI 运营助手（数字员工）。它和排版鸭刚好互补：**排版鸭适合「自己写、自己排」的创作者，它适合「AI 代办全流程」的运营者。**
 
