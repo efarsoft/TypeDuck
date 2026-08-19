@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 经典蓝 */
+export const theme: Theme = {
+    id: 'classic-blue',
+    name: '经典蓝',
+    description: '反白色块标题，科技商业的纸媒感',
+    category: 'expressive',
+    previewBackground: '#ffffff',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#3a3a3a;font-size:16px;line-height:1.8;word-break:break-word;letter-spacing:0.5px;',
+      h1: 'margin:1.6em 0 1em;font-size:1.55em;font-weight:bold;color:#1A6DB5;text-align:center;border-bottom:2px solid #1A6DB5;padding-bottom:0.6em;',
+      h2: 'margin:2em 0 0.7em;font-size:1.15em;font-weight:bold;color:#ffffff;background:#1A6DB5;padding:5px 14px 4px;border-top-left-radius:3px;border-top-right-radius:3px;display:inline-block;border-bottom:2px solid #14527D;',
+      h3: 'margin:1.5em 0 0.8em;font-size:1.1em;font-weight:bold;color:#1A6DB5;border-left:3px solid #1A6DB5;padding-left:10px;',
+      h4: 'margin:1.2em 0 0.6em;font-size:1.02em;font-weight:bold;color:#444444;',
+      h5: 'margin:1.1em 0 0.5em;font-size:1em;font-weight:600;color:#444444;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#666666;',
+      p: 'margin:1em 0;',
+      a: 'color:#1A6DB5;text-decoration:none;border-bottom:1px solid #1A6DB5;',
+      strong: 'color:#1A6DB5;font-weight:bold;',
+      em: 'font-style:italic;color:#555555;',
+      del: 'text-decoration:line-through;color:#aaaaaa;',
+      ul: 'margin:0.8em 0;padding-left:1.5em;',
+      ol: 'margin:0.8em 0;padding-left:1.5em;',
+      li: 'margin:6px 0;line-height:1.75;',
+      blockquote: 'margin:1.2em 0;padding:14px 16px;border-left:4px solid #1A6DB5;background:#f7fbff;color:#555555;',
+      code: 'color:#1A6DB5;background:#EBF5FF;padding:2px 6px;border-radius:3px;font-size:0.9em;font-family:Menlo,Consolas,monospace;',
+      codeBlock: 'font-family:Menlo,Consolas,monospace;font-size:13px;line-height:1.8;color:#93C5FD;',
+      codeBlockWrapper: 'background:#0F2A44;padding:16px;border-radius:10px;overflow-x:auto;margin:1.3em 0;box-shadow:0 8px 24px rgba(0,0,0,0.2);',
+      table: 'border-collapse:collapse;margin:1.3em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#EBF5FF;padding:9px 12px;font-weight:600;border:1px solid #cfe4f5;color:#14527D;',
+      td: 'padding:9px 12px;border:1px solid #cfe4f5;',
+      tr: '',
+      img: 'max-width:100%;border-radius:5px;display:block;margin:15px auto;box-shadow:#84A1A8 0 6px 12px;',
+      hr: 'border:none;height:1px;background:linear-gradient(to right,rgba(26,109,181,0),rgba(26,109,181,0.6),rgba(26,109,181,0));margin:2em 0;',
+    },
+}

@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** Bauhaus */
+export const theme: Theme = {
+    id: 'bauhaus',
+    name: 'Bauhaus',
+    description: '红蓝黄三原色碰撞的现代主义',
+    category: 'expressive',
+    previewBackground: '#ffffff',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#212121;font-size:16px;line-height:1.8;word-break:break-word;',
+      h1: 'margin:1.6em 0 0.8em;font-size:1.7em;font-weight:800;color:#212121;box-shadow:inset 0 -0.38em 0 #ffd400;padding:0 6px;display:inline-block;',
+      h2: 'margin:1.5em 0 0.6em;font-size:1.3em;font-weight:700;color:#212121;border-left:6px solid #e63946;padding-left:10px;',
+      h3: 'margin:1.3em 0 0.5em;font-size:1.15em;font-weight:700;color:#1d3557;',
+      h4: 'margin:1.2em 0 0.5em;font-size:1.05em;font-weight:600;color:#212121;',
+      h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#212121;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#757575;',
+      p: 'margin:1em 0;',
+      a: 'color:#1d3557;text-decoration:none;border-bottom:2px solid #e63946;',
+      strong: 'font-weight:700;color:#212121;box-shadow:inset 0 -0.32em 0 #ffd400;padding:0 2px;',
+      em: 'font-style:italic;color:#1d3557;',
+      del: 'text-decoration:line-through;color:#9e9e9e;',
+      ul: 'margin:1em 0;padding-left:1.6em;',
+      ol: 'margin:1em 0;padding-left:1.6em;',
+      li: 'margin:0.4em 0;',
+      blockquote: 'margin:1.3em 0;padding:0.8em 1.2em;border-left:6px solid #1d3557;background:#f5f5f5;color:#424242;',
+      code: 'background:#f5f5f5;color:#e63946;padding:3px 6px;border-radius:2px;font-size:0.85em;font-family:"SF Mono",Consolas,monospace;',
+      codeBlock: 'font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.5;color:#212121;',
+      codeBlockWrapper: 'background:#f5f5f5;padding:20px;border-left:4px solid #1d3557;border-radius:0 6px 6px 0;overflow-x:auto;margin:1.3em 0;',
+      table: 'border-collapse:collapse;margin:1.3em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#212121;color:#ffffff;padding:10px 14px;text-align:left;font-weight:600;border:1px solid #212121;',
+      td: 'padding:10px 14px;border:1px solid #e0e0e0;',
+      tr: '',
+      img: 'max-width:100%;display:block;margin:1.3em auto;border:3px solid #212121;',
+      hr: 'border:none;height:4px;background:linear-gradient(to right,#e63946 0 33%,#1d3557 33% 66%,#ffd400 66% 100%);margin:2em 0;border-radius:2px;',
+    },
+}

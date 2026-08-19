@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** GitHub */
+export const theme: Theme = {
+  id: 'github',
+  name: 'GitHub',
+  description: "开发者的肌肉记忆，README 即视感",
+  category: 'daily',
+  previewBackground: '#ffffff',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#24292e;font-size:16px;line-height:1.8;word-break:break-word;',
+    h1: 'margin:1.5em 0 0.7em;font-size:1.7em;font-weight:600;border-bottom:1px solid #eaecef;padding-bottom:0.3em;',
+    h2: 'margin:1.4em 0 0.6em;font-size:1.4em;font-weight:600;border-bottom:1px solid #eaecef;padding-bottom:0.3em;',
+    h3: 'margin:1.3em 0 0.5em;font-size:1.2em;font-weight:600;',
+    h4: 'margin:1.2em 0 0.5em;font-size:1.05em;font-weight:600;',
+    h5: 'margin:1.1em 0 0.4em;font-size:0.95em;font-weight:600;',
+    h6: 'margin:1em 0 0.4em;font-size:0.9em;font-weight:600;color:#6a737d;',
+    p: 'margin:0.9em 0;',
+    a: 'color:#0366d6;text-decoration:none;',
+    strong: 'font-weight:600;',
+    em: 'font-style:italic;',
+    del: 'text-decoration:line-through;color:#6a737d;',
+    ul: 'margin:0.9em 0;padding-left:1.6em;',
+    ol: 'margin:0.9em 0;padding-left:1.6em;',
+    li: 'margin:0.3em 0;',
+    blockquote: 'margin:1.2em 0;padding:0 1em;border-left:4px solid #dfe2e5;color:#6a737d;',
+    code: 'background:rgba(27,31,35,0.05);padding:0.2em 0.4em;border-radius:3px;font-size:0.9em;font-family:SFMono-Regular,Consolas,monospace;',
+    codeBlock: 'font-family:SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.45;color:#24292e;',
+    codeBlockWrapper: 'background:#f6f8fa;padding:14px;border-radius:6px;overflow-x:auto;margin:1.2em 0;',
+    table: 'border-collapse:collapse;margin:1.2em 0;width:100%;',
+    thead: '',
+    th: 'border:1px solid #dfe2e5;padding:6px 13px;background:#f6f8fa;font-weight:600;',
+    td: 'border:1px solid #dfe2e5;padding:6px 13px;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.2em auto;',
+    hr: 'border:none;border-top:1px solid #eaecef;margin:1.8em 0;',
+  },
+}

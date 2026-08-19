@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 咖啡屋 */
+export const theme: Theme = {
+    id: 'coffee-house',
+    name: '咖啡屋',
+    description: '巧克力棕书卷气，午后慢读',
+    category: 'narrative',
+    previewBackground: '#faf6f1',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#4d4239;font-size:16px;line-height:1.85;word-break:break-word;',
+      h1: 'margin:1.7em 0 1em;font-size:1.5em;font-weight:700;color:#6b4f3a;text-align:center;',
+      h2: 'margin:1.6em 0 0.7em;font-size:1.25em;font-weight:700;color:#6b4f3a;',
+      h3: 'margin:1.4em 0 0.6em;font-size:1.1em;font-weight:600;color:#8a6a50;border-bottom:2px solid #c9a98a;display:inline-block;padding-bottom:2px;',
+      h4: 'margin:1.2em 0 0.5em;font-size:1.02em;font-weight:600;color:#5d4a3c;',
+      h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#7d6a5a;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#9a8776;',
+      p: 'margin:1em 0;',
+      a: 'color:#8a6a50;text-decoration:none;border-bottom:1px dotted #b3998a;',
+      strong: 'font-weight:700;color:#6b4f3a;',
+      em: 'font-style:italic;color:#8a7a6a;',
+      del: 'text-decoration:line-through;color:#bbaa9a;',
+      ul: 'margin:1em 0;padding-left:1.5em;',
+      ol: 'margin:1em 0;padding-left:1.5em;',
+      li: 'margin:0.4em 0;',
+      blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:4px solid #a5836a;background:#f3ece2;color:#7d6a5a;border-radius:0 8px 8px 0;',
+      code: 'background:#f3ece2;color:#8a5a3e;padding:2px 6px;border-radius:4px;font-size:0.85em;font-family:"SF Mono",Consolas,monospace;',
+      codeBlock: 'font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.6;color:#4d4239;',
+      codeBlockWrapper: 'background:#f3ece2;padding:16px;border-radius:8px;overflow-x:auto;margin:1.4em 0;',
+      table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#f3ece2;padding:9px 12px;font-weight:600;border:1px solid #e2d4c4;color:#6b4f3a;',
+      td: 'padding:9px 12px;border:1px solid #e2d4c4;',
+      tr: '',
+      img: 'max-width:100%;border-radius:6px;display:block;margin:1.4em auto;',
+      hr: 'border:none;border-top:1px dashed #d4c3b0;margin:2.2em 0;',
+    },
+}

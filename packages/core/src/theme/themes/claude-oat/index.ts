@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** Claude 燕麦 */
+export const theme: Theme = {
+    id: 'claude-oat',
+    name: 'Claude 燕麦',
+    description: '燕麦底沉稳书卷，深度长文与哲思',
+    category: 'narrative',
+    previewBackground: '#f8f6f0',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#2b2b2b;font-size:16px;line-height:1.8;word-break:break-word;',
+      h1: 'margin:1.6em 0 0.7em;font-size:1.7em;font-weight:700;color:#b75c3d;',
+      h2: 'margin:1.5em 0 0.6em;font-size:1.35em;font-weight:600;color:#b75c3d;',
+      h3: 'margin:1.3em 0 0.5em;font-size:1.15em;font-weight:600;color:#2b2b2b;',
+      h4: 'margin:1.2em 0 0.5em;font-size:1.05em;font-weight:600;color:#2b2b2b;',
+      h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#2b2b2b;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#6b6b6b;',
+      p: 'margin:1em 0;',
+      a: 'color:#b75c3d;text-decoration:none;border-bottom:1px solid #b75c3d;',
+      strong: 'font-weight:700;color:#b75c3d;background:rgba(183,92,61,0.08);padding:0 4px;border-radius:4px;',
+      em: 'font-style:italic;color:#666666;',
+      del: 'text-decoration:line-through;color:#a3a3a3;',
+      ul: 'margin:1em 0;padding-left:1.6em;',
+      ol: 'margin:1em 0;padding-left:1.6em;',
+      li: 'margin:0.4em 0;',
+      blockquote: 'margin:1.3em 0;padding:0.8em 1.2em;border-left:4px solid #b75c3d;background:rgba(183,92,61,0.04);color:#555555;border-radius:4px;',
+      code: 'background:#f0ece4;color:#b75c3d;padding:3px 6px;border-radius:4px;font-size:0.85em;font-family:"SF Mono",Consolas,monospace;',
+      codeBlock: 'font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.5;color:#2b2b2b;',
+      codeBlockWrapper: 'background:#f0ece4;padding:20px;border-radius:8px;overflow-x:auto;margin:1.3em 0;',
+      table: 'border-collapse:collapse;margin:1.3em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#f0ece4;padding:10px 14px;text-align:left;font-weight:600;border:1px solid #e0ddd6;',
+      td: 'padding:10px 14px;border:1px solid #e0ddd6;',
+      tr: '',
+      img: 'max-width:100%;display:block;margin:1.3em auto;border-radius:4px;',
+      hr: 'border:none;border-top:1px solid #e5e0d5;margin:2em 0;',
+    },
+}

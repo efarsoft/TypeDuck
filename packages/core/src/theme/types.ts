@@ -29,11 +29,16 @@ export interface ThemeStyles {
   [key: string]: string
 }
 
-export type ThemeCategory = 'minimal' | 'tech' | 'literary' | 'design'
+/**
+ * 主题分组按使用场景划分（而非视觉风格）——用户选主题时想的是"我写什么文章"。
+ */
+export type ThemeCategory = 'daily' | 'expressive' | 'narrative'
 
 export interface Theme {
   id: string
   name: string
+  /** 一句话定位：适合什么文章，显示在主题卡片上 */
+  description: string
   category: ThemeCategory
   /** 预览面板背景，用于预览区外层容器 */
   previewBackground: string

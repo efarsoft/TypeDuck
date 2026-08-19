@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 羊皮纸 */
+export const theme: Theme = {
+    id: 'retro-parchment',
+    name: '羊皮纸',
+    description: '纸纹底 + 火漆红，人文历史与鉴赏',
+    category: 'narrative',
+    previewBackground: '#f4ecd8',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#2b2621;font-size:16px;line-height:1.8;word-break:break-word;font-family:Georgia,"Times New Roman",Times,serif;background:#f4ecd8;',
+      h1: 'margin:1.6em 0 0.8em;font-size:1.75em;font-weight:800;color:#2b2621;letter-spacing:-0.02em;',
+      h2: 'margin:1.5em 0 0.6em;font-size:1.35em;font-weight:700;color:#8c2211;',
+      h3: 'margin:1.3em 0 0.5em;font-size:1.15em;font-weight:600;color:#2b2621;',
+      h4: 'margin:1.2em 0 0.5em;font-size:1.05em;font-weight:600;color:#2b2621;',
+      h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#4a4238;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#4a4238;',
+      p: 'margin:1em 0;',
+      a: 'color:#8c2211;text-decoration:none;border-bottom:1px solid #8c2211;',
+      strong: 'font-weight:700;color:#8c2211;',
+      em: 'font-style:italic;color:#666666;',
+      del: 'text-decoration:line-through;color:#a39a8b;',
+      ul: 'margin:1em 0;padding-left:1.6em;',
+      ol: 'margin:1em 0;padding-left:1.6em;',
+      li: 'margin:0.4em 0;',
+      blockquote: 'margin:1.3em 0;padding:0.8em 1.2em;border-left:4px solid #8c2211;background:#efe5cc;color:#555555;font-style:italic;',
+      code: 'background:#ede4d0;color:#8c2211;padding:3px 6px;border-radius:4px;font-size:0.85em;font-family:"SF Mono",Consolas,monospace;',
+      codeBlock: 'font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.5;color:#2b2621;',
+      codeBlockWrapper: 'background:#ede4d0;padding:20px;border-radius:8px;overflow-x:auto;margin:1.3em 0;',
+      table: 'border-collapse:collapse;margin:1.3em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#ede4d0;padding:10px 14px;text-align:left;font-weight:600;border:1px solid #d4c9ae;',
+      td: 'padding:10px 14px;border:1px solid #d4c9ae;',
+      tr: '',
+      img: 'max-width:100%;display:block;margin:1.3em auto;border-radius:4px;',
+      hr: 'border:none;border-top:1px solid #d4c9ae;margin:2em 0;',
+    },
+}

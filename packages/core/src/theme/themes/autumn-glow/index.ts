@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 秋日暖光 */
+export const theme: Theme = {
+    id: 'autumn-glow',
+    name: '秋日暖光',
+    description: '暖米白 + 暖橙，治愈系情感故事',
+    category: 'narrative',
+    previewBackground: '#faf9f5',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#4a413d;font-size:16px;line-height:1.75;word-break:break-word;letter-spacing:0.5px;',
+      h1: 'margin:1.7em 0 1em;font-size:1.55em;font-weight:700;color:#d97758;text-align:center;',
+      h2: 'margin:1.6em 0 0.7em;font-size:1.25em;font-weight:600;color:#d97758;border-bottom:1px dashed rgba(74,65,61,0.3);padding-bottom:0.35em;',
+      h3: 'margin:1.4em 0 0.6em;font-size:1.1em;font-weight:600;color:#c06b4d;border-bottom:2px solid #d97758;display:inline-block;padding-bottom:2px;',
+      h4: 'margin:1.2em 0 0.5em;font-size:1.02em;font-weight:600;color:#4a413d;',
+      h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#6b5d54;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#8a7c72;',
+      p: 'margin:1em 0;',
+      a: 'color:#d97758;text-decoration:none;border-bottom:1px dashed #d97758;',
+      strong: 'color:#c06b4d;font-weight:600;',
+      em: 'font-style:italic;color:#8a7c72;',
+      del: 'text-decoration:line-through;color:#b8aca2;',
+      ul: 'margin:1em 0;padding-left:1.5em;',
+      ol: 'margin:1em 0;padding-left:1.5em;',
+      li: 'margin:0.4em 0;',
+      blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:5px solid #d97758;background:#fef4e7;color:#7a6a55;box-shadow:inset 0 0 15px rgba(217,119,88,0.1);border-radius:0 8px 8px 0;',
+      code: 'background:#fef4e7;color:#c06b4d;padding:2px 6px;border-radius:4px;font-size:0.85em;font-family:"SF Mono",Consolas,monospace;',
+      codeBlock: 'font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.7;color:#4a413d;',
+      codeBlockWrapper: 'background:#fdf2e4;padding:16px;border-radius:10px;overflow-x:auto;margin:1.4em 0;',
+      table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#fef4e7;padding:9px 12px;font-weight:600;border:1px solid #eed9c4;color:#a05a3e;',
+      td: 'padding:9px 12px;border:1px solid #eed9c4;',
+      tr: '',
+      img: 'max-width:100%;border-radius:8px;display:block;margin:1.4em auto;',
+      hr: 'border:none;height:1px;background:rgba(74,65,61,0.15);margin:2.2em 0;',
+    },
+}

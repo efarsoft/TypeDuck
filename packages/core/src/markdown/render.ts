@@ -18,6 +18,18 @@ const md = new MarkdownIt({
   },
 }).use(taskLists, { enabled: false, label: true })
 
+/** 每条 CSS 声明追加 !important：微信公众号编辑器会重置未加权的行内样式 */
+export function withImportant(css: string): string {
+  return (
+    css
+      .split(';')
+      .map((d) => d.trim())
+      .filter(Boolean)
+      .map((d) => (d.includes('!important') ? d : `${d} !important`))
+      .join(';') + ';'
+  )
+}
+
 /** 将主题样式表与 hljs class 映射为内联 style，并移除所有 class（公众号不支持 class） */
 function injectInlineStyles(html: string, theme: Theme): string {
   const container = document.createElement('div')
@@ -31,7 +43,7 @@ function injectInlineStyles(html: string, theme: Theme): string {
     if (tag === 'pre') {
       style = theme.styles.codeBlockWrapper
       const codeEl = el.querySelector('code')
-      if (codeEl) codeEl.setAttribute('style', theme.styles.codeBlock)
+      if (codeEl) codeEl.setAttribute('style', withImportant(theme.styles.codeBlock))
     } else if (tag === 'code') {
       const inPre = el.parentElement?.tagName.toLowerCase() === 'pre'
       style = inPre ? theme.styles.codeBlock : theme.styles.code
@@ -49,7 +61,7 @@ function injectInlineStyles(html: string, theme: Theme): string {
       if (theme.hljsStyleMap[cls]) style += theme.hljsStyleMap[cls]
     }
 
-    if (style) el.setAttribute('style', style)
+    if (style) el.setAttribute('style', withImportant(style))
     el.removeAttribute('class')
     el.removeAttribute('id')
   })

@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsMonokai } from '../../hljs-maps'
+
+/** 暖橙 */
+export const theme: Theme = {
+    id: 'warm-orange',
+    name: '暖橙',
+    description: '短色块分割线，自媒体的活力',
+    category: 'expressive',
+    previewBackground: '#ffffff',
+    hljsStyleMap: hljsMonokai,
+    styles: {
+      root: 'color:#3e3e3e;font-size:16px;line-height:1.8;word-break:break-word;',
+      h1: 'margin:1.6em 0 1em;font-size:1.55em;font-weight:bold;color:#EF7060;text-align:center;border-bottom:2px solid #EF7060;padding-bottom:0.6em;',
+      h2: 'margin:2em 0 0.7em;font-size:1.15em;font-weight:bold;color:#ffffff;background:#EF7060;padding:4px 12px 2px;border-top-left-radius:3px;border-top-right-radius:3px;display:inline-block;',
+      h3: 'margin:1.5em 0 0.8em;font-size:1.1em;font-weight:bold;color:#EF7060;',
+      h4: 'margin:1.2em 0 0.6em;font-size:1.02em;font-weight:bold;color:#c0392b;',
+      h5: 'margin:1.1em 0 0.5em;font-size:1em;font-weight:600;color:#555555;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#777777;',
+      p: 'margin:1em 0;',
+      a: 'color:#EF7060;text-decoration:none;border-bottom:1px solid #EF7060;',
+      strong: 'color:#EF7060;font-weight:bold;',
+      em: 'font-style:italic;color:#555555;',
+      del: 'text-decoration:line-through;color:#aaaaaa;',
+      ul: 'margin:0.8em 0;padding-left:1.5em;',
+      ol: 'margin:0.8em 0;padding-left:1.5em;',
+      li: 'margin:6px 0;line-height:1.75;',
+      blockquote: 'margin:1.2em 0;padding:12px 16px;border-left:4px solid #EF7060;background:#fff9f9;color:#555555;',
+      code: 'color:#e96900;background:#f3f3f3;padding:2px 6px;border-radius:4px;font-size:0.9em;font-family:Menlo,Consolas,monospace;',
+      codeBlock: 'font-family:Menlo,Consolas,monospace;font-size:13px;line-height:1.8;color:#FDBA74;',
+      codeBlockWrapper: 'background:#1C1917;padding:16px;border-radius:10px;overflow-x:auto;margin:1.3em 0;box-shadow:0 8px 24px rgba(0,0,0,0.2);',
+      table: 'border-collapse:collapse;margin:1.3em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#fff9f9;padding:9px 12px;font-weight:600;border:1px solid #f3d9d4;color:#c0392b;',
+      td: 'padding:9px 12px;border:1px solid #f3d9d4;',
+      tr: '',
+      img: 'max-width:100%;border-radius:5px;display:block;margin:15px auto;',
+      hr: 'border:none;height:3px;background:#EF7060;width:40px;margin:2em 0;border-radius:2px;',
+    },
+}

@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { copyHtmlToClipboard, exportHtmlFile } from '@typeduck/core'
-import {
-  DuckEditor,
-  DuckPreview,
-  DuckToolbar,
-  DocumentList,
-  ThemeSelector,
-} from '@typeduck/shared-ui'
+import { copyHtmlToClipboard, exportHtmlFile, withImportant } from '@typeduck/core'
+import { DuckEditor, DuckPreview, DocumentList, ThemeSelector } from '@typeduck/shared-ui'
 import { useEditorStore } from './stores/editor'
 import HistoryPanel from './components/HistoryPanel.vue'
 
 const store = useEditorStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
-const showThemePanel = ref(true)
-const showHistory = ref(false)
+const rightView = ref<'theme' | 'history'>('theme')
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
+
+const viewLabels: Record<typeof viewMode.value, string> = {
+  split: '双栏',
+  editor: '仅编辑',
+  preview: '仅预览',
+}
+const viewTitle = computed(() => `视图切换（当前：${viewLabels[viewMode.value]}）`)
 
 onMounted(() => {
   store.load()
@@ -93,18 +93,19 @@ const saveLabel = computed(
     ({ saved: '已保存', saving: '保存中…', unsaved: '未保存' })[store.saveState],
 )
 
-const charCount = computed(() => store.activeDoc?.content.length ?? 0)
+/** 根容器样式同样加 !important，防公众号编辑器覆盖 */
+const rootStyle = computed(() => withImportant(store.theme.styles.root))
 
-function onInsert(text: string) {
-  editorRef.value?.insert(text)
-}
-function onWrap(prefix: string, suffix: string) {
-  editorRef.value?.wrapSelection(prefix, suffix)
-}
+const charCount = computed(() => store.activeDoc?.content.length ?? 0)
+const lineCount = computed(() => store.activeDoc?.content.split('\n').length ?? 0)
 
 async function onCopy() {
-  const ok = await copyHtmlToClipboard(`<section style="${store.theme.styles.root}">${store.renderedHtml}</section>`)
+  const ok = await copyHtmlToClipboard(`<section style="${rootStyle.value}">${store.renderedHtml}</section>`)
   store.showToast(ok ? '已复制，去公众号编辑器粘贴吧！🦆' : '复制失败，请重试')
+}
+
+function onPublish() {
+  store.showToast('发布到公众号需配置已认证服务号 API，敬请期待 🚀')
 }
 
 function onExport() {
@@ -113,7 +114,7 @@ function onExport() {
     store.activeDoc.title || '未命名文档',
     store.renderedHtml,
     store.theme.previewBackground,
-    store.theme.styles.root,
+    rootStyle.value,
   )
   store.showToast('已导出 HTML 文件')
 }
@@ -124,13 +125,15 @@ async function onRemove(id: string) {
   }
 }
 
-function setView(mode: 'split' | 'editor' | 'preview') {
-  viewMode.value = mode
+function cycleView() {
+  viewMode.value =
+    viewMode.value === 'split' ? 'editor' : viewMode.value === 'editor' ? 'preview' : 'split'
 }
 </script>
 
 <template>
   <div class="app">
+    <!-- 左侧文档列表 -->
     <aside class="sidebar">
       <DocumentList
         :docs="store.docs"
@@ -142,56 +145,95 @@ function setView(mode: 'split' | 'editor' | 'preview') {
     </aside>
 
     <main class="main">
-      <header class="title-bar">
+      <!-- 顶栏：品牌 + 主操作 -->
+      <header class="appbar">
         <div class="brand">
           <span class="brand-logo">🦆</span>
           <span class="brand-name">排版鸭</span>
+          <span class="brand-slogan">排版呀，交给我吧！</span>
         </div>
-        <input v-model="title" class="title-input" placeholder="无标题文档" />
-        <button class="copy-primary" title="复制到公众号" @click="onCopy">
-          <svg class="ic" viewBox="0 0 22 22" aria-hidden="true">
-            <path d="M9 7l-4 4 4 4M13 7l4 4-4 4" />
-          </svg>
-          复制到公众号
-        </button>
+        <div class="appbar-right">
+          <button class="btn-publish" title="发布到公众号" @click="onPublish">发布到公众号</button>
+          <button class="copy-primary" title="复制到公众号" @click="onCopy">
+            <svg class="ic" viewBox="0 0 22 22" aria-hidden="true">
+              <path d="M9 7l-4 4 4 4M13 7l4 4-4 4" />
+            </svg>
+            复制到公众号
+          </button>
+        </div>
       </header>
 
-      <DuckToolbar
-        @insert="onInsert"
-        @wrap="onWrap"
-        @export="onExport"
-        @toggle-theme="showThemePanel = !showThemePanel"
-        @toggle-history="showHistory = !showHistory"
-        @set-view="setView"
-      />
-
-      <div class="panes">
-        <div v-show="viewMode !== 'preview'" class="pane editor-pane">
-          <DuckEditor ref="editorRef" v-model="content" />
+      <!-- 子标题栏：标题输入 + 保存状态 + 视图/导出/历史/主题图标 -->
+      <div class="subbar">
+        <input v-model="title" class="title-input" placeholder="无标题文档" />
+        <span class="save-state" :data-state="store.saveState">{{ saveLabel }}</span>
+        <div class="subbar-right">
+          <button class="icon-btn" :title="viewTitle" @click="cycleView">
+            <svg class="ic" viewBox="0 0 22 22">
+              <path d="M3 4h7v14H3zM12 4h7v14h-7z" />
+            </svg>
+          </button>
+          <button class="icon-btn" title="导出 HTML" @click="onExport">
+            <svg class="ic" viewBox="0 0 22 22">
+              <path d="M11 3v9M8 9l3 3 3-3M4 15v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
+            </svg>
+          </button>
+          <button
+            class="icon-btn"
+            :class="{ active: rightView === 'history' }"
+            title="历史版本"
+            @click="rightView = 'history'"
+          >
+            <svg class="ic" viewBox="0 0 22 22">
+              <path d="M3 11a8 8 0 1 0 3-6M3 4v4h4M11 7v4l3 2" />
+            </svg>
+          </button>
+          <button
+            class="icon-btn"
+            :class="{ active: rightView === 'theme' }"
+            title="主题样式"
+            @click="rightView = 'theme'"
+          >
+            <svg class="ic" viewBox="0 0 22 22">
+              <path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 1 0-16z" />
+            </svg>
+          </button>
         </div>
-        <div v-show="viewMode !== 'editor'" class="pane preview-pane">
+      </div>
+
+      <!-- 内容区：编辑 / 预览 / 右侧面板（3 列） -->
+      <div class="content">
+        <section v-show="viewMode !== 'preview'" class="pane editor-pane">
+          <DuckEditor ref="editorRef" v-model="content" />
+        </section>
+        <section v-show="viewMode !== 'editor'" class="pane preview-pane">
           <DuckPreview
             ref="previewRef"
             :html="store.renderedHtml"
             :background="store.theme.previewBackground"
-            :root-style="store.theme.styles.root"
+            :root-style="rootStyle"
           />
-        </div>
-        <aside v-if="showThemePanel" class="theme-panel">
-          <ThemeSelector v-model="themeId" />
+        </section>
+        <aside class="pane right-pane">
+          <template v-if="rightView === 'theme'">
+            <div class="panel-head"><span>主题样式</span></div>
+            <div class="right-scroll">
+              <ThemeSelector v-model="themeId" />
+            </div>
+          </template>
+          <HistoryPanel
+            v-else
+            :history="store.history"
+            @restore="store.restoreHistory"
+            @close="rightView = 'theme'"
+          />
         </aside>
-        <HistoryPanel
-          v-if="showHistory"
-          :history="store.history"
-          @restore="store.restoreHistory"
-          @close="showHistory = false"
-        />
       </div>
 
       <footer class="status-bar">
         <span v-if="store.activeDoc" class="status-meta">
-          {{ store.activeDoc.wordCount }} 字 · {{ charCount }} 字符 · 约
-          {{ store.activeDoc.estimatedReadTime }} 分钟
+          Markdown · {{ lineCount }} 行 · {{ store.activeDoc.wordCount }} 字 ·
+          {{ charCount }} 字符 · 约 {{ store.activeDoc.estimatedReadTime }} 分钟
         </span>
         <span v-else class="status-meta">暂无文档</span>
         <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
@@ -221,36 +263,60 @@ function setView(mode: 'split' | 'editor' | 'preview') {
   flex-direction: column;
   min-width: 0;
 }
-.title-bar {
+
+/* 顶栏 */
+.appbar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 16px;
+  gap: 10px;
+  height: 54px;
+  flex-shrink: 0;
+  padding: 0 16px;
   border-bottom: 1px solid #e5e6eb;
   background: #fff;
 }
 .brand {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: 8px;
   flex-shrink: 0;
 }
 .brand-logo {
   font-size: 18px;
+  line-height: 1;
 }
 .brand-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: #1a1a1a;
+  white-space: nowrap;
 }
-.title-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 15px;
+.brand-slogan {
+  font-size: 12px;
+  color: #b0b3b8;
+  white-space: nowrap;
+}
+.appbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-publish {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #07c160;
+  border-radius: 6px;
+  background: #fff;
+  color: #07c160;
+  font-size: 13px;
   font-weight: 600;
-  background: transparent;
-  min-width: 0;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.btn-publish:hover {
+  background: #e8f9ef;
 }
 .copy-primary {
   display: inline-flex;
@@ -278,39 +344,130 @@ function setView(mode: 'split' | 'editor' | 'preview') {
   fill: none;
   stroke-width: 1.6;
 }
-.panes {
+
+/* 子标题栏 */
+.subbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 50px;
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-bottom: 1px solid #e5e6eb;
+  background: #fff;
+}
+.title-input {
+  width: 260px;
+  max-width: 40%;
+  height: 32px;
+  border: 1px solid #e5e6eb;
+  border-radius: 7px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #1d2129;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.title-input:focus {
+  border-color: #07c160;
+}
+.save-state {
+  font-size: 12px;
+  color: #07c160;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.save-state[data-state='unsaved'] {
+  color: #e6a23c;
+}
+.save-state[data-state='saving'] {
+  color: #409eff;
+}
+.subbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e6eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #4e5969;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.icon-btn:hover {
+  background: #f2f3f5;
+  color: #1d2129;
+}
+.icon-btn.active {
+  background: #e8f9ef;
+  color: #07c160;
+  border-color: #07c160;
+}
+.icon-btn .ic {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 内容区 3 列 */
+.content {
   flex: 1;
   display: flex;
   min-height: 0;
 }
 .pane {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
 }
 .editor-pane {
+  flex: 1.1;
   border-right: 1px solid #e5e6eb;
+  display: flex;
+  flex-direction: column;
 }
-.theme-panel {
-  width: 220px;
-  border-left: 1px solid #e5e6eb;
+.preview-pane {
+  flex: 1.1;
+  border-right: 1px solid #e5e6eb;
+  display: flex;
+  flex-direction: column;
+  background: #f3f4f6;
+}
+.right-pane {
+  flex: 0 0 300px;
+  width: 300px;
   background: #fff;
-  overflow-y: auto;
-  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
+.right-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 底部状态栏 */
 .status-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 28px;
+  height: 30px;
+  flex-shrink: 0;
   padding: 0 16px;
   border-top: 1px solid #e5e6eb;
   background: #fafafa;
   font-size: 12px;
-  color: #999;
-  flex-shrink: 0;
-}
-.status-save {
   color: #999;
 }
 .status-save[data-state='unsaved'] {
@@ -319,6 +476,7 @@ function setView(mode: 'split' | 'editor' | 'preview') {
 .status-save[data-state='saving'] {
   color: #409eff;
 }
+
 .toast {
   position: fixed;
   bottom: 32px;

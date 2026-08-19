@@ -12,3 +12,39 @@ body,
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   color: #24292e;
 }
+
+/* 全局细滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d5d8dd;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #bfc4cb;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 文本选中超链接绿色主题色 */
+::selection {
+  background: rgba(7, 193, 96, 0.2);
+}
+
+/* 面板通用头（编辑区 / 右侧面板共用） */
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e5e6eb;
+  background: #fafbfc;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4e5969;
+}

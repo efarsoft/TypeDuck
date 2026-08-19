@@ -1,5 +1,4 @@
 export { default as DuckEditor } from './Editor/Editor.vue'
 export { default as DuckPreview } from './Preview/Preview.vue'
 export { default as ThemeSelector } from './ThemeSelector/ThemeSelector.vue'
-export { default as DuckToolbar } from './Toolbar/Toolbar.vue'
 export { default as DocumentList } from './DocumentList/DocumentList.vue'

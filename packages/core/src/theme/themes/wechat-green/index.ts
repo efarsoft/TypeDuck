@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 微信绿 */
+export const theme: Theme = {
+    id: 'wechat-green',
+    name: '微信绿',
+    description: '官方感配色，粘到公众号最不违和',
+    category: 'daily',
+    previewBackground: '#ffffff',
+    hljsStyleMap: hljsLight,
+    styles: {
+      root: 'color:#333333;font-size:16px;line-height:1.8;word-break:break-word;',
+      h1: 'margin:1.6em 0 0.8em;font-size:1.65em;font-weight:700;color:#111111;text-align:center;',
+      h2: 'margin:1.5em 0 0.6em;font-size:1.3em;font-weight:700;color:#07c160;border-left:5px solid #07c160;padding-left:10px;',
+      h3: 'margin:1.3em 0 0.5em;font-size:1.15em;font-weight:600;color:#0aa856;',
+      h4: 'margin:1.2em 0 0.5em;font-size:1.05em;font-weight:600;color:#333333;',
+      h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#333333;',
+      h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#666666;',
+      p: 'margin:1em 0;',
+      a: 'color:#07c160;text-decoration:none;border-bottom:1px solid rgba(7,193,96,0.4);',
+      strong: 'font-weight:700;color:#07c160;background:rgba(7,193,96,0.08);padding:0 4px;border-radius:4px;',
+      em: 'font-style:italic;color:#666666;',
+      del: 'text-decoration:line-through;color:#999999;',
+      ul: 'margin:1em 0;padding-left:1.6em;',
+      ol: 'margin:1em 0;padding-left:1.6em;',
+      li: 'margin:0.4em 0;',
+      blockquote: 'margin:1.3em 0;padding:0.8em 1.2em;border-left:4px solid #07c160;background:#f6fffa;color:#555555;',
+      code: 'background:#f0f7f2;color:#07c160;padding:3px 6px;border-radius:4px;font-size:0.85em;font-family:"SF Mono",Consolas,monospace;',
+      codeBlock: 'font-family:"SF Mono",Consolas,monospace;font-size:13px;line-height:1.5;color:#333333;',
+      codeBlockWrapper: 'background:#f0f7f2;padding:20px;border-radius:8px;overflow-x:auto;margin:1.3em 0;',
+      table: 'border-collapse:collapse;margin:1.3em 0;width:100%;font-size:0.95em;',
+      thead: '',
+      th: 'background:#f0f7f2;padding:10px 14px;text-align:left;font-weight:600;border:1px solid #d8e8dc;',
+      td: 'padding:10px 14px;border:1px solid #d8e8dc;',
+      tr: '',
+      img: 'max-width:100%;display:block;margin:1.3em auto;border-radius:4px;',
+      hr: 'border:none;border-top:1px solid #d8e8dc;margin:2em 0;',
+    },
+}

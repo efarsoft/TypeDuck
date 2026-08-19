@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 极简白 */
+export const theme: Theme = {
+  id: 'minimal-white',
+  name: '极简白',
+  description: '万能默认，干净不出错',
+  category: 'daily',
+  previewBackground: '#ffffff',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#333333;font-size:16px;line-height:1.8;letter-spacing:0.5px;word-break:break-word;',
+    h1: 'margin:1.6em 0 0.8em;font-size:1.7em;font-weight:600;color:#1a1a1a;text-align:center;',
+    h2: 'margin:1.5em 0 0.7em;font-size:1.35em;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eeeeee;padding-bottom:0.3em;',
+    h3: 'margin:1.3em 0 0.6em;font-size:1.15em;font-weight:600;color:#1a1a1a;',
+    h4: 'margin:1.2em 0 0.5em;font-size:1.05em;font-weight:600;color:#1a1a1a;',
+    h5: 'margin:1.1em 0 0.4em;font-size:1em;font-weight:600;color:#1a1a1a;',
+    h6: 'margin:1em 0 0.4em;font-size:0.95em;font-weight:600;color:#666666;',
+    p: 'margin:0.9em 0;',
+    a: 'color:#1e80ff;text-decoration:none;border-bottom:1px solid rgba(30,128,255,0.3);',
+    strong: 'font-weight:600;color:#1a1a1a;',
+    em: 'font-style:italic;',
+    del: 'text-decoration:line-through;color:#999999;',
+    ul: 'margin:0.9em 0;padding-left:1.4em;',
+    ol: 'margin:0.9em 0;padding-left:1.4em;',
+    li: 'margin:0.35em 0;',
+    blockquote: 'margin:1.2em 0;padding:0.8em 1em;border-left:3px solid #dddddd;background:#f9f9f9;color:#666666;',
+    code: 'background:#f5f5f5;color:#c7254e;padding:2px 5px;border-radius:3px;font-size:0.9em;font-family:Menlo,Consolas,monospace;',
+    codeBlock: 'font-family:Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:#333333;',
+    codeBlockWrapper: 'background:#f6f8fa;padding:14px;border-radius:6px;overflow-x:auto;margin:1.2em 0;',
+    table: 'border-collapse:collapse;margin:1.2em auto;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'border:1px solid #dddddd;background:#f5f5f5;padding:8px 12px;font-weight:600;',
+    td: 'border:1px solid #dddddd;padding:8px 12px;',
+    tr: '',
+    img: 'max-width:100%;border-radius:4px;display:block;margin:1.2em auto;',
+    hr: 'border:none;border-top:1px solid #eeeeee;margin:2em 0;',
+  },
+}
