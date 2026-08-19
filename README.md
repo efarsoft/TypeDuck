@@ -69,8 +69,8 @@ pnpm build:web
 | 天数 | 主题 | 核心产出 | 状态 |
 |:---:|------|----------|:---:|
 | **Day 0** | 开发工具与 AI 编程环境准备 | 开发环境就绪 | ✅ |
-| **Day 1** | 核心引擎 + Web MVP 上线 | 输入 Markdown → 一键复制到公众号 | ✅ **当前版本** |
-| **Day 2** | 桌面版 Electron 封装 | 三平台桌面应用 | ⏳ |
+| **Day 1** | 核心引擎 + Web MVP 上线 | 输入 Markdown → 一键复制到公众号 | ✅ |
+| **Day 2** | 桌面版 Electron 封装 | 三平台桌面应用，本地文件编辑 | ✅ **当前版本** |
 | **Day 3** | AI 辅助写作（BYOK 模式） | 润色 / 扩写 / 续写 / 标题生成 | ⏳ |
 | **Day 4** | 高级功能：榜单 + 选题 + 配图 | 创作全流程覆盖 | ⏳ |
 | **Day 5** | 自动运营：定时任务 + 微信草稿箱 | 排版鸭 7×24 自动工作 | ⏳ |
@@ -83,7 +83,7 @@ packages/
 ├── core/        # 核心引擎：Markdown 渲染、主题系统、内联样式转换、剪贴板、导出
 ├── shared-ui/   # 共享 Vue 组件：编辑器、预览、工具栏、主题选择器、文档列表
 ├── web/         # Web 版应用（Vue 3 + Vite + Pinia + IndexedDB）
-└── desktop/     # 桌面版（Day 2 实现）
+└── desktop/     # 桌面版（Electron 封装，复用 web 应用与核心代码）
 ```
 
 **技术栈**：Vue 3 · TypeScript · Vite · CodeMirror 6 · markdown-it · highlight.js · Pinia · IndexedDB

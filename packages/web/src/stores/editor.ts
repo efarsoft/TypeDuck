@@ -186,6 +186,65 @@ export const useEditorStore = defineStore('editor', () => {
     () => refreshHistory(),
   )
 
+  /* ---------- 桌面版（Electron）本地文件集成 ---------- */
+
+  const isDesktop = !!window.desktopAPI
+  /** 文档 id -> 已保存的本地文件路径（仅桌面版，内存态） */
+  const filePaths = new Map<string, string>()
+
+  /** 从磁盘打开 .md 文件，作为新文档载入 */
+  async function openFromDisk() {
+    if (!window.desktopAPI) return
+    const result = await window.desktopAPI.openFile()
+    if (!result) return
+    const now = Date.now()
+    const doc: Doc = {
+      id: uuid(),
+      title: result.title,
+      content: result.content,
+      themeId: 'minimal-white',
+      createdAt: now,
+      updatedAt: now,
+      tags: [],
+      status: 'draft',
+      wordCount: countWords(result.content),
+      estimatedReadTime: Math.max(1, Math.ceil(countWords(result.content) / 400)),
+    }
+    await db.putDoc(doc)
+    docs.value.unshift(doc)
+    activeDoc.value = doc
+    filePaths.set(doc.id, result.filePath)
+    saveState.value = 'saved'
+    showToast(`已打开 ${result.title}.md`)
+  }
+
+  /** 保存当前文档到本地文件（无路径时弹另存为） */
+  async function saveToDisk(forceSaveAs = false) {
+    const doc = activeDoc.value
+    if (!doc || !window.desktopAPI) return
+    try {
+      let filePath = forceSaveAs ? null : filePaths.get(doc.id) ?? null
+      if (!filePath) {
+        const result = await window.desktopAPI.saveFileDialog(
+          doc.content,
+          (doc.title || '未命名文档') + '.md',
+        )
+        if (!result) return
+        filePath = result.filePath
+      } else {
+        await window.desktopAPI.saveFile(filePath, doc.content)
+      }
+      filePaths.set(doc.id, filePath)
+      if (!doc.title) {
+        doc.title = filePath.split(/[\\/]/).pop()!.replace(/\.md$/i, '') || doc.title
+      }
+      saveState.value = 'saved'
+      showToast(`已保存到 ${filePath}`)
+    } catch {
+      showToast('保存失败，请重试')
+    }
+  }
+
   return {
     docs,
     activeDoc,
@@ -194,6 +253,7 @@ export const useEditorStore = defineStore('editor', () => {
     toast,
     theme,
     renderedHtml,
+    isDesktop,
     load,
     createDoc,
     selectDoc,
@@ -201,5 +261,7 @@ export const useEditorStore = defineStore('editor', () => {
     markUnsaved,
     restoreHistory,
     showToast,
+    openFromDisk,
+    saveToDisk,
   }
 })

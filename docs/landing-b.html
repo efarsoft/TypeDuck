@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>排版鸭 TypeDuck · 落地页方案 B：杂志编辑风</title>
+<style>
+  :root {
+    --paper: #fbf7f0;
+    --ink: #4a4238;
+    --ink-strong: #2e2820;
+    --accent: #8b6e4e;
+    --muted: #9a8c78;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Songti SC", "Noto Serif SC", Georgia, "SimSun", serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 2;
+  }
+  .serif-cn { letter-spacing: 1px; }
+
+  /* nav: 细线书签式 */
+  nav {
+    display: flex; align-items: baseline; gap: 28px;
+    max-width: 720px; margin: 0 auto; padding: 26px 24px 14px;
+    border-bottom: 1px solid #d9cbb2; font-size: 14px;
+  }
+  nav .logo { font-weight: 700; font-size: 16px; margin-right: auto; color: var(--ink-strong); }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--accent); }
+  nav a.use { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 2px; }
+
+  article { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+  /* hero = 文章开头 */
+  .hero { padding: 72px 0 24px; text-align: center; }
+  .hero .kicker { font-size: 13px; color: var(--accent); letter-spacing: 4px; margin-bottom: 18px; }
+  .hero h1 { font-size: clamp(34px, 5vw, 54px); font-weight: 700; color: var(--ink-strong); line-height: 1.5; }
+  .hero .lede {
+    margin: 26px auto 0; max-width: 34em; font-size: 16px; color: var(--ink); text-indent: 2em;
+  }
+  .hero .cta-row { margin-top: 40px; text-align: center; }
+  .cta {
+    display: inline-block; text-decoration: none; font-size: 15px; letter-spacing: 2px;
+    padding: 12px 46px; border: 1px solid var(--accent); color: var(--accent); border-radius: 2px;
+    transition: .2s; font-family: inherit;
+  }
+  .cta:hover { background: var(--accent); color: var(--paper); }
+
+  .divider { text-align: center; color: #c9b391; margin: 52px 0; font-size: 14px; letter-spacing: 8px; }
+
+  /* 正文段落 = 功能介绍 */
+  .chapter h2 {
+    font-size: 22px; text-align: center; color: var(--ink-strong);
+    margin-bottom: 6px; letter-spacing: 2px;
+  }
+  .chapter h2 small { display: block; font-size: 12px; color: var(--muted); letter-spacing: 4px; margin-top: 4px; font-weight: 400; }
+  .chapter p { margin: 18px 0; text-indent: 2em; font-size: 15.5px; }
+  .chapter blockquote {
+    margin: 28px 0; padding: 14px 22px; border-left: 3px solid #c9b391;
+    background: rgba(201,179,145,.12); font-style: italic; color: #7a6a55; font-size: 15px;
+  }
+
+  /* 主题切换器：本方案的灵魂 */
+  .theme-switcher { margin: 36px 0 20px; text-align: center; }
+  .theme-switcher button {
+    font-family: inherit; font-size: 13.5px; letter-spacing: 2px; cursor: pointer;
+    padding: 7px 20px; margin: 0 5px; border-radius: 2px;
+    border: 1px solid #d9cbb2; background: transparent; color: var(--ink); transition: .15s;
+  }
+  .theme-switcher button.active { background: var(--ink-strong); color: var(--paper); border-color: var(--ink-strong); }
+  .demo-card {
+    border-radius: 4px; padding: 34px 30px; border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 14px 40px rgba(74,66,56,.12); transition: background .25s, color .25s;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .demo-card h3 { font-size: 17px; text-align: center; margin-bottom: 12px; }
+  .demo-card p { text-indent: 0 !important; font-size: 13.5px !important; line-height: 1.9 !important; margin: 8px 0 !important; }
+  .demo-card .dq { border-left: 3px solid currentColor; opacity: .8; padding: 4px 12px; font-size: 13px !important; }
+  .demo-card .hint { text-align: center; font-size: 11.5px; opacity: .55; margin-top: 14px !important; }
+
+  /* 路线图 = 目录 */
+  .toc { border: 1px solid #d9cbb2; border-radius: 4px; padding: 26px 30px; }
+  .toc .t { font-weight: 700; text-align: center; letter-spacing: 3px; margin-bottom: 14px; }
+  .toc ol { list-style: none; }
+  .toc li { display: flex; gap: 12px; padding: 6px 0; font-size: 14.5px; border-bottom: 1px dashed #e4d9c3; }
+  .toc li:last-child { border-bottom: none; }
+  .toc .n { color: var(--accent); font-family: Georgia, serif; }
+  .toc .done { color: var(--ink-strong); }
+  .toc .pending { color: var(--muted); }
+  .toc .st { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  footer { text-align: center; padding: 60px 24px 48px; border-top: 1px solid #d9cbb2; margin-top: 60px; }
+  footer img { width: 120px; border-radius: 4px; }
+  footer .fw { font-size: 14px; margin-top: 12px; color: var(--ink-strong); }
+  footer .end { margin-top: 30px; font-size: 13px; color: var(--muted); letter-spacing: 2px; }
+
+  .note { position: fixed; left: 0; right: 0; bottom: 0; text-align: center; font-size: 12px; padding: 6px; color: #fff; background: rgba(0,0,0,.6); z-index: 99; }
+</style>
+</head>
+<body>
+
+<div class="note">📋 落地页方案 B · 杂志编辑风（静态对比稿，试试中间的主题切换器）</div>
+
+<nav>
+  <span class="logo">排版鸭 TypeDuck</span>
+  <a href="#why">缘起</a>
+  <a href="#demo">主题</a>
+  <a href="#plan">目录</a>
+  <a class="use" href="#">在线使用</a>
+</nav>
+
+<article>
+  <header class="hero">
+    <div class="kicker">一 只 专 注 排 版 的 鸭 子</div>
+    <h1 class="serif-cn">排版呀，交给我吧</h1>
+    <p class="lede">你负责把想法写成 Markdown，剩下的交给这只鸭子：主题、预览、复制、粘贴，样式一个都不会丢。写作的归写作，排版的归排版鸭。</p>
+    <div class="cta-row"><a class="cta" href="#">开始写作</a></div>
+  </header>
+
+  <div class="divider">· · ·</div>
+
+  <section class="chapter" id="why">
+    <h2 class="serif-cn">缘起<small>WHY TYPEDUCK</small></h2>
+    <p>写公众号的朋友，多少都被排版折磨过。内容花一小时写完，格式再花半小时调——字号、行距、颜色、代码块，来回折腾，预览出来还是这里歪那里斜。</p>
+    <blockquote>AI 吐出来的是 Markdown，公众号编辑器吃的是 HTML。这中间隔着的半小时，就是排版鸭要替你省掉的时间。</blockquote>
+    <p>所以排版鸭只做三件事：左边写 Markdown，右边看公众号效果，一键复制粘贴。不注册、不登录、不联网，文章只存在你自己的浏览器里。MIT 开源，完全免费。</p>
+  </section>
+
+  <section class="chapter" id="demo">
+    <h2 class="serif-cn">四种性格<small>THEMES</small></h2>
+    <p>下面这段示例文字，就是排版鸭排出来的样子。点一点切换主题——<b>用产品本身证明产品</b>。</p>
+
+    <div class="theme-switcher" id="switcher">
+      <button data-theme="letter" class="active">信笺</button>
+      <button data-theme="minimal">极简白</button>
+      <button data-theme="github">GitHub</button>
+      <button data-theme="night">极夜黑</button>
+    </div>
+
+    <div class="demo-card" id="demoCard">
+      <h3>排版鸭使用手册</h3>
+      <p>打开排版鸭，左侧写下 Markdown，右侧即时可见公众号效果。手机宽度预览，所见即所得。</p>
+      <p>写完之后，点击「复制到公众号」，再到公众号后台按下 Ctrl+V——标题、引用、代码高亮，所有样式原样保留。</p>
+      <p class="dq">排版呀，交给我吧！🦆</p>
+      <p class="hint">↑ 这是同一篇文章在不同主题下的样子</p>
+    </div>
+  </section>
+
+  <div class="divider">· · ·</div>
+
+  <section class="chapter" id="plan">
+    <h2 class="serif-cn">目 录<small>A 7-DAY JOURNEY</small></h2>
+    <p>排版鸭是一个连载中的实战项目：从零到一的完整开发过程，七 天 写 完，全 程 公 开。</p>
+    <div class="toc">
+      <div class="t">七 日 谈</div>
+      <ol>
+        <li class="done"><span class="n">Day 0</span><span>开发工具与 AI 编程环境准备</span><span class="st">已完结</span></li>
+        <li class="done"><span class="n">Day 1</span><span>核心引擎 + Web MVP 上线</span><span class="st">当前版本</span></li>
+        <li class="pending"><span class="n">Day 2</span><span>桌面版 Electron 封装</span><span class="st">待写</span></li>
+        <li class="pending"><span class="n">Day 3</span><span>AI 辅助写作（BYOK 模式）</span><span class="st">待写</span></li>
+        <li class="pending"><span class="n">Day 4</span><span>热门榜单 + 选题库 + 配图助手</span><span class="st">待写</span></li>
+        <li class="pending"><span class="n">Day 5</span><span>自动运营：定时任务 + 微信草稿箱</span><span class="st">待写</span></li>
+        <li class="pending"><span class="n">Day 6</span><span>收官：上线 + 开源 + 复盘</span><span class="st">待写</span></li>
+      </ol>
+    </div>
+  </section>
+</article>
+
+<footer>
+  <img src="../images/wechat-qrcode.jpg" alt="公众号二维码">
+  <p class="fw">关注「AI猿叔」· 扫码一起造轮子</p>
+  <p class="end">—— 完 ——</p>
+  <p class="end" style="margin-top:10px">排版鸭 TypeDuck · MIT 开源</p>
+</footer>
+
+<script>
+  const themes = {
+    letter:  { bg: '#fbf7f0', fg: '#4a4238', title: '#8b6e4e', border: '#d9cbb2' },
+    minimal: { bg: '#ffffff', fg: '#333333', title: '#1a1a1a', border: '#eeeeee' },
+    github:  { bg: '#ffffff', fg: '#24292e', title: '#1a1a1a', border: '#eaecef' },
+    night:   { bg: '#242424', fg: '#d7dae0', title: '#ffffff', border: '#3e4451' },
+  }
+  const card = document.getElementById('demoCard')
+  const buttons = document.querySelectorAll('#switcher button')
+  buttons.forEach(btn => btn.addEventListener('click', () => {
+    const t = themes[btn.dataset.theme]
+    card.style.background = t.bg
+    card.style.color = t.fg
+    card.style.borderColor = t.border
+    card.querySelector('h3').style.color = t.title
+    buttons.forEach(b => b.classList.toggle('active', b === btn))
+  }))
+</script>
+
+</body>
+</html>

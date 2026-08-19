@@ -2,5 +2,17 @@
   "name": "@typeduck/desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "排版鸭桌面版（Electron 封装）—— 本 MVP 阶段暂未实现，规划见 README.md"
+  "description": "排版鸭桌面版（Electron 封装，复用 web 应用）",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
 }

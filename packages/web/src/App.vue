@@ -14,12 +14,21 @@ import HistoryPanel from './components/HistoryPanel.vue'
 const store = useEditorStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
-const showThemePanel = ref(false)
+const showThemePanel = ref(true)
 const showHistory = ref(false)
+const viewMode = ref<'split' | 'editor' | 'preview'>('split')
 
 onMounted(() => {
   store.load()
   setupSyncScroll()
+  // 桌面版：接住原生菜单事件
+  if (window.desktopAPI) {
+    const api = window.desktopAPI
+    api.onMenu('menu:new', () => store.createDoc())
+    api.onMenu('menu:open', () => store.openFromDisk())
+    api.onMenu('menu:save', () => store.saveToDisk())
+    api.onMenu('menu:save-as', () => store.saveToDisk(true))
+  }
 })
 
 /** 双栏按比例同步滚动（加锁防回环，rAF 防抖） */
@@ -84,6 +93,8 @@ const saveLabel = computed(
     ({ saved: '已保存', saving: '保存中…', unsaved: '未保存' })[store.saveState],
 )
 
+const charCount = computed(() => store.activeDoc?.content.length ?? 0)
+
 function onInsert(text: string) {
   editorRef.value?.insert(text)
 }
@@ -112,6 +123,10 @@ async function onRemove(id: string) {
     await store.removeDoc(id)
   }
 }
+
+function setView(mode: 'split' | 'editor' | 'preview') {
+  viewMode.value = mode
+}
 </script>
 
 <template>
@@ -128,27 +143,33 @@ async function onRemove(id: string) {
 
     <main class="main">
       <header class="title-bar">
+        <div class="brand">
+          <span class="brand-logo">🦆</span>
+          <span class="brand-name">排版鸭</span>
+        </div>
         <input v-model="title" class="title-input" placeholder="无标题文档" />
-        <span class="save-state" :data-state="store.saveState">{{ saveLabel }}</span>
-        <span v-if="store.activeDoc" class="meta">
-          {{ store.activeDoc.wordCount }} 字 · 约 {{ store.activeDoc.estimatedReadTime }} 分钟
-        </span>
+        <button class="copy-primary" title="复制到公众号" @click="onCopy">
+          <svg class="ic" viewBox="0 0 22 22" aria-hidden="true">
+            <path d="M9 7l-4 4 4 4M13 7l4 4-4 4" />
+          </svg>
+          复制到公众号
+        </button>
       </header>
 
       <DuckToolbar
         @insert="onInsert"
         @wrap="onWrap"
-        @copy="onCopy"
         @export="onExport"
         @toggle-theme="showThemePanel = !showThemePanel"
         @toggle-history="showHistory = !showHistory"
+        @set-view="setView"
       />
 
       <div class="panes">
-        <div class="pane editor-pane">
+        <div v-show="viewMode !== 'preview'" class="pane editor-pane">
           <DuckEditor ref="editorRef" v-model="content" />
         </div>
-        <div class="pane preview-pane">
+        <div v-show="viewMode !== 'editor'" class="pane preview-pane">
           <DuckPreview
             ref="previewRef"
             :html="store.renderedHtml"
@@ -166,6 +187,15 @@ async function onRemove(id: string) {
           @close="showHistory = false"
         />
       </div>
+
+      <footer class="status-bar">
+        <span v-if="store.activeDoc" class="status-meta">
+          {{ store.activeDoc.wordCount }} 字 · {{ charCount }} 字符 · 约
+          {{ store.activeDoc.estimatedReadTime }} 分钟
+        </span>
+        <span v-else class="status-meta">暂无文档</span>
+        <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
+      </footer>
     </main>
 
     <transition name="toast">
@@ -183,6 +213,7 @@ async function onRemove(id: string) {
   width: 220px;
   border-right: 1px solid #e5e6eb;
   background: #fff;
+  flex-shrink: 0;
 }
 .main {
   flex: 1;
@@ -193,10 +224,24 @@ async function onRemove(id: string) {
 .title-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 10px 16px;
   border-bottom: 1px solid #e5e6eb;
   background: #fff;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.brand-logo {
+  font-size: 18px;
+}
+.brand-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 .title-input {
   flex: 1;
@@ -205,20 +250,33 @@ async function onRemove(id: string) {
   font-size: 15px;
   font-weight: 600;
   background: transparent;
+  min-width: 0;
 }
-.save-state {
-  font-size: 12px;
-  color: #999;
+.copy-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 6px;
+  background: #07c160;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
-.save-state[data-state='unsaved'] {
-  color: #e6a23c;
+.copy-primary:hover {
+  background: #06ad56;
 }
-.save-state[data-state='saving'] {
-  color: #409eff;
-}
-.meta {
-  font-size: 12px;
-  color: #bbb;
+.copy-primary .ic {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
 }
 .panes {
   flex: 1;
@@ -238,6 +296,28 @@ async function onRemove(id: string) {
   border-left: 1px solid #e5e6eb;
   background: #fff;
   overflow-y: auto;
+  flex-shrink: 0;
+}
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 16px;
+  border-top: 1px solid #e5e6eb;
+  background: #fafafa;
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
+}
+.status-save {
+  color: #999;
+}
+.status-save[data-state='unsaved'] {
+  color: #e6a23c;
+}
+.status-save[data-state='saving'] {
+  color: #409eff;
 }
 .toast {
   position: fixed;

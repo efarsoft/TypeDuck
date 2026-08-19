@@ -33,23 +33,22 @@ defineExpose({ getScrollEl })
 .preview {
   height: 100%;
   overflow: hidden;
-  background: #f0f2f5;
+  background: #f3f4f6;
 }
 .preview-scroll {
   height: 100%;
   overflow-y: auto;
-  padding: 16px;
+  padding: 24px 16px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 .preview-phone {
-  width: 390px; /* 手机屏宽预览 */
+  width: 390px; /* 固定手机屏宽预览（无外壳） */
   max-width: 100%;
-  padding: 20px 16px 32px;
+  padding: 24px 20px 36px;
   border-radius: 12px;
-  border: 1px solid #e5e6eb;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #ebecef;
   overflow: hidden;
 }
 </style>

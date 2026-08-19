@@ -1,0 +1,26 @@
+appId: cn.efarsoft.typeduck
+productName: 排版鸭
+directories:
+  output: release
+files:
+  - src/**/*
+  - package.json
+extraResources:
+  # 打包时把 Web 版构建产物一起带上（生产模式从 ../web/dist 加载）
+  - from: ../web/dist
+    to: web/dist
+    filter: ['**/*']
+win:
+  target: nsis
+  artifactName: ${productName}-${version}-${arch}-setup.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: 排版鸭
+mac:
+  target: dmg
+  category: public.app-category.productivity
+linux:
+  target: AppImage
+  category: Utility

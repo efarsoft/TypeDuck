@@ -10,7 +10,7 @@
   "scripts": {
     "dev:web": "pnpm --filter @typeduck/web dev",
     "build:web": "pnpm --filter @typeduck/web build",
-    "dev:desktop": "echo \"desktop 版尚未实现，见 packages/desktop/README.md\"",
-    "build:desktop": "echo \"desktop 版尚未实现，见 packages/desktop/README.md\""
+    "dev:desktop": "pnpm --filter @typeduck/desktop dev",
+    "build:desktop": "pnpm build:web && pnpm --filter @typeduck/desktop build"
   }
 }
