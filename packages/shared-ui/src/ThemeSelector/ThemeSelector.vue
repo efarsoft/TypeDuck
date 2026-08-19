@@ -64,8 +64,7 @@ function pickStyle(style: string, prop: string): string {
               borderLeft: `2px solid ${pickStyle(theme.styles.blockquote, 'border-left')?.split(' ').pop() || '#ccc'}`,
             }"
           ></span>
-          <span class="mini-name">{{ theme.name }}</span>
-          <span class="mini-desc" :title="theme.description">{{ theme.description }}</span>
+          <span class="mini-desc" :title="`${theme.name}：${theme.description}`">{{ theme.description }}</span>
         </button>
       </div>
     </div>
@@ -133,20 +132,19 @@ function pickStyle(style: string, prop: string): string {
   width: 60%;
   opacity: 0.6;
 }
-.mini-name {
-  font-size: 11px;
-  color: #555;
-  font-weight: 600;
-  text-align: left;
-  padding-top: 4px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
-}
 .mini-desc {
   font-size: 10px;
   color: #999;
+  font-weight: 500;
   text-align: left;
-  white-space: nowrap;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  min-height: 34px; /* 固定两行高度，卡片对齐 */
 }
 </style>

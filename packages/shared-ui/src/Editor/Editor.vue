@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
+import { undo, redo } from '@codemirror/commands'
 
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
@@ -45,22 +46,43 @@ const icons: Record<string, string> = {
   codeblock: '<path d="M8 7l-3 3 3 3M14 7l3 3-3 3M11 6l-1 10"/>',
   ul: '<path d="M5 6h.01M5 12h.01M5 18h.01M9 6h10M9 12h10M9 18h10"/>',
   ol: '<path d="M5 6h.01M5 12h.01M5 18h.01M9 6h10M9 12h10M9 18h10"/>',
+  task: '<path d="M5 6h2v2H5zM5 6v2h2V6zM5 11h2v2H5zM5 16h2v2H5zM9 7h8M9 12h8M9 17h8"/>',
   link: '<path d="M9 12h4M10 8a4 4 0 0 1 0 8h-1M12 12a4 4 0 0 1 0-8h1"/>',
   image: '<path d="M4 5h12v12H4zM4 13l3-3 3 3 2-2 4 4M8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>',
+  table: '<path d="M3 5h14v12H3zM3 9h14M3 13h14M8 5v12M12 5v12"/>',
+  undo: '<path d="M8 5L3 10l5 5M3 10h9a5 5 0 0 1 0 10h-3"/>',
+  redo: '<path d="M14 5l5 5-5 5M19 10h-9a5 5 0 0 0 0 10h3"/>',
 }
 
-/** 快速格式按钮（图标化，内嵌于编辑区顶部） */
-const quickButtons: { icon: string; title: string; action: () => void }[] = [
-  { icon: 'bold', title: '粗体', action: () => doWrap('**', '**') },
-  { icon: 'italic', title: '斜体', action: () => doWrap('*', '*') },
-  { icon: 'strike', title: '删除线', action: () => doWrap('~~', '~~') },
-  { icon: 'quote', title: '引用', action: () => doInsert('\n> ') },
-  { icon: 'code', title: '行内代码', action: () => doWrap('`', '`') },
-  { icon: 'codeblock', title: '代码块', action: () => doInsert('\n```js\n\n```\n') },
-  { icon: 'ul', title: '无序列表', action: () => doInsert('\n- ') },
-  { icon: 'ol', title: '有序列表', action: () => doInsert('\n1. ') },
-  { icon: 'link', title: '链接', action: () => doInsert('[标题](https://)') },
-  { icon: 'image', title: '图片', action: () => doInsert('![描述](https://)') },
+/** 快速格式按钮：按「标题 / 文字格式 / 块级 / 插入」四组划分（label 为文字按钮，icon 为图标按钮） */
+const buttonGroups: { icon?: string; label?: string; title: string; action: () => void }[][] = [
+  [
+    { label: 'H1', title: '一级标题', action: () => doInsert('\n# ') },
+    { label: 'H2', title: '二级标题', action: () => doInsert('\n## ') },
+    { label: 'H3', title: '三级标题', action: () => doInsert('\n### ') },
+  ],
+  [
+    { icon: 'bold', title: '粗体', action: () => doWrap('**', '**') },
+    { icon: 'italic', title: '斜体', action: () => doWrap('*', '*') },
+    { icon: 'strike', title: '删除线', action: () => doWrap('~~', '~~') },
+  ],
+  [
+    { icon: 'quote', title: '引用', action: () => doInsert('\n> ') },
+    { icon: 'code', title: '行内代码', action: () => doWrap('`', '`') },
+    { icon: 'codeblock', title: '代码块', action: () => doInsert('\n```js\n\n```\n') },
+    { icon: 'ul', title: '无序列表', action: () => doInsert('\n- ') },
+    { icon: 'ol', title: '有序列表', action: () => doInsert('\n1. ') },
+    { icon: 'task', title: '任务清单', action: () => doInsert('\n- [ ] ') },
+    { icon: 'table', title: '表格', action: () => doInsert('\n| 表头 | 表头 |\n| --- | --- |\n| 内容 | 内容 |\n') },
+  ],
+  [
+    { icon: 'link', title: '链接', action: () => doInsert('[标题](https://)') },
+    { icon: 'image', title: '图片', action: () => doInsert('![描述](https://)') },
+  ],
+  [
+    { icon: 'undo', title: '撤销 (Ctrl+Z)', action: () => view && undo(view) },
+    { icon: 'redo', title: '重做 (Ctrl+Y)', action: () => view && redo(view) },
+  ],
 ]
 
 onMounted(() => {
@@ -75,8 +97,10 @@ onMounted(() => {
         }
       }),
       EditorView.theme({
-        '&': { height: '100%', fontSize: '14px' },
+        '&': { height: '100%', fontSize: '14px', backgroundColor: '#fafbfc' },
         '.cm-scroller': { fontFamily: 'Menlo, Consolas, "Courier New", monospace' },
+        '.cm-gutters': { backgroundColor: '#fafbfc', borderColor: '#edf0f2' },
+        '.cm-activeLine': { backgroundColor: 'rgba(7,193,96,0.04)' },
       }),
     ],
     parent: host.value!,
@@ -103,17 +127,21 @@ defineExpose({
 
 <template>
   <section class="editor-panel">
-    <div class="panel-head"><span>Markdown 内容</span></div>
     <div class="format-bar">
-      <button
-        v-for="btn in quickButtons"
-        :key="btn.title"
-        class="fbtn"
-        :title="btn.title"
-        @click="btn.action"
-      >
-        <svg class="ic" viewBox="0 0 22 22" v-html="icons[btn.icon]"></svg>
-      </button>
+      <template v-for="(group, gi) in buttonGroups" :key="gi">
+        <span v-if="gi > 0" class="fdivider"></span>
+        <button
+          v-for="btn in group"
+          :key="btn.title"
+          class="fbtn"
+          :class="{ 'fbtn-text': btn.label }"
+          :title="btn.title"
+          @click="btn.action"
+        >
+          <svg v-if="btn.icon" class="ic" viewBox="0 0 22 22" v-html="icons[btn.icon]"></svg>
+          <template v-else>{{ btn.label }}</template>
+        </button>
+      </template>
     </div>
     <div ref="host" class="editor-host"></div>
   </section>
@@ -125,7 +153,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #fff;
+  background: #fafbfc; /* 工作区浅灰底，与预览区（成品区）形成分区 */
 }
 .editor-host {
   flex: 1;
@@ -144,6 +172,12 @@ defineExpose({
   background: #fff;
   flex-wrap: wrap;
   flex-shrink: 0;
+}
+.fdivider {
+  width: 1px;
+  height: 16px;
+  background: #e5e6eb;
+  margin: 0 6px;
 }
 .fbtn {
   width: 30px;
@@ -171,5 +205,13 @@ defineExpose({
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+/* 文字型按钮（H1/H2/H3） */
+.fbtn-text {
+  width: auto;
+  padding: 0 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 </style>

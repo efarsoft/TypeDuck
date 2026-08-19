@@ -6,6 +6,8 @@ export interface DocListItem {
   title: string
   updatedAt: number
   wordCount: number
+  /** 该文档当前主题的强调色（小圆点标识用） */
+  themeColor?: string
 }
 
 const props = defineProps<{
@@ -73,7 +75,13 @@ onUnmounted(() => document.removeEventListener('click', closeMenus))
         :class="{ active: doc.id === activeId }"
         @click="emit('select', doc.id)"
       >
-        <div class="doc-title">{{ doc.title || '无标题文档' }}</div>
+        <div class="doc-title">
+          <span
+            v-if="doc.themeColor"
+            class="theme-dot"
+            :style="{ background: doc.themeColor }"
+          ></span>{{ doc.title || '无标题文档' }}
+        </div>
         <div class="doc-meta">
           <span>{{ formatTime(doc.updatedAt) }}</span>
           <span>{{ doc.wordCount }} 字</span>
@@ -177,6 +185,17 @@ onUnmounted(() => document.removeEventListener('click', closeMenus))
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+.theme-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
 }
 .doc-item.active .doc-title {
   color: #07c160;

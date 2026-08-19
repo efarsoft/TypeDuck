@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-const props = defineProps<{ html: string; background: string; rootStyle: string }>()
+const props = defineProps<{
+  html: string
+  background: string
+  rootStyle: string
+  themeName?: string
+}>()
+
+const emit = defineEmits<{ (e: 'open-theme'): void }>()
 
 const scrollEl = ref<HTMLElement>()
 
@@ -27,7 +34,9 @@ defineExpose({ getScrollEl })
 <template>
   <div class="preview">
     <div class="preview-bar">
-      <span class="preview-tag">预览</span>
+      <button class="preview-tag" title="点击切换主题" @click="emit('open-theme')">
+        预览<template v-if="themeName"> · {{ themeName }}</template> ▸
+      </button>
       <div class="size-switch">
         <button
           v-for="s in sizes"
@@ -72,9 +81,19 @@ defineExpose({ getScrollEl })
   flex-shrink: 0;
 }
 .preview-tag {
+  border: none;
+  background: transparent;
+  padding: 2px 6px;
   font-size: 11px;
-  color: #bbb;
+  color: #999;
   letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.preview-tag:hover {
+  color: #07c160;
+  background: #f0faf4;
 }
 .size-switch {
   display: inline-flex;

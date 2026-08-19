@@ -15,33 +15,36 @@ function uuid(): string {
 
 const WELCOME_CONTENT = `# 排版呀，交给我吧！
 
-**排版鸭**是一款专为微信公众号创作者打造的 Markdown 排版工具。
+**排版鸭**是一款专为微信公众号创作者打造的 Markdown 排版工具——本地优先、完全免费、MIT 开源。
 
-## 快速上手
+## 三步搞定一篇公众号文章
 
-1. 在左侧编辑 Markdown 源码
-2. 右侧实时预览公众号排版效果
-3. 点击右上角 **📋 复制到公众号**
-4. 粘贴到公众号编辑器即可发布
+1. 在左侧用 Markdown 写作（支持 \`**粗体**\`、\`*斜体*\`、代码块、表格、任务列表）
+2. 在右侧主题面板挑选排版主题（内置 **19 套**，从极简白到水墨风）
+3. 点击顶部 **复制到公众号**，粘贴到公众号后台——样式完整保留
 
-## 支持的语法
+## 预览的两种尺寸
 
-- 标题、**粗体**、*斜体*、~~删除线~~
-- [链接](https://github.com) 与图片
-- > 引用：本地优先、完全免费
-- \`行内代码\` 与代码块：
+预览区顶部可切换 **手机（390px）** 和 **公众号（677px）** 宽度：手机看阅读体验，公众号宽度做发布前终检。
+
+## 写给技术作者
+
+> 代码高亮复制到公众号依然保留配色——所有样式已内联化，微信编辑器清洗不掉。
 
 \`\`\`js
 console.log('Hello 排版鸭!')
 \`\`\`
 
-| 语法 | 支持 |
+| 能力 | 状态 |
 | --- | :---: |
-| GFM 表格 | ✅ |
-| 任务列表 | ✅ |
+| 19 套主题一键切换 | ✅ |
+| 自动保存 + 30 版历史 | ✅ |
+| 双栏同步滚动 | ✅ |
+| 导出独立 HTML | ✅ |
+| 本地文件（桌面版） | ✅ |
 
-- [x] 自动保存
-- [x] 历史版本
+- [x] 数据只存在你自己的浏览器里
+- [x] 无需注册登录
 
 ---
 
@@ -52,6 +55,15 @@ export type SaveState = 'saved' | 'saving' | 'unsaved'
 
 function countWords(text: string): number {
   return text.replace(/[\s#>*`~\-|!\[\]()]/g, '').length
+}
+
+/** 从内容提取标题：优先一级/二级标题，其次首个非空行（去除 Markdown 记号，限 24 字） */
+function extractTitle(content: string): string {
+  const heading = content.match(/^#{1,3}\s+(.+)$/m)
+  const raw = (heading ? heading[1] : content.split('\n').find((l) => l.trim()) || '')
+    .replace(/[#*`~>\[\]()!]/g, '')
+    .trim()
+  return raw.length > 24 ? raw.slice(0, 24) + '…' : raw
 }
 
 export const useEditorStore = defineStore('editor', () => {
@@ -65,6 +77,12 @@ export const useEditorStore = defineStore('editor', () => {
   const renderedHtml = computed(() =>
     activeDoc.value ? render(activeDoc.value.content, theme.value) : '',
   )
+  /** Word 友好版：不带 !important（Word 的 HTML 解析器不识别，会整段错乱） */
+  const renderedHtmlPlain = computed(() =>
+    activeDoc.value
+      ? render(activeDoc.value.content, theme.value, { important: false })
+      : '',
+  )
 
   let saveTimer: ReturnType<typeof setTimeout> | undefined
   let toastTimer: ReturnType<typeof setTimeout> | undefined
@@ -77,8 +95,16 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function load() {
     docs.value = await db.getAllDocs()
+    // 历史遗留的无标题文档：从内容回填标题
+    for (const doc of docs.value) {
+      if (!doc.title) {
+        doc.title = extractTitle(doc.content)
+        await db.putDoc(doc)
+      }
+    }
     if (docs.value.length === 0) {
-      await createDoc()
+      // 首次使用：唯一一次填入欢迎文案
+      await createDoc(WELCOME_CONTENT)
     } else {
       activeDoc.value = docs.value[0]
     }
@@ -89,19 +115,20 @@ export const useEditorStore = defineStore('editor', () => {
     window.addEventListener('beforeunload', () => void flushSave())
   }
 
-  async function createDoc() {
+  /** 新建文档：默认空白；仅首次使用（库为空）时由 load() 传入欢迎文案 */
+  async function createDoc(initialContent = '') {
     const now = Date.now()
     const doc: Doc = {
       id: uuid(),
       title: '',
-      content: WELCOME_CONTENT,
+      content: initialContent,
       themeId: 'minimal-white',
       createdAt: now,
       updatedAt: now,
       tags: [],
       status: 'draft',
-      wordCount: countWords(WELCOME_CONTENT),
-      estimatedReadTime: Math.max(1, Math.ceil(countWords(WELCOME_CONTENT) / 400)),
+      wordCount: countWords(initialContent),
+      estimatedReadTime: Math.max(1, Math.ceil(countWords(initialContent) / 400)),
     }
     await db.putDoc(doc)
     docs.value.unshift(doc)
@@ -128,6 +155,10 @@ export const useEditorStore = defineStore('editor', () => {
   function markUnsaved() {
     const doc = activeDoc.value
     if (!doc) return
+    // 标题为空时从内容自动提取，避免满屏「无标题文档」
+    if (!doc.title.trim()) {
+      doc.title = extractTitle(doc.content)
+    }
     saveState.value = 'unsaved'
     clearTimeout(saveTimer)
     // 捕获目标文档引用，避免防抖期间切换文档后误存到别的文档
@@ -135,12 +166,19 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   async function saveDoc(doc: Doc) {
-    saveState.value = 'saving'
+    // 保存状态只描述"当前活动文档"；后台 flush 保存其他文档时不动它
+    const isActive = activeDoc.value?.id === doc.id
+    if (isActive) saveState.value = 'saving'
     doc.updatedAt = Date.now()
     doc.wordCount = countWords(doc.content)
     doc.estimatedReadTime = Math.max(1, Math.ceil(doc.wordCount / 400))
-    await db.putDoc(doc)
-    if (activeDoc.value?.id === doc.id) saveState.value = 'saved'
+    try {
+      await db.putDoc(doc)
+      if (isActive) saveState.value = 'saved'
+    } catch {
+      if (isActive) saveState.value = 'unsaved'
+      return
+    }
     await snapshotIfChanged(doc)
   }
 
@@ -253,6 +291,7 @@ export const useEditorStore = defineStore('editor', () => {
     toast,
     theme,
     renderedHtml,
+    renderedHtmlPlain,
     isDesktop,
     load,
     createDoc,

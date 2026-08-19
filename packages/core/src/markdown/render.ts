@@ -30,20 +30,25 @@ export function withImportant(css: string): string {
   )
 }
 
-/** 将主题样式表与 hljs class 映射为内联 style，并移除所有 class（公众号不支持 class） */
-function injectInlineStyles(html: string, theme: Theme): string {
+/**
+ * 将主题样式表与 hljs class 映射为内联 style，并移除所有 class（公众号不支持 class）。
+ * important=true 时全声明加 !important（防微信覆盖）；
+ * Word 等解析器不识别 !important，导 docx 时须传 false。
+ */
+function injectInlineStyles(html: string, theme: Theme, important = true): string {
   const container = document.createElement('div')
   container.innerHTML = html
 
   container.querySelectorAll('*').forEach((el) => {
     const tag = el.tagName.toLowerCase()
+    const boost = (s: string) => (important ? withImportant(s) : s)
     let style = ''
 
     // 代码块外层包装
     if (tag === 'pre') {
       style = theme.styles.codeBlockWrapper
       const codeEl = el.querySelector('code')
-      if (codeEl) codeEl.setAttribute('style', withImportant(theme.styles.codeBlock))
+      if (codeEl) codeEl.setAttribute('style', boost(theme.styles.codeBlock))
     } else if (tag === 'code') {
       const inPre = el.parentElement?.tagName.toLowerCase() === 'pre'
       style = inPre ? theme.styles.codeBlock : theme.styles.code
@@ -61,7 +66,7 @@ function injectInlineStyles(html: string, theme: Theme): string {
       if (theme.hljsStyleMap[cls]) style += theme.hljsStyleMap[cls]
     }
 
-    if (style) el.setAttribute('style', withImportant(style))
+    if (style) el.setAttribute('style', boost(style))
     el.removeAttribute('class')
     el.removeAttribute('id')
   })
@@ -70,7 +75,11 @@ function injectInlineStyles(html: string, theme: Theme): string {
 }
 
 /** 渲染 Markdown 为带内联样式的 HTML（预览与复制共用同一份输出） */
-export function render(markdown: string, theme: Theme): string {
+export function render(
+  markdown: string,
+  theme: Theme,
+  opts: { important?: boolean } = {},
+): string {
   const raw = md.render(markdown)
-  return injectInlineStyles(raw, theme)
+  return injectInlineStyles(raw, theme, opts.important !== false)
 }

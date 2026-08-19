@@ -7,6 +7,7 @@
   "types": "src/index.ts",
   "dependencies": {
     "highlight.js": "^11.9.0",
+    "html-docx-js-typescript": "^0.1.5",
     "markdown-it": "^14.0.0",
     "markdown-it-task-lists": "^2.1.1"
   }

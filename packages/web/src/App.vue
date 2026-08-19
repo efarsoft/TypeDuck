@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { copyHtmlToClipboard, exportHtmlFile, withImportant } from '@typeduck/core'
+import {
+  copyHtmlToClipboard,
+  exportHtmlFile,
+  exportPrintPdf,
+  exportWordDoc,
+  getTheme,
+  withImportant,
+} from '@typeduck/core'
 import { DuckEditor, DuckPreview, DocumentList, ThemeSelector } from '@typeduck/shared-ui'
 import { useEditorStore } from './stores/editor'
 import HistoryPanel from './components/HistoryPanel.vue'
@@ -11,16 +18,17 @@ const previewRef = ref<InstanceType<typeof DuckPreview>>()
 const rightView = ref<'theme' | 'history'>('theme')
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
 
-const viewLabels: Record<typeof viewMode.value, string> = {
-  split: '双栏',
-  editor: '仅编辑',
-  preview: '仅预览',
-}
-const viewTitle = computed(() => `视图切换（当前：${viewLabels[viewMode.value]}）`)
+/** 视图模式：双栏 / 仅编辑 / 仅预览（分段图标切换） */
+const viewModes = [
+  { mode: 'split', label: '双栏', icon: '<path d="M3 4h7v14H3zM12 4h7v14h-7z"/>' },
+  { mode: 'editor', label: '仅编辑', icon: '<path d="M3 4h14v14H3z"/>' },
+  { mode: 'preview', label: '仅预览', icon: '<path d="M5 4h8v14H5zM16 8l3 3-3 3"/>' },
+] as const
 
 onMounted(() => {
   store.load()
   setupSyncScroll()
+  document.addEventListener('click', onDocClickForExport)
   // 桌面版：接住原生菜单事件
   if (window.desktopAPI) {
     const api = window.desktopAPI
@@ -96,17 +104,41 @@ const saveLabel = computed(
 /** 根容器样式同样加 !important，防公众号编辑器覆盖 */
 const rootStyle = computed(() => withImportant(store.theme.styles.root))
 
-const charCount = computed(() => store.activeDoc?.content.length ?? 0)
-const lineCount = computed(() => store.activeDoc?.content.split('\n').length ?? 0)
+/** 文档列表数据：附带主题强调色圆点 */
+function pickColor(style: string): string {
+  const m = style.match(/(?:^|;)\s*color:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))/)
+  return m ? m[1] : ''
+}
+const docsForList = computed(() =>
+  store.docs.map((d) => {
+    const t = getTheme(d.themeId)
+    return {
+      ...d,
+      themeColor: pickColor(t.styles.h2) || pickColor(t.styles.root) || '#999999',
+    }
+  }),
+)
 
+/** 复制防重复：点击后短暂禁用并切换文案 */
+const copied = ref(false)
 async function onCopy() {
+  if (copied.value) return
   const ok = await copyHtmlToClipboard(`<section style="${rootStyle.value}">${store.renderedHtml}</section>`)
+  if (ok) {
+    copied.value = true
+    setTimeout(() => (copied.value = false), 800)
+  }
   store.showToast(ok ? '已复制，去公众号编辑器粘贴吧！🦆' : '复制失败，请重试')
 }
 
-function onPublish() {
-  store.showToast('发布到公众号需配置已认证服务号 API，敬请期待 🚀')
-}
+const charCount = computed(() => store.activeDoc?.content.length ?? 0)
+const lineCount = computed(() => store.activeDoc?.content.split('\n').length ?? 0)
+
+/** 标题输入框宽度 = 编辑器列宽度（编辑/预览各占一半，右侧面板 300px） */
+const titleInputWidth = computed(() => {
+  if (viewMode.value === 'editor') return 'calc(100% - 28px)'
+  return 'calc((100% - 300px) / 2 - 28px)'
+})
 
 function onExport() {
   if (!store.activeDoc) return
@@ -119,126 +151,185 @@ function onExport() {
   store.showToast('已导出 HTML 文件')
 }
 
+/** 导出下拉 */
+const showExportMenu = ref(false)
+async function onExportAs(format: 'html' | 'markdown' | 'docx' | 'pdf') {
+  showExportMenu.value = false
+  if (!store.activeDoc) return
+  const name = store.activeDoc.title || '未命名文档'
+  if (format === 'html') return onExport()
+  if (format === 'markdown') {
+    const blob = new Blob([store.activeDoc.content], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${name.replace(/[\\/:*?"<>|]/g, '_')}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+    store.showToast('已导出 Markdown 文件')
+    return
+  }
+  if (format === 'docx') {
+    // Word 不识别 !important，用干净版渲染产物
+    await exportWordDoc(
+      name,
+      store.renderedHtmlPlain,
+      store.theme.previewBackground,
+      store.theme.styles.root,
+    )
+    store.showToast('已导出 Word (.docx)')
+    return
+  }
+  // PDF：弹出打印窗口，选「另存为 PDF」
+  exportPrintPdf(name, store.renderedHtml, store.theme.previewBackground, rootStyle.value)
+  store.showToast('在打印窗口选择「另存为 PDF」')
+}
+
+/** 点击导出菜单外部关闭 */
+function onDocClickForExport(e: MouseEvent) {
+  const el = e.target as HTMLElement
+  if (showExportMenu.value && !el.closest('.export-wrap')) showExportMenu.value = false
+}
+
 async function onRemove(id: string) {
   if (confirm('确定删除该文档及其历史版本？此操作不可恢复。')) {
     await store.removeDoc(id)
   }
 }
-
-function cycleView() {
-  viewMode.value =
-    viewMode.value === 'split' ? 'editor' : viewMode.value === 'editor' ? 'preview' : 'split'
-}
 </script>
 
 <template>
   <div class="app">
-    <!-- 左侧文档列表 -->
-    <aside class="sidebar">
-      <DocumentList
-        :docs="store.docs"
-        :active-id="store.activeDoc?.id ?? null"
-        @select="store.selectDoc"
-        @create="store.createDoc"
-        @remove="onRemove"
-      />
-    </aside>
-
-    <main class="main">
-      <!-- 顶栏：品牌 + 主操作 -->
-      <header class="appbar">
-        <div class="brand">
-          <span class="brand-logo">🦆</span>
-          <span class="brand-name">排版鸭</span>
-          <span class="brand-slogan">排版呀，交给我吧！</span>
-        </div>
-        <div class="appbar-right">
-          <button class="btn-publish" title="发布到公众号" @click="onPublish">发布到公众号</button>
-          <button class="copy-primary" title="复制到公众号" @click="onCopy">
-            <svg class="ic" viewBox="0 0 22 22" aria-hidden="true">
-              <path d="M9 7l-4 4 4 4M13 7l4 4-4 4" />
-            </svg>
-            复制到公众号
+    <!-- 通栏顶栏：品牌 + 主操作（横贯整个窗口） -->
+    <header class="appbar">
+      <div class="brand">
+        <span class="brand-logo">🦆</span>
+        <span class="brand-name">排版鸭</span>
+        <span class="brand-slogan">排版呀，交给我吧！</span>
+      </div>
+      <div class="appbar-right">
+        <button class="copy-primary" :class="{ done: copied }" :disabled="copied" title="复制到公众号" @click="onCopy">
+          <svg v-if="!copied" class="ic" viewBox="0 0 22 22" aria-hidden="true">
+            <path d="M9 7l-4 4 4 4M13 7l4 4-4 4" />
+          </svg>
+          <span v-else class="check">✓</span>
+          {{ copied ? '已复制' : '复制到公众号' }}
+        </button>
+        <!-- 导出下拉：HTML / Markdown 可用，DOCX / PDF 占位 -->
+        <div class="export-wrap">
+          <button class="btn-export" title="导出" @click.stop="showExportMenu = !showExportMenu">
+            导出
+            <span class="caret">▾</span>
           </button>
-        </div>
-      </header>
-
-      <!-- 子标题栏：标题输入 + 保存状态 + 视图/导出/历史/主题图标 -->
-      <div class="subbar">
-        <input v-model="title" class="title-input" placeholder="无标题文档" />
-        <span class="save-state" :data-state="store.saveState">{{ saveLabel }}</span>
-        <div class="subbar-right">
-          <button class="icon-btn" :title="viewTitle" @click="cycleView">
-            <svg class="ic" viewBox="0 0 22 22">
-              <path d="M3 4h7v14H3zM12 4h7v14h-7z" />
-            </svg>
-          </button>
-          <button class="icon-btn" title="导出 HTML" @click="onExport">
-            <svg class="ic" viewBox="0 0 22 22">
-              <path d="M11 3v9M8 9l3 3 3-3M4 15v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
-            </svg>
-          </button>
-          <button
-            class="icon-btn"
-            :class="{ active: rightView === 'history' }"
-            title="历史版本"
-            @click="rightView = 'history'"
-          >
-            <svg class="ic" viewBox="0 0 22 22">
-              <path d="M3 11a8 8 0 1 0 3-6M3 4v4h4M11 7v4l3 2" />
-            </svg>
-          </button>
-          <button
-            class="icon-btn"
-            :class="{ active: rightView === 'theme' }"
-            title="主题样式"
-            @click="rightView = 'theme'"
-          >
-            <svg class="ic" viewBox="0 0 22 22">
-              <path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 1 0-16z" />
-            </svg>
-          </button>
+          <div v-if="showExportMenu" class="export-menu" @click.stop>
+            <button class="export-item" @click="onExportAs('html')">导出为 HTML</button>
+            <button class="export-item" @click="onExportAs('markdown')">导出为 Markdown</button>
+            <button class="export-item" @click="onExportAs('docx')">导出为 Word (.docx)</button>
+            <button class="export-item" @click="onExportAs('pdf')">导出为 PDF</button>
+          </div>
         </div>
       </div>
+    </header>
 
-      <!-- 内容区：编辑 / 预览 / 右侧面板（3 列） -->
-      <div class="content">
-        <section v-show="viewMode !== 'preview'" class="pane editor-pane">
-          <DuckEditor ref="editorRef" v-model="content" />
-        </section>
-        <section v-show="viewMode !== 'editor'" class="pane preview-pane">
-          <DuckPreview
-            ref="previewRef"
-            :html="store.renderedHtml"
-            :background="store.theme.previewBackground"
-            :root-style="rootStyle"
+    <!-- 主体：侧栏与子标题栏同一行起步，工作区在右侧纵排 -->
+    <div class="body">
+      <aside class="sidebar">
+        <DocumentList
+          :docs="docsForList"
+          :active-id="store.activeDoc?.id ?? null"
+          @select="store.selectDoc"
+          @create="store.createDoc"
+          @remove="onRemove"
+        />
+      </aside>
+
+      <div class="workarea">
+        <!-- 子标题栏：与侧栏同一行（不通栏） -->
+        <div class="subbar">
+          <!-- 宽度与编辑器列对齐（扣掉子栏左右内边距 28px） -->
+          <input
+            v-model="title"
+            class="title-input"
+            :style="{ width: titleInputWidth }"
+            placeholder="无标题文档"
           />
-        </section>
-        <aside class="pane right-pane">
-          <template v-if="rightView === 'theme'">
-            <div class="panel-head"><span>主题样式</span></div>
-            <div class="right-scroll">
-              <ThemeSelector v-model="themeId" />
+          <div class="subbar-right">
+            <!-- 视图切换：三枚图标分段选择，当前项高亮 -->
+            <div class="view-switch">
+              <button
+                v-for="v in viewModes"
+                :key="v.mode"
+                class="icon-btn"
+                :class="{ active: viewMode === v.mode }"
+                :title="v.label"
+                @click="viewMode = v.mode"
+              >
+                <svg class="ic" viewBox="0 0 22 22" v-html="v.icon"></svg>
+              </button>
             </div>
-          </template>
-          <HistoryPanel
-            v-else
-            :history="store.history"
-            @restore="store.restoreHistory"
-            @close="rightView = 'theme'"
-          />
-        </aside>
-      </div>
+            <button
+              class="icon-btn"
+              :class="{ active: rightView === 'history' }"
+              title="历史版本"
+              @click="rightView = 'history'"
+            >
+              <svg class="ic" viewBox="0 0 22 22">
+                <path d="M3 11a8 8 0 1 0 3-6M3 4v4h4M11 7v4l3 2" />
+              </svg>
+            </button>
+            <button
+              class="icon-btn"
+              :class="{ active: rightView === 'theme' }"
+              title="主题样式"
+              @click="rightView = 'theme'"
+            >
+              <svg class="ic" viewBox="0 0 22 22">
+                <path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 1 0-16z" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-      <footer class="status-bar">
-        <span v-if="store.activeDoc" class="status-meta">
-          Markdown · {{ lineCount }} 行 · {{ store.activeDoc.wordCount }} 字 ·
-          {{ charCount }} 字符 · 约 {{ store.activeDoc.estimatedReadTime }} 分钟
-        </span>
-        <span v-else class="status-meta">暂无文档</span>
-        <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
-      </footer>
-    </main>
+        <div class="content">
+          <section v-show="viewMode !== 'preview'" class="pane editor-pane">
+            <DuckEditor ref="editorRef" v-model="content" />
+          </section>
+          <section v-show="viewMode !== 'editor'" class="pane preview-pane">
+            <DuckPreview
+              ref="previewRef"
+              :html="store.renderedHtml"
+              :background="store.theme.previewBackground"
+              :root-style="rootStyle"
+              :theme-name="store.theme.name"
+              @open-theme="rightView = 'theme'"
+            />
+          </section>
+          <aside class="pane right-pane">
+            <template v-if="rightView === 'theme'">
+              <div class="panel-head"><span>主题样式</span></div>
+              <div class="right-scroll">
+                <ThemeSelector v-model="themeId" />
+              </div>
+            </template>
+            <HistoryPanel
+              v-else
+              :history="store.history"
+              @restore="store.restoreHistory"
+              @close="rightView = 'theme'"
+            />
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <footer class="status-bar">
+      <span v-if="store.activeDoc" class="status-meta">
+        Markdown · {{ lineCount }} 行 · {{ store.activeDoc.wordCount }} 字 ·
+        {{ charCount }} 字符 · 约 {{ store.activeDoc.estimatedReadTime }} 分钟
+      </span>
+      <span v-else class="status-meta">暂无文档</span>
+      <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
+    </footer>
 
     <transition name="toast">
       <div v-if="store.toast" class="toast">{{ store.toast }}</div>
@@ -249,19 +340,26 @@ function cycleView() {
 <style scoped>
 .app {
   display: flex;
+  flex-direction: column;
   height: 100%;
+}
+/* 主体行：侧栏与工作区同一行，均从通栏顶栏下方开始 */
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.workarea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 .sidebar {
   width: 220px;
   border-right: 1px solid #e5e6eb;
   background: #fff;
   flex-shrink: 0;
-}
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
 }
 
 /* 顶栏 */
@@ -302,21 +400,79 @@ function cycleView() {
   align-items: center;
   gap: 8px;
 }
-.btn-publish {
+/* 导出下拉 */
+.export-wrap {
+  position: relative;
   flex-shrink: 0;
+}
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #07c160;
+  border: 1px solid #e5e6eb;
   border-radius: 6px;
   background: #fff;
-  color: #07c160;
+  color: #4e5969;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.btn-publish:hover {
-  background: #e8f9ef;
+.btn-export:hover {
+  border-color: #07c160;
+  color: #07c160;
+}
+.btn-export .caret {
+  font-size: 9px;
+}
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 80;
+  min-width: 190px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+.export-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.export-item:hover {
+  background: #f2f3f5;
+}
+.export-item.soon {
+  color: #999;
+  cursor: default;
+}
+.export-item.soon:hover {
+  background: #fafafa;
+}
+.export-item em {
+  font-style: normal;
+  font-size: 10px;
+  color: #bbb;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 .copy-primary {
   display: inline-flex;
@@ -336,6 +492,16 @@ function cycleView() {
 }
 .copy-primary:hover {
   background: #06ad56;
+}
+.copy-primary:disabled {
+  cursor: default;
+}
+.copy-primary.done {
+  background: #37c700;
+}
+.copy-primary .check {
+  font-size: 14px;
+  font-weight: 700;
 }
 .copy-primary .ic {
   width: 16px;
@@ -357,8 +523,7 @@ function cycleView() {
   background: #fff;
 }
 .title-input {
-  width: 260px;
-  max-width: 40%;
+  max-width: 100%;
   height: 32px;
   border: 1px solid #e5e6eb;
   border-radius: 7px;
@@ -370,18 +535,6 @@ function cycleView() {
 }
 .title-input:focus {
   border-color: #07c160;
-}
-.save-state {
-  font-size: 12px;
-  color: #07c160;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.save-state[data-state='unsaved'] {
-  color: #e6a23c;
-}
-.save-state[data-state='saving'] {
-  color: #409eff;
 }
 .subbar-right {
   margin-left: auto;
@@ -419,6 +572,28 @@ function cycleView() {
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+/* 视图切换分段组：三枚连体按钮 */
+.view-switch {
+  display: inline-flex;
+  margin-right: 4px;
+}
+.view-switch .icon-btn {
+  border-radius: 0;
+  border-right-width: 0;
+}
+.view-switch .icon-btn:first-child {
+  border-radius: 7px 0 0 7px;
+}
+.view-switch .icon-btn:last-child {
+  border-radius: 0 7px 7px 0;
+  border-right-width: 1px;
+}
+.view-switch .icon-btn.active {
+  border-color: #07c160;
+}
+.view-switch .icon-btn.active + .icon-btn {
+  border-left-color: #07c160;
 }
 
 /* 内容区 3 列 */
@@ -479,7 +654,7 @@ function cycleView() {
 
 .toast {
   position: fixed;
-  bottom: 32px;
+  bottom: 60px; /* 避开底部状态栏 */
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.78);

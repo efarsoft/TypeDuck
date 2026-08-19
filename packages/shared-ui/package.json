@@ -6,10 +6,11 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
-    "@typeduck/core": "workspace:*",
-    "codemirror": "^6.0.0",
+    "@codemirror/commands": "^6.11.0",
     "@codemirror/lang-markdown": "^6.0.0",
-    "@codemirror/language-data": "^6.0.0"
+    "@codemirror/language-data": "^6.0.0",
+    "@typeduck/core": "workspace:*",
+    "codemirror": "^6.0.0"
   },
   "peerDependencies": {
     "vue": "^3.4.0"
