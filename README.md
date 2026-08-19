@@ -12,8 +12,9 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933.svg)]()
 [![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D.svg)]()
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF.svg)]()
+[![在线使用](https://img.shields.io/badge/在线使用-typeduck.vercel.app-07c160.svg)](https://typeduck.vercel.app/)
 
-[功能一览](#-核心功能day-1--web-mvp-已上线) · [快速开始](#-快速开始) · [开发路线](#️-开发路线) · [关注公众号](#-关注公众号)
+[功能一览](#-核心功能day-1--web-mvp-已上线) · [快速开始](#-快速开始) · [开发路线](#️-开发路线) · [在线使用](https://typeduck.vercel.app/) · [关注公众号](#-关注公众号)
 
 </div>
 
