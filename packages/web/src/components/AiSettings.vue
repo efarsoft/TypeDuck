@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { AI_PRESETS, getPreset, listModels } from '@typeduck/core'
 import { useAiStore } from '../stores/ai'
 
@@ -23,6 +23,27 @@ const modelOptions = computed(() => {
   if (!ai.config.model || base.includes(ai.config.model)) return base
   return [ai.config.model, ...base]
 })
+
+/** 自绘下拉（datalist 动态更新选项后浏览器经常不刷新，弃用） */
+const modelDropdown = ref(false)
+const filteredModels = computed(() => {
+  const all = modelOptions.value
+  const kw = ai.config.model.trim().toLowerCase()
+  if (!kw || all.includes(ai.config.model)) return all
+  const hit = all.filter((m) => m.toLowerCase().includes(kw))
+  return hit.length ? hit : all
+})
+
+function pickModel(m: string) {
+  ai.config.model = m
+  modelDropdown.value = false
+}
+
+function onDocClick(e: MouseEvent) {
+  if (!(e.target as HTMLElement).closest('.model-row')) modelDropdown.value = false
+}
+onMounted(() => document.addEventListener('click', onDocClick))
+onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 const testing = ref(false)
 const testState = ref<'' | 'ok' | 'fail'>('')
@@ -54,7 +75,7 @@ async function fetchModels() {
 </script>
 
 <template>
-  <div class="ai-overlay" @click.self="emit('close')">
+  <div class="ai-overlay">
     <div class="ai-dialog">
       <header class="dlg-head">
         <span class="dlg-title">🤖 AI 设置 · BYOK</span>
@@ -107,10 +128,33 @@ async function fetchModels() {
             {{ testing ? '获取中…' : '获取模型列表' }}
           </button>
         </label>
-        <input v-model="ai.config.model" class="fld" list="ai-model-options" placeholder="模型名" spellcheck="false" />
-        <datalist id="ai-model-options">
-          <option v-for="m in modelOptions" :key="m" :value="m" />
-        </datalist>
+        <div class="model-row">
+          <input
+            v-model="ai.config.model"
+            class="fld model-input"
+            placeholder="模型名，可手填或从下拉选择"
+            spellcheck="false"
+            @focus="modelDropdown = true"
+          />
+          <button
+            class="model-toggle"
+            title="选择模型"
+            type="button"
+            @click="modelDropdown = !modelDropdown"
+          >
+            ▾
+          </button>
+          <ul v-if="modelDropdown && filteredModels.length" class="model-list">
+            <li
+              v-for="m in filteredModels"
+              :key="m"
+              :class="{ active: m === ai.config.model }"
+              @click="pickModel(m)"
+            >
+              {{ m }}
+            </li>
+          </ul>
+        </div>
         <p v-if="testMsg" class="test-msg" :data-state="testState">{{ testMsg }}</p>
       </div>
 
@@ -247,6 +291,64 @@ async function fetchModels() {
 .key-row {
   display: flex;
   gap: 6px;
+}
+/* 模型组合框：输入框可手填，▾ 按钮弹自绘下拉 */
+.model-row {
+  position: relative;
+  display: flex;
+  gap: 6px;
+}
+.model-input {
+  flex: 1;
+}
+.model-toggle {
+  width: 40px;
+  height: 34px;
+  border: 1px solid #e5e6eb;
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+  color: #4e5969;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.model-toggle:hover {
+  background: #f2f3f5;
+}
+.model-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.model-list li {
+  padding: 8px 10px;
+  font-size: 12.5px;
+  color: #1d2129;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: Menlo, Consolas, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.model-list li:hover {
+  background: #f2f3f5;
+}
+.model-list li.active {
+  color: #07c160;
+  background: #f0faf4;
+  font-weight: 600;
 }
 .key-toggle {
   width: 40px;
