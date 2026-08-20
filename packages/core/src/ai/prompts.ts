@@ -13,10 +13,10 @@ export type AiActionId =
   | 'theme'
 
 export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boolean }> = {
-  polish: { label: '润色', needsSelection: true },
-  expand: { label: '扩写', needsSelection: true },
-  shorten: { label: '缩写', needsSelection: true },
-  continue: { label: '续写', needsSelection: false },
+  polish: { label: 'AI 润色', needsSelection: true },
+  expand: { label: 'AI 扩写', needsSelection: true },
+  shorten: { label: 'AI 缩写', needsSelection: true },
+  continue: { label: 'AI 续写', needsSelection: false },
   titles: { label: '生成标题', needsSelection: false },
   custom: { label: '自定义指令', needsSelection: true },
   outline: { label: '生成大纲', needsSelection: false },

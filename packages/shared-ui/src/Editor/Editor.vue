@@ -113,10 +113,10 @@ const buttonGroups: {
     { icon: 'image', title: '图片', action: () => doInsert('![描述](https://)') },
   ],
   [
-    { label: '润色', title: 'AI 润色选中文字', ai: true, action: () => emit('ai', 'polish'), disabled: () => !hasSelection.value },
-    { label: '扩写', title: 'AI 扩写选中文字', ai: true, action: () => emit('ai', 'expand'), disabled: () => !hasSelection.value },
-    { label: '缩写', title: 'AI 缩写选中文字', ai: true, action: () => emit('ai', 'shorten'), disabled: () => !hasSelection.value },
-    { label: '续写', title: 'AI 从光标处续写', ai: true, action: () => emit('ai', 'continue') },
+    { label: 'AI 润色', title: 'AI 润色选中文字', ai: true, action: () => emit('ai', 'polish'), disabled: () => !hasSelection.value },
+    { label: 'AI 扩写', title: 'AI 扩写选中文字', ai: true, action: () => emit('ai', 'expand'), disabled: () => !hasSelection.value },
+    { label: 'AI 缩写', title: 'AI 缩写选中文字', ai: true, action: () => emit('ai', 'shorten'), disabled: () => !hasSelection.value },
+    { label: 'AI 续写', title: 'AI 从光标处续写', ai: true, action: () => emit('ai', 'continue') },
   ],
   [
     { icon: 'undo', title: '撤销 (Ctrl+Z)', action: () => view && undo(view) },

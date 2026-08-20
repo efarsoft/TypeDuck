@@ -142,7 +142,8 @@ watch(
         </button>
       </div>
       <p v-if="mode === 'menu'" class="dim">
-        选中文字后，工具栏的 润色 / 扩写 / 缩写 / 续写 随时可用；上方 ✨ 生成标题。BYOK：用你自己的 Key，内容不经过任何服务器。
+        选中文字后，工具栏的 AI 润色 / AI 扩写 / AI 缩写 / AI 续写 随时可用；上方 ✨ 生成标题。BYOK：用你自己的
+        Key，内容不经过任何服务器。
       </p>
 
       <div v-else-if="mode === 'custom'" class="form">
