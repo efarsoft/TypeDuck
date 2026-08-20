@@ -41,6 +41,7 @@ console.log('Hello 排版鸭!')
 | 自动保存 + 30 版历史 | ✅ |
 | 双栏同步滚动 | ✅ |
 | 导出 HTML / Word / PDF / Markdown | ✅ |
+| AI 辅助写作（BYOK，OpenAI 兼容） | ✅ |
 | 本地文件（桌面版） | ✅ |
 
 - [x] 数据只存在你自己的浏览器里

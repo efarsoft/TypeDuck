@@ -4,12 +4,19 @@ import { EditorView, basicSetup } from 'codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { undo, redo } from '@codemirror/commands'
+import type { AiActionId } from '@typeduck/core'
 
 const props = defineProps<{ modelValue: string }>()
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+  (e: 'ai', action: AiActionId): void
+}>()
 
 const host = ref<HTMLElement>()
 let view: EditorView | undefined
+
+/** 当前是否有选区（AI 的润色/扩写/缩写依赖它动态禁用按钮） */
+const hasSelection = ref(false)
 
 /** 编辑器滚动容器，供双栏同步滚动使用 */
 function getScrollEl(): HTMLElement | null {
@@ -37,6 +44,25 @@ function doWrap(prefix: string, suffix = prefix) {
   view.focus()
 }
 
+/** 选区快照：文本 + 范围 + 光标前全文（AI 任务的输入与回写位置） */
+function getSelectionInfo(): { text: string; from: number; to: number; before: string } {
+  if (!view) return { text: '', from: 0, to: 0, before: '' }
+  const { from, to } = view.state.selection.main
+  return {
+    text: view.state.sliceDoc(from, to),
+    from,
+    to,
+    before: view.state.sliceDoc(0, from),
+  }
+}
+
+/** 替换指定范围（AI「替换选区」用） */
+function replaceRange(from: number, to: number, text: string) {
+  if (!view) return
+  view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length } })
+  view.focus()
+}
+
 const icons: Record<string, string> = {
   bold: '<path d="M7 5h5a3 3 0 0 1 0 6H7zM7 11h6a3 3 0 0 1 0 6H7z"/>',
   italic: '<path d="M9 5h5M9 17h5M12 5l-3 12"/>',
@@ -54,8 +80,15 @@ const icons: Record<string, string> = {
   redo: '<path d="M14 5l5 5-5 5M19 10h-9a5 5 0 0 0 0 10h3"/>',
 }
 
-/** 快速格式按钮：按「标题 / 文字格式 / 块级 / 插入」四组划分（label 为文字按钮，icon 为图标按钮） */
-const buttonGroups: { icon?: string; label?: string; title: string; action: () => void }[][] = [
+/** 快速格式按钮：按「标题 / 文字格式 / 块级 / 插入 / AI / 历史」分组（label 为文字按钮，icon 为图标按钮） */
+const buttonGroups: {
+  icon?: string
+  label?: string
+  title: string
+  action: () => void
+  ai?: boolean
+  disabled?: () => boolean
+}[][] = [
   [
     { label: 'H1', title: '一级标题', action: () => doInsert('\n# ') },
     { label: 'H2', title: '二级标题', action: () => doInsert('\n## ') },
@@ -80,6 +113,12 @@ const buttonGroups: { icon?: string; label?: string; title: string; action: () =
     { icon: 'image', title: '图片', action: () => doInsert('![描述](https://)') },
   ],
   [
+    { label: '润色', title: 'AI 润色选中文字', ai: true, action: () => emit('ai', 'polish'), disabled: () => !hasSelection.value },
+    { label: '扩写', title: 'AI 扩写选中文字', ai: true, action: () => emit('ai', 'expand'), disabled: () => !hasSelection.value },
+    { label: '缩写', title: 'AI 缩写选中文字', ai: true, action: () => emit('ai', 'shorten'), disabled: () => !hasSelection.value },
+    { label: '续写', title: 'AI 从光标处续写', ai: true, action: () => emit('ai', 'continue') },
+  ],
+  [
     { icon: 'undo', title: '撤销 (Ctrl+Z)', action: () => view && undo(view) },
     { icon: 'redo', title: '重做 (Ctrl+Y)', action: () => view && redo(view) },
   ],
@@ -94,6 +133,9 @@ onMounted(() => {
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           emit('update:modelValue', update.state.doc.toString())
+        }
+        if (update.docChanged || update.selectionSet) {
+          hasSelection.value = !update.state.selection.main.empty
         }
       }),
       EditorView.theme({
@@ -122,6 +164,8 @@ defineExpose({
   getScrollEl,
   insert: doInsert,
   wrapSelection: doWrap,
+  getSelectionInfo,
+  replaceRange,
 })
 </script>
 
@@ -134,8 +178,9 @@ defineExpose({
           v-for="btn in group"
           :key="btn.title"
           class="fbtn"
-          :class="{ 'fbtn-text': btn.label }"
+          :class="{ 'fbtn-text': btn.label, 'fbtn-ai': btn.ai }"
           :title="btn.title"
+          :disabled="btn.disabled?.() ?? false"
           @click="btn.action"
         >
           <svg v-if="btn.icon" class="ic" viewBox="0 0 22 22" v-html="icons[btn.icon]"></svg>
@@ -196,6 +241,23 @@ defineExpose({
 .fbtn:hover {
   background: #eef0f2;
   color: #1d2129;
+}
+.fbtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.fbtn:disabled:hover {
+  background: transparent;
+  color: #4e5969;
+}
+/* AI 动作按钮：品牌绿，与普通格式按钮区分 */
+.fbtn-ai {
+  color: #07c160;
+  font-weight: 600;
+}
+.fbtn-ai:not(:disabled):hover {
+  background: #e8f9ef;
+  color: #06ad56;
 }
 .fbtn .ic {
   width: 18px;

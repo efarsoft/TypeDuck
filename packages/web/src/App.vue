@@ -1,21 +1,30 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import {
+  AI_ACTIONS,
+  buildMessages,
   copyHtmlToClipboard,
   exportHtmlFile,
   exportPrintPdf,
   exportWordDoc,
   getTheme,
+  parseTitles,
+  streamChat,
   withImportant,
 } from '@typeduck/core'
+import type { ActionInput, AiActionId } from '@typeduck/core'
 import { DuckEditor, DuckPreview, DocumentList, ThemeSelector } from '@typeduck/shared-ui'
 import { useEditorStore } from './stores/editor'
+import { useAiStore, type AiTask } from './stores/ai'
 import HistoryPanel from './components/HistoryPanel.vue'
+import AiPanel from './components/AiPanel.vue'
+import AiSettings from './components/AiSettings.vue'
 
 const store = useEditorStore()
+const aiStore = useAiStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
-const rightView = ref<'theme' | 'history'>('theme')
+const rightView = ref<'theme' | 'history' | 'ai'>('theme')
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
 
 /** 视图模式：双栏 / 仅编辑 / 仅预览（分段图标切换） */
@@ -214,6 +223,109 @@ async function onRemove(id: string) {
     await store.removeDoc(id)
   }
 }
+
+/* ---------- AI 辅助写作（BYOK，一套 OpenAI 兼容协议接所有厂商） ---------- */
+
+const showAiSettings = ref(false)
+const aiTask = ref<AiTask | null>(null)
+let aiAbort: AbortController | undefined
+
+/** 编辑器工具栏 AI 按钮：润色 / 扩写 / 缩写 / 续写 */
+function onAiAction(action: AiActionId) {
+  if (!aiStore.isConfigured) {
+    showAiSettings.value = true
+    store.showToast('先配置 AI：选厂商、填你自己的 API Key')
+    return
+  }
+  const info = editorRef.value?.getSelectionInfo()
+  if (!info) return
+  if (AI_ACTIONS[action].needsSelection && !info.text.trim()) {
+    store.showToast('请先选中要处理的文字')
+    return
+  }
+  runAiTask(
+    action,
+    { selection: info.text, before: info.before },
+    info.text.trim() ? { from: info.from, to: info.to } : null,
+  )
+}
+
+/** 子标题栏 ✨：基于正文生成 5 个候选标题 */
+function onGenerateTitles() {
+  if (!aiStore.isConfigured) {
+    showAiSettings.value = true
+    store.showToast('先配置 AI：选厂商、填你自己的 API Key')
+    return
+  }
+  const doc = store.activeDoc
+  if (!doc || doc.content.trim().length < 50) {
+    store.showToast('先写点正文，再来生成标题')
+    return
+  }
+  runAiTask('titles', { before: doc.content, title: doc.title }, null)
+}
+
+async function runAiTask(action: AiActionId, input: ActionInput, range: AiTask['range']) {
+  if (!store.activeDoc) return
+  aiAbort?.abort()
+  aiAbort = new AbortController()
+  rightView.value = 'ai'
+  const docId = store.activeDoc.id
+  aiTask.value = { docId, action, status: 'streaming', text: '', input, range }
+  try {
+    const full = await streamChat(aiStore.config, buildMessages(action, input), {
+      signal: aiAbort.signal,
+      onDelta: (t) => aiTask.value && (aiTask.value.text += t),
+    })
+    if (!aiTask.value || aiTask.value.docId !== docId) return
+    if (action === 'titles' && parseTitles(full).length === 0) {
+      aiTask.value.status = 'error'
+      aiTask.value.text = '模型没有按格式返回标题，点「重试」或换个模型'
+      return
+    }
+    aiTask.value.status = 'done'
+  } catch (err) {
+    if (!aiTask.value || aiTask.value.docId !== docId) return
+    if ((err as Error).name === 'AbortError') {
+      // 手动停止：已有部分内容按完成处理，否则收起任务
+      if (aiTask.value.text) aiTask.value.status = 'done'
+      else aiTask.value = null
+    } else {
+      aiTask.value.status = 'error'
+      aiTask.value.text = err instanceof Error ? err.message : String(err)
+    }
+  }
+}
+
+/** 结果回写编辑器：替换当时的选区，或插入到光标处 */
+function onAiApply(mode: 'replace' | 'insert') {
+  const task = aiTask.value
+  if (!task || task.status !== 'done') return
+  if (store.activeDoc?.id !== task.docId) {
+    store.showToast('文档已切换，请重新生成')
+    return
+  }
+  if (mode === 'replace' && task.range) {
+    editorRef.value?.replaceRange(task.range.from, task.range.to, task.text)
+  } else {
+    editorRef.value?.insert(task.text)
+  }
+  aiTask.value = null
+  store.showToast('已写入编辑器')
+}
+
+function onAiUseTitle(title: string) {
+  if (!store.activeDoc) return
+  store.activeDoc.title = title
+  store.markUnsaved()
+  aiTask.value = null
+  store.showToast('标题已应用 ✨')
+}
+
+function onAiRetry() {
+  const task = aiTask.value
+  if (task) runAiTask(task.action, task.input, task.range)
+}
 </script>
 
 <template>
@@ -272,6 +384,24 @@ async function onRemove(id: string) {
             placeholder="无标题文档"
           />
           <div class="subbar-right">
+            <!-- AI：生成标题 + 助手面板 -->
+            <button class="icon-btn" title="AI 生成标题" @click="onGenerateTitles">
+              <svg class="ic" viewBox="0 0 22 22">
+                <path
+                  d="M11 3l1.7 4.5L17 9l-4.3 1.5L11 15l-1.7-4.5L5 9l4.3-1.5zM17.5 14l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"
+                />
+              </svg>
+            </button>
+            <button
+              class="icon-btn"
+              :class="{ active: rightView === 'ai' }"
+              title="AI 助手"
+              @click="rightView = 'ai'"
+            >
+              <svg class="ic" viewBox="0 0 22 22">
+                <path d="M4 5h14v10H9l-5 4zM8 10h.01M12 10h.01M16 10h.01" />
+              </svg>
+            </button>
             <!-- 视图切换：三枚图标分段选择，当前项高亮 -->
             <div class="view-switch">
               <button
@@ -310,7 +440,7 @@ async function onRemove(id: string) {
 
         <div class="content">
           <section v-show="viewMode !== 'preview'" class="pane editor-pane">
-            <DuckEditor ref="editorRef" v-model="content" />
+            <DuckEditor ref="editorRef" v-model="content" @ai="onAiAction" />
           </section>
           <section v-show="viewMode !== 'editor'" class="pane preview-pane">
             <DuckPreview
@@ -333,6 +463,16 @@ async function onRemove(id: string) {
                 <ThemeSelector v-model="themeId" />
               </div>
             </template>
+            <AiPanel
+              v-else-if="rightView === 'ai'"
+              :task="aiTask"
+              @stop="aiAbort?.abort()"
+              @retry="onAiRetry"
+              @apply="onAiApply"
+              @use-title="onAiUseTitle"
+              @close="rightView = 'theme'"
+              @open-settings="showAiSettings = true"
+            />
             <HistoryPanel
               v-else
               :history="store.history"
@@ -352,6 +492,8 @@ async function onRemove(id: string) {
       <span v-else class="status-meta">暂无文档</span>
       <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
     </footer>
+
+    <AiSettings v-if="showAiSettings" @close="showAiSettings = false" />
 
     <transition name="toast">
       <div v-if="store.toast" class="toast">{{ store.toast }}</div>
