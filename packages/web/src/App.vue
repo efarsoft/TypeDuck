@@ -169,10 +169,10 @@ async function onCopy() {
 const charCount = computed(() => store.activeDoc?.content.length ?? 0)
 const lineCount = computed(() => store.activeDoc?.content.split('\n').length ?? 0)
 
-/** 标题输入框宽度 = 编辑器列宽度（编辑/预览各占一半，右侧面板 300px） */
+/** 标题输入框宽度 = 编辑器列宽度 − ✨ 按钮（32px）− 间距（12px）− 内边距（28px） */
 const titleInputWidth = computed(() => {
-  if (viewMode.value === 'editor') return 'calc(100% - 28px)'
-  return 'calc((100% - 300px) / 2 - 28px)'
+  if (viewMode.value === 'editor') return 'calc(100% - 72px)'
+  return 'calc((100% - 300px) / 2 - 72px)'
 })
 
 function onExport() {
@@ -454,22 +454,22 @@ function onRemoveTheme(id: string) {
       <div class="workarea">
         <!-- 子标题栏：与侧栏同一行（不通栏） -->
         <div class="subbar">
-          <!-- 宽度与编辑器列对齐（扣掉子栏左右内边距 28px） -->
+          <!-- 宽度与编辑器列对齐（扣掉左右内边距 28px + ✨ 按钮 32px + 间距 12px） -->
           <input
             v-model="title"
             class="title-input"
             :style="{ width: titleInputWidth }"
             placeholder="无标题文档"
           />
+          <button class="icon-btn" title="AI 生成标题" @click="onGenerateTitles">
+            <svg class="ic" viewBox="0 0 22 22">
+              <path
+                d="M11 3l1.7 4.5L17 9l-4.3 1.5L11 15l-1.7-4.5L5 9l4.3-1.5zM17.5 14l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"
+              />
+            </svg>
+          </button>
           <div class="subbar-right">
-            <!-- AI：生成标题 + 助手面板 -->
-            <button class="icon-btn" title="AI 生成标题" @click="onGenerateTitles">
-              <svg class="ic" viewBox="0 0 22 22">
-                <path
-                  d="M11 3l1.7 4.5L17 9l-4.3 1.5L11 15l-1.7-4.5L5 9l4.3-1.5zM17.5 14l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"
-                />
-              </svg>
-            </button>
+            <!-- AI 助手面板 -->
             <button
               class="icon-btn"
               :class="{ active: rightView === 'ai' }"
