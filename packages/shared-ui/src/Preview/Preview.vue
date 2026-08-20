@@ -1,16 +1,49 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 const props = defineProps<{
   html: string
   background: string
   rootStyle: string
+  /** 进阶自定义 CSS（已由调用方加 .td-rich 作用域），仅网页预览路径注入 */
+  customCss?: string
   themeName?: string
+  articleTitle?: string
+  accountName?: string
 }>()
 
-const emit = defineEmits<{ (e: 'open-theme'): void }>()
+const emit = defineEmits<{
+  (e: 'open-theme'): void
+  (e: 'update:accountName', name: string): void
+}>()
 
 const scrollEl = ref<HTMLElement>()
+
+/** 公众号头部日期（进入页面时刻） */
+const metaDate = new Date()
+const pad = (n: number) => String(n).padStart(2, '0')
+const dateText = `${metaDate.getFullYear()}-${pad(metaDate.getMonth() + 1)}-${pad(metaDate.getDate())} ${pad(metaDate.getHours())}:${pad(metaDate.getMinutes())}`
+
+/** 公众号名点击编辑 */
+const editingAccount = ref(false)
+const accountDraft = ref('')
+const accountInput = ref<HTMLInputElement>()
+watch(editingAccount, async (editing) => {
+  if (editing) {
+    await nextTick()
+    accountInput.value?.focus()
+    accountInput.value?.select()
+  }
+})
+function startEditAccount() {
+  accountDraft.value = props.accountName || ''
+  editingAccount.value = true
+}
+function commitAccount() {
+  editingAccount.value = false
+  const name = accountDraft.value.trim()
+  if (name && name !== props.accountName) emit('update:accountName', name)
+}
 
 /** 预览滚动容器，供双栏同步滚动使用 */
 function getScrollEl(): HTMLElement | null {
@@ -24,9 +57,10 @@ const sizes = [
 ] as const
 const activeSize = ref<number>(390)
 
-const rootHtml = computed(
-  () => `<section style="${props.rootStyle}">${props.html}</section>`,
-)
+const rootHtml = computed(() => {
+  const styleTag = props.customCss ? `<style>${props.customCss}</style>` : ''
+  return `<section class="td-rich" style="${props.rootStyle}">${styleTag}${props.html}</section>`
+})
 
 defineExpose({ getScrollEl })
 </script>
@@ -56,6 +90,27 @@ defineExpose({ getScrollEl })
         :class="{ wide: activeSize === 677 }"
         :style="{ background, width: activeSize + 'px' }"
       >
+        <!-- 公众号原生头部模拟：标题 + 公众号名 + 日期（点击公众号名可编辑） -->
+        <header class="wx-head">
+          <h1 class="wx-title">{{ articleTitle || '未命名文档' }}</h1>
+          <div class="wx-meta">
+            <span class="wx-avatar">🦆</span>
+            <input
+              v-if="editingAccount"
+              ref="accountInput"
+              v-model="accountDraft"
+              class="wx-account-input"
+              maxlength="20"
+              @keyup.enter="commitAccount"
+              @blur="commitAccount"
+            />
+            <button v-else class="wx-account" title="点击修改公众号名称" @click="startEditAccount">
+              {{ accountName }}
+            </button>
+            <span class="wx-date">{{ dateText }}</span>
+          </div>
+        </header>
+        <!-- 进阶主题 customCss 已随 rootHtml 一并 v-html 注入（含 .td-rich 作用域）；公众号复制路径不含 -->
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-html="rootHtml"></div>
       </div>
@@ -127,10 +182,69 @@ defineExpose({ getScrollEl })
 }
 .preview-phone {
   max-width: 100%;
-  padding: 24px 20px 36px;
+  padding: 20px 16px 36px;
   border-radius: 12px;
   border: 1px solid #ebecef;
   overflow: hidden;
   transition: width 0.2s ease;
+}
+/* 公众号原生头部模拟（贴近微信文章页观感） */
+.wx-head {
+  margin: 4px 4px 18px;
+}
+.wx-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.88);
+  margin: 0 0 14px;
+  white-space: normal;      /* 完整换行显示，不截断 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.wx-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+.wx-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #07c160;
+  color: #fff;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.wx-account {
+  border: none;
+  background: transparent;
+  padding: 1px 4px;
+  font-size: 13px;
+  color: #576b95;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.wx-account:hover {
+  background: rgba(87, 107, 149, 0.08);
+}
+.wx-account-input {
+  width: 130px;
+  border: 1px solid #07c160;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  padding: 1px 4px;
+  outline: none;
+}
+.wx-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.35);
 }
 </style>

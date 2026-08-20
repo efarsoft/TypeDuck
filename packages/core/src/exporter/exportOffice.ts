@@ -38,13 +38,15 @@ ${bodyHtml}
   URL.revokeObjectURL(url)
 }
 
-/** 导出为 PDF：弹出打印窗口（含全部内联样式），由浏览器「另存为 PDF」 */
+/** 导出为 PDF：弹出打印窗口（含全部内联样式 + 主题 customCss），由浏览器「另存为 PDF」 */
 export function exportPrintPdf(
   title: string,
   bodyHtml: string,
   background: string,
   rootStyle = '',
+  customCss = '',
 ): void {
+  const css = customCss ? `<style>\n${customCss}\n</style>\n` : ''
   const win = window.open('', '_blank', 'width=800,height=900')
   if (!win) return
   win.document.write(`<!DOCTYPE html>
@@ -56,9 +58,9 @@ export function exportPrintPdf(
   @page { margin: 18mm 14mm; }
   @media print { body { padding: 0 !important; background: #fff !important; } }
 </style>
-</head>
+${css}</head>
 <body style="margin:0;padding:24px 12px;background:${background};">
-<section style="max-width:677px;margin:0 auto;padding:24px;background:${
+<section class="td-rich" style="max-width:677px;margin:0 auto;padding:24px;background:${
     background === '#242424' ? '#242424' : '#ffffff'
   };${rootStyle}">
 ${bodyHtml}

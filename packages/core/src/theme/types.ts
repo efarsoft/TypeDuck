@@ -31,8 +31,9 @@ export interface ThemeStyles {
 
 /**
  * 主题分组按使用场景划分（而非视觉风格）——用户选主题时想的是"我写什么文章"。
+ * daily 日常写作（干净通用）/ expressive 个性撞色（强对比彩色）/ narrative 文艺叙事（衬线阅读）/ dark 深色沉浸。
  */
-export type ThemeCategory = 'daily' | 'expressive' | 'narrative'
+export type ThemeCategory = 'daily' | 'expressive' | 'narrative' | 'dark'
 
 export interface Theme {
   id: string
@@ -45,4 +46,11 @@ export interface Theme {
   styles: ThemeStyles
   /** highlight.js token class -> 内联样式映射 */
   hljsStyleMap: Record<string, string>
+  /**
+   * 进阶自定义 CSS（可选）：仅作用于「网页预览 / 导出 HTML / 导出 PDF」路径，
+   * 会由渲染层自动加 `.td-rich` 作用域前缀后注入 <style>。
+   * 用于 drop-cap、首字下沉、阴影、渐变、动画等微信/Word 不支持的效果；
+   * 公众号复制与 Word 导出仍走 `styles` 安全内联，customCss 不会注入。
+   */
+  customCss?: string
 }

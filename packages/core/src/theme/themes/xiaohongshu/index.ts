@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 小红书种草风 */
+export const theme: Theme = {
+  id: 'xiaohongshu',
+  name: '小红书种草',
+  description: '珊瑚粉活力俏皮，好物分享与种草',
+  category: 'expressive',
+  previewBackground: '#fff5f7',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#2b2b2b;font-size:15px;line-height:1.8;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.6em 0 0.8em;font-size:1.5em;font-weight:800;color:#ff2e63;text-align:center;border-bottom:2px solid #ff2e63;padding-bottom:0.5em;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.15em;font-weight:700;color:#ff2e63;background:#ffe3ea;padding:5px 12px 4px;border-radius:14px;display:inline-block;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.1em;font-weight:700;color:#ff2e63;',
+    h4: 'margin:1.3em 0 0.6em;font-size:1.02em;font-weight:700;color:#d6336c;',
+    h5: 'margin:1.2em 0 0.5em;font-size:1em;font-weight:600;color:#555555;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#888888;',
+    p: 'margin:1em 0;',
+    a: 'color:#ff2e63;text-decoration:none;border-bottom:1px solid #ff2e63;',
+    strong: 'color:#ff2e63;font-weight:800;',
+    em: 'font-style:italic;color:#d6336c;',
+    del: 'text-decoration:line-through;color:#bbbbbb;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;line-height:1.7;',
+    blockquote: 'margin:1.4em 0;padding:12px 16px;border-left:4px solid #ff2e63;background:#fff0f3;color:#555555;border-radius:0 8px 8px 0;',
+    code: 'color:#ff2e63;background:#fff0f3;padding:2px 6px;border-radius:6px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#c0392b;',
+    codeBlockWrapper: 'background:#fff0f3;padding:16px;border-radius:10px;overflow-x:auto;margin:1.4em 0;border:1px solid #ffd0db;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#ffe3ea;padding:9px 13px;font-weight:600;border:1px solid #ffd0db;color:#d6336c;',
+    td: 'padding:9px 13px;border:1px solid #ffd0db;',
+    tr: '',
+    img: 'max-width:100%;border-radius:14px;display:block;margin:1.4em auto;',
+    hr: 'border:none;height:3px;background:#ff2e63;width:40px;margin:2em auto;border-radius:2px;',
+  },
+}

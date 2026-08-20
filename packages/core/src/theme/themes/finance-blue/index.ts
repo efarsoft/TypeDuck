@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 商务财经蓝 */
+export const theme: Theme = {
+  id: 'finance-blue',
+  name: '财经蓝',
+  description: '藏青石板严谨克制，年报与研报',
+  category: 'daily',
+  previewBackground: '#ffffff',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#1f2d3d;font-size:15px;line-height:1.8;word-break:break-word;letter-spacing:0.2px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.7em 0 0.8em;font-size:1.55em;font-weight:700;color:#16335c;border-bottom:2px solid #1a3a6b;padding-bottom:0.4em;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.3em;font-weight:700;color:#1a3a6b;border-bottom:1px solid #d0d9e6;padding-bottom:0.35em;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.13em;font-weight:600;color:#1a3a6b;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.03em;font-weight:600;color:#2b3b4e;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#445569;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#6b7889;',
+    p: 'margin:1em 0;',
+    a: 'color:#1a3a6b;text-decoration:none;border-bottom:1px solid #b9c6d8;',
+    strong: 'font-weight:700;color:#16335c;',
+    em: 'font-style:italic;color:#445569;',
+    del: 'text-decoration:line-through;color:#9aa6b5;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;line-height:1.7;',
+    blockquote: 'margin:1.4em 0;padding:12px 16px;border-left:4px solid #1a3a6b;background:#eef2f7;color:#45556b;border-radius:0 4px 4px 0;',
+    code: 'background:#eef2f7;color:#1a3a6b;padding:2px 6px;border-radius:4px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#1f2d3d;',
+    codeBlockWrapper: 'background:#f4f7fb;padding:16px;border-radius:8px;overflow-x:auto;margin:1.4em 0;border:1px solid #d0d9e6;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#eef2f7;padding:9px 13px;text-align:left;font-weight:600;color:#16335c;border:1px solid #d0d9e6;',
+    td: 'padding:9px 13px;border:1px solid #d0d9e6;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border-radius:4px;',
+    hr: 'border:none;border-top:1px solid #d0d9e6;margin:2em 0;',
+  },
+}

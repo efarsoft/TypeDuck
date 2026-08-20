@@ -78,8 +78,13 @@ export async function getAllDocs(): Promise<Doc[]> {
   return docs.sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
-export function putDoc(doc: Doc): Promise<void> {
-  return tx(DOC_STORE, 'readwrite', (s) => s.put(doc)).then(() => undefined)
+/** Vue 响应式 Proxy 无法被 IndexedDB 结构化克隆，入库前一律净化为纯对象 */
+function purify<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj))
+}
+
+export async function putDoc(doc: Doc): Promise<void> {
+  return tx(DOC_STORE, 'readwrite', (s) => s.put(purify(doc))).then(() => undefined)
 }
 
 export function deleteDoc(id: string): Promise<void> {

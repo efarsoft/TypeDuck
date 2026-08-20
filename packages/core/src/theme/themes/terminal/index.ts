@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsMonokai } from '../../hljs-maps'
+
+/** 科技终端 */
+export const theme: Theme = {
+  id: 'terminal',
+  name: '科技终端',
+  description: '等宽字体 + neon 青绿，代码即美学',
+  category: 'dark',
+  previewBackground: '#010409',
+  hljsStyleMap: hljsMonokai,
+  styles: {
+    root: 'color:#c9d1d9;font-size:15px;line-height:1.7;letter-spacing:0.2px;word-break:break-word;font-family:"SFMono-Regular",Consolas,Menlo,"Courier New",monospace;',
+    h1: 'margin:1.7em 0 0.8em;font-size:1.55em;font-weight:700;color:#58e6b0;text-align:center;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.3em;font-weight:700;color:#58e6b0;border-left:4px solid #58e6b0;padding-left:10px;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#56d4ff;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#56d4ff;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#8b949e;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#8b949e;',
+    p: 'margin:1em 0;',
+    a: 'color:#56d4ff;text-decoration:none;border-bottom:1px solid #56d4ff;',
+    strong: 'font-weight:700;color:#ffffff;',
+    em: 'font-style:italic;color:#adbac7;',
+    del: 'text-decoration:line-through;color:#6b7686;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:4px solid #56d4ff;background:#161b22;color:#8b949e;border-radius:0 8px 8px 0;',
+    code: 'background:#161b22;color:#7ee787;padding:2px 6px;border:1px solid #30363d;border-radius:4px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#c9d1d9;',
+    codeBlockWrapper: 'background:#161b22;padding:16px;border:1px solid #30363d;border-radius:8px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#161b22;padding:9px 13px;font-weight:600;color:#56d4ff;border:1px solid #30363d;',
+    td: 'padding:9px 13px;border:1px solid #30363d;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border:1px solid #30363d;border-radius:6px;',
+    hr: 'border:none;border-top:1px solid #30363d;margin:2.2em 0;',
+  },
+}

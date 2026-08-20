@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 卡片信息流 */
+export const theme: Theme = {
+  id: 'card-flow',
+  name: '卡片信息流',
+  description: '圆角卡片信息流，产品介绍与清单体',
+  category: 'daily',
+  previewBackground: '#e9eef7',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#2c333a;font-size:15px;line-height:1.8;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.8em 0 0.9em;font-size:1.6em;font-weight:700;color:#1f2d3d;text-align:center;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.32em;font-weight:700;color:#1f2d3d;border-left:4px solid #3b6cff;padding-left:10px;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#3b6cff;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#3b6cff;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#4a5568;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#6b7686;',
+    p: 'margin:1em 0;',
+    a: 'color:#3b6cff;text-decoration:none;border-bottom:1px solid #3b6cff;',
+    strong: 'font-weight:700;color:#1f2d3d;',
+    em: 'font-style:italic;color:#5a6675;',
+    del: 'text-decoration:line-through;color:#a0a8b4;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border:1px solid #d8e0f5;border-left:4px solid #3b6cff;background:#ffffff;color:#4a5568;border-radius:10px;',
+    code: 'background:#eef2ff;color:#3b6cff;padding:2px 6px;border-radius:6px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#2c333a;',
+    codeBlockWrapper: 'background:#ffffff;padding:16px;border:1px solid #d8e0f5;border-radius:10px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#eef2ff;padding:9px 13px;font-weight:600;color:#3b6cff;border:1px solid #d8e0f5;',
+    td: 'padding:9px 13px;border:1px solid #d8e0f5;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border:1px solid #d8e0f5;border-radius:10px;',
+    hr: 'border:none;border-top:1px solid #d8e0f5;margin:2.2em 0;',
+  },
+}

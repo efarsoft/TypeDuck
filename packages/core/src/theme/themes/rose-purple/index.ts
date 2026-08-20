@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 蔷薇紫 */
+export const theme: Theme = {
+  id: 'rose-purple',
+  name: '蔷薇紫',
+  description: '蔷薇浅紫，优质长文与浪漫叙事',
+  category: 'expressive',
+  previewBackground: '#f6eef9',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#3a3140;font-size:15px;line-height:1.85;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.8em 0 0.9em;font-size:1.6em;font-weight:700;color:#9b59b6;text-align:center;letter-spacing:1px;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.32em;font-weight:700;color:#9b59b6;border-left:4px solid #c79bd6;padding-left:10px;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#a96bc0;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#a96bc0;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#6a5a70;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#6a5a70;',
+    p: 'margin:1em 0;',
+    a: 'color:#9b59b6;text-decoration:none;border-bottom:1px solid #9b59b6;',
+    strong: 'font-weight:700;color:#8e44ad;',
+    em: 'font-style:italic;color:#7a6a80;',
+    del: 'text-decoration:line-through;color:#b3a6ba;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:4px solid #c79bd6;background:#f3e9f7;color:#5a4a60;font-style:italic;border-radius:0 10px 10px 0;',
+    code: 'background:#f3e9f7;color:#9b59b6;padding:2px 6px;border-radius:6px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#3a3140;',
+    codeBlockWrapper: 'background:#f3e9f7;padding:16px;border:1px solid #e0c9ee;border-radius:10px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#f3e9f7;padding:9px 13px;font-weight:600;color:#9b59b6;border:1px solid #e0c9ee;',
+    td: 'padding:9px 13px;border:1px solid #e0c9ee;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border:1px solid #e0c9ee;border-radius:10px;',
+    hr: 'border:none;border-top:1px dashed #e0c9ee;margin:2.2em 0;',
+  },
+}

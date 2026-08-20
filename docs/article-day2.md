@@ -1,7 +1,7 @@
 # Day 2：给排版鸭套上 Electron 的壳，13 分钟变身桌面应用
 
 > 「造个轮子！排版鸭 TypeDuck」系列教程 · 第 4 篇
-> 前置阅读：[Day 1：核心引擎 + Web MVP 上线]()
+> 前置阅读：Day 1《核心引擎 + Web MVP 上线》（公众号内链接，发布后回填）
 
 昨天 Day 1 结尾我说：「Web 版已经能用了，但每次开浏览器总觉得差了点意思。」今天就把这个「差了点意思」补上。
 
@@ -249,6 +249,35 @@ mainWindow.loadFile(path.join(process.resourcesPath, 'web', 'dist', 'index.html'
 
 这种坑文档里写得潦草，实际打包一次才踩得到。
 
+**开发模式也有一个同款坑：白屏**。开发时桌面窗口加载的是 Vite dev server（`http://localhost:5173`），如果 Electron 比 Vite 先启动——或者 Vite 中途挂了——`loadURL` 会在服务不存在时执行，加载失败，窗口停在白屏，**而且永远不会自动重试**。第一天跑桌面版就撞上了：进程都活着，窗口就是一片白。
+
+修法是让主进程「等服务器就绪再加载」：
+
+```javascript
+// 轮询等待 dev server 就绪（超时后仍尝试加载一次，让错误可见）
+async function waitForServer(url, timeoutMs) {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    try {
+      await net.fetch(url)
+      return
+    } catch {
+      await new Promise((r) => setTimeout(r, 300))
+    }
+  }
+}
+
+// createWindow 里（注意 createWindow 要声明成 async）
+if (isDev) {
+  await waitForServer(DEV_URL, 15000)
+  await mainWindow.loadURL(DEV_URL)
+}
+```
+
+改动很小，但从这以后**无论先启动哪个，桌面端都会安静地等到 web 就绪再渲染**。生产打包版不受影响（走 `loadFile` 本地文件，没有启动顺序依赖）——这个修复纯粹是给开发体验的。
+
+顺带记一个改主进程代码的教训：Electron 的入口是 CommonJS，**不支持顶层 `await`**。我把 `await waitForServer(...)` 写进 `createWindow()` 时忘了把它声明成 `async`，Electron 直接启动报错 `SyntaxError: await is only valid in async functions`。教训一句话：**改完主进程代码，必须重启 Electron 验证，别指望它热更新。**
+
 ---
 
 ## 六、今天没做什么（同样重要）
@@ -342,4 +371,4 @@ mainWindow.loadFile(path.join(process.resourcesPath, 'web', 'dist', 'index.html'
 
 *「排版鸭」开发教程连载中，关注公众号「**AI猿叔**」第一时间收到更新。*
 
-*系列导航：[Day 0]() · [Day 1]() · [Day 2（本文）]() · Day 3（明天见）*
+*系列导航：Day 0 · Day 1 · Day 2（本文） · Day 3（均可在公众号历史消息中查看）*

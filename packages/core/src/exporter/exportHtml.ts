@@ -4,7 +4,9 @@ export function exportHtmlFile(
   bodyHtml: string,
   background: string,
   rootStyle = '',
+  customCss = '',
 ): void {
+  const css = customCss ? `<style>\n${customCss}\n</style>\n` : ''
   const doc = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -12,9 +14,9 @@ export function exportHtmlFile(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <title>${escapeHtml(title)}</title>
-</head>
+${css}</head>
 <body style="margin:0;padding:24px 12px;background:${background};">
-<section style="max-width:677px;margin:0 auto;padding:24px;background:${background === '#242424' ? '#242424' : '#ffffff'};${rootStyle}">
+<section class="td-rich" style="max-width:677px;margin:0 auto;padding:24px;background:${background === '#242424' ? '#242424' : '#ffffff'};${rootStyle}">
 ${bodyHtml}
 </section>
 </body>

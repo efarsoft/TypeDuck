@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 莫兰迪高级灰 */
+export const theme: Theme = {
+  id: 'morandi',
+  name: '莫兰迪灰',
+  description: '低饱和灰调，克制沉稳的高级感',
+  category: 'narrative',
+  previewBackground: '#f4f3f0',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#4a4742;font-size:15px;line-height:1.85;word-break:break-word;font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;',
+    h1: 'margin:1.7em 0 0.7em;font-size:1.55em;font-weight:700;color:#4a4742;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.3em;font-weight:600;color:#4a4742;border-bottom:1px solid #cabfb0;padding-bottom:0.4em;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.14em;font-weight:600;color:#7c8a7d;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.04em;font-weight:600;color:#5a564f;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#6b665e;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#8a847a;',
+    p: 'margin:1em 0;',
+    a: 'color:#7c8a7d;text-decoration:none;border-bottom:1px solid #b3bcae;',
+    strong: 'font-weight:700;color:#3f3c38;',
+    em: 'font-style:italic;color:#6b665e;',
+    del: 'text-decoration:line-through;color:#a8a299;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.8em 1.2em;border-left:4px solid #b8a98f;background:#ecebe6;color:#6b665e;border-radius:4px;',
+    code: 'background:#ecebe6;color:#7c8a7d;padding:3px 6px;border-radius:4px;font-size:0.85em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.6;color:#4a4742;',
+    codeBlockWrapper: 'background:#ecebe6;padding:16px;border-radius:8px;overflow-x:auto;margin:1.4em 0;border:1px solid #ddd8cf;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#ecebe6;padding:9px 13px;text-align:left;font-weight:600;color:#5a564f;border:1px solid #ddd8cf;',
+    td: 'padding:9px 13px;border:1px solid #ddd8cf;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border-radius:4px;',
+    hr: 'border:none;border-top:1px solid #cabfb0;margin:2.2em 0;',
+  },
+}

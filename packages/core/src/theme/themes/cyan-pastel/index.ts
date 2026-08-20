@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 嫩青小清新 */
+export const theme: Theme = {
+  id: 'cyan-pastel',
+  name: '嫩青小清新',
+  description: '低饱和嫩青，治愈系生活记录',
+  category: 'expressive',
+  previewBackground: '#eaf6f5',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#3a4a4a;font-size:15px;line-height:1.85;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.8em 0 0.9em;font-size:1.6em;font-weight:700;color:#2a9d8f;text-align:center;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.32em;font-weight:700;color:#2a9d8f;border-bottom:2px solid #b8e6e0;padding-bottom:0.35em;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#3aa99b;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#3aa99b;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#5a6a6a;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#5a6a6a;',
+    p: 'margin:1em 0;',
+    a: 'color:#2a9d8f;text-decoration:none;border-bottom:1px solid #2a9d8f;',
+    strong: 'font-weight:700;color:#2a9d8f;',
+    em: 'font-style:italic;color:#6a7a7a;',
+    del: 'text-decoration:line-through;color:#a9baba;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:4px solid #5ec5b8;background:#e9f7f5;color:#4a5a5a;border-radius:0 10px 10px 0;',
+    code: 'background:#e3f5f3;color:#2a9d8f;padding:2px 6px;border-radius:6px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#3a4a4a;',
+    codeBlockWrapper: 'background:#e9f7f5;padding:16px;border:1px solid #c7ebe6;border-radius:10px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#e9f7f5;padding:9px 13px;font-weight:600;color:#2a9d8f;border:1px solid #c7ebe6;',
+    td: 'padding:9px 13px;border:1px solid #c7ebe6;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border:1px solid #c7ebe6;border-radius:12px;',
+    hr: 'border:none;border-top:1px dashed #c7ebe6;margin:2.2em 0;',
+  },
+}

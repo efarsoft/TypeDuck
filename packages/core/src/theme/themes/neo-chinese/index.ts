@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 新中式 */
+export const theme: Theme = {
+  id: 'neo-chinese',
+  name: '新中式',
+  description: '宣纸朱砂，国风人文与诗词',
+  category: 'narrative',
+  previewBackground: '#efe9da',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#3a322a;font-size:15px;line-height:1.9;word-break:break-word;font-family:Georgia,"Times New Roman","Songti SC","SimSun",serif;',
+    h1: 'margin:1.8em 0 0.9em;font-size:1.6em;font-weight:700;color:#9e2b25;text-align:center;letter-spacing:2px;border-bottom:1px solid #c9a87a;padding-bottom:0.4em;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.3em;font-weight:700;color:#9e2b25;border-left:4px solid #9e2b25;padding-left:10px;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#7a4a2b;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#7a4a2b;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#6b5d4d;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#6b5d4d;',
+    p: 'margin:1em 0;',
+    a: 'color:#9e2b25;text-decoration:none;border-bottom:1px dashed #c9a87a;',
+    strong: 'font-weight:700;color:#9e2b25;',
+    em: 'font-style:italic;color:#7a4a2b;',
+    del: 'text-decoration:line-through;color:#a89a86;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:4px solid #9e2b25;background:#efe7d6;color:#6b5d4d;font-style:italic;border-radius:0 6px 6px 0;',
+    code: 'background:#efe7d6;color:#9e2b25;padding:2px 6px;border-radius:4px;font-size:0.85em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#3a322a;',
+    codeBlockWrapper: 'background:#efe7d6;padding:16px;border-left:4px solid #9e2b25;border-radius:4px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#efe7d6;padding:9px 13px;font-weight:600;color:#9e2b25;border:1px solid #d8cab0;',
+    td: 'padding:9px 13px;border:1px solid #d8cab0;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border:1px solid #d8cab0;border-radius:4px;',
+    hr: 'border:none;border-top:1px dashed #c9a87a;margin:2.2em 0;',
+  },
+}

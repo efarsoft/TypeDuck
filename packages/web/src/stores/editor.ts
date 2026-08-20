@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { getTheme, render } from '@typeduck/core'
+import { getTheme, render, scopeCss } from '@typeduck/core'
 import type { Doc, DocHistory } from '../db'
 import * as db from '../db'
 
@@ -57,13 +57,13 @@ function countWords(text: string): number {
   return text.replace(/[\s#>*`~\-|!\[\]()]/g, '').length
 }
 
-/** 从内容提取标题：优先一级/二级标题，其次首个非空行（去除 Markdown 记号，限 24 字） */
+/** 从内容提取标题：优先一级/二级标题，其次首个非空行（去除 Markdown 记号）。
+ *  不做长度截断——列表/输入框的显示省略交给 CSS，公众号标题栏上限 64 字 */
 function extractTitle(content: string): string {
   const heading = content.match(/^#{1,3}\s+(.+)$/m)
-  const raw = (heading ? heading[1] : content.split('\n').find((l) => l.trim()) || '')
+  return (heading ? heading[1] : content.split('\n').find((l) => l.trim()) || '')
     .replace(/[#*`~>\[\]()!]/g, '')
     .trim()
-  return raw.length > 24 ? raw.slice(0, 24) + '…' : raw
 }
 
 export const useEditorStore = defineStore('editor', () => {
@@ -72,6 +72,10 @@ export const useEditorStore = defineStore('editor', () => {
   const saveState = ref<SaveState>('saved')
   const history = ref<DocHistory[]>([])
   const toast = ref('')
+
+  /** 公众号名称：预览头部模拟用，localStorage 持久化 */
+  const accountName = ref(localStorage.getItem('typeduck:accountName') || 'AI猿叔')
+  watch(accountName, (v) => localStorage.setItem('typeduck:accountName', v))
 
   const theme = computed(() => getTheme(activeDoc.value?.themeId ?? 'minimal-white'))
   const renderedHtml = computed(() =>
@@ -83,6 +87,12 @@ export const useEditorStore = defineStore('editor', () => {
       ? render(activeDoc.value.content, theme.value, { important: false })
       : '',
   )
+  /** 进阶渲染版（rich）：保留 class、不加 !important，供网页预览 / HTML / PDF 导出使用，customCss 可覆盖 */
+  const renderedRichHtml = computed(() =>
+    activeDoc.value ? render(activeDoc.value.content, theme.value, { rich: true }) : '',
+  )
+  /** 当前主题的 customCss，已加 .td-rich 作用域；公众号复制与 Word 导出不使用 */
+  const customCss = computed(() => scopeCss(theme.value.customCss ?? '', '.td-rich'))
 
   let saveTimer: ReturnType<typeof setTimeout> | undefined
   let toastTimer: ReturnType<typeof setTimeout> | undefined
@@ -95,10 +105,12 @@ export const useEditorStore = defineStore('editor', () => {
 
   async function load() {
     docs.value = await db.getAllDocs()
-    // 历史遗留的无标题文档：从内容回填标题
+    // 历史遗留修复：无标题文档回填；被旧版 24 字截断的标题还原为全文
     for (const doc of docs.value) {
-      if (!doc.title) {
-        doc.title = extractTitle(doc.content)
+      const full = extractTitle(doc.content)
+      const truncated = doc.title.endsWith('…') && full.startsWith(doc.title.slice(0, -1))
+      if (!doc.title || truncated) {
+        doc.title = full
         await db.putDoc(doc)
       }
     }
@@ -292,6 +304,9 @@ export const useEditorStore = defineStore('editor', () => {
     theme,
     renderedHtml,
     renderedHtmlPlain,
+    renderedRichHtml,
+    customCss,
+    accountName,
     isDesktop,
     load,
     createDoc,

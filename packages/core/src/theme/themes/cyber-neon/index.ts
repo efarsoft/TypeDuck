@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsMonokai } from '../../hljs-maps'
+
+/** 赛博霓虹 */
+export const theme: Theme = {
+  id: 'cyber-neon',
+  name: '赛博霓虹',
+  description: '暗底 + 品红/青双霓虹，二次元/游戏/科技炫光',
+  category: 'dark',
+  previewBackground: '#0b0b14',
+  hljsStyleMap: hljsMonokai,
+  styles: {
+    root: 'color:#e9e9f2;font-size:15px;line-height:1.8;letter-spacing:0.3px;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.7em 0 0.9em;font-size:1.6em;font-weight:800;color:#ff2e97;text-align:center;letter-spacing:1px;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.32em;font-weight:700;color:#ffffff;border-left:4px solid #ff2e97;padding-left:10px;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#00e5ff;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#00e5ff;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#9aa0b5;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#9aa0b5;',
+    p: 'margin:1em 0;',
+    a: 'color:#00e5ff;text-decoration:none;border-bottom:1px solid #00e5ff;',
+    strong: 'font-weight:700;color:#ff2e97;',
+    em: 'font-style:italic;color:#ff8fd0;',
+    del: 'text-decoration:line-through;color:#6b6f80;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.8em 1.1em;border-left:4px solid #00e5ff;background:#15151f;color:#b9bdd0;',
+    code: 'background:#15151f;color:#ff6ec7;padding:2px 6px;border:1px solid #2a2a3a;border-radius:4px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#e9e9f2;',
+    codeBlockWrapper: 'background:#101018;padding:16px;border:1px solid #2a2a3a;border-radius:8px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'border:1px solid #2a2a3a;background:#15151f;padding:9px 13px;font-weight:600;color:#00e5ff;',
+    td: 'border:1px solid #2a2a3a;padding:9px 13px;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border:1px solid #2a2a3a;border-radius:6px;',
+    hr: 'border:none;border-top:2px solid #ff2e97;margin:2.2em 0;',
+  },
+}

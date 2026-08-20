@@ -1,14 +1,27 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell, net } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
 const DEV_URL = 'http://localhost:5173'
 const isDev = !app.isPackaged
 
+/** 轮询等待 dev server 就绪（超时后仍尝试加载一次，让错误可见） */
+async function waitForServer(url, timeoutMs) {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    try {
+      await net.fetch(url)
+      return
+    } catch {
+      await new Promise((r) => setTimeout(r, 300))
+    }
+  }
+}
+
 let mainWindow = null
 
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -25,8 +38,9 @@ function createWindow() {
   })
 
   if (isDev) {
-    // 开发模式连 Vite dev server（需先 pnpm dev:web）
-    mainWindow.loadURL(DEV_URL)
+    // 开发模式连 Vite dev server：轮询等待就绪后再加载，避免先启 Electron 导致白屏
+    await waitForServer(DEV_URL, 15000)
+    await mainWindow.loadURL(DEV_URL)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
     // 打包后 web 构建产物在 resources/web/dist（extraResources，asar 外）

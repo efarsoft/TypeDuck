@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 国潮故宫红金 */
+export const theme: Theme = {
+  id: 'forbidden-city',
+  name: '故宫红金',
+  description: '故宫红配描金，华丽庄重的国风',
+  category: 'narrative',
+  previewBackground: '#faf4e9',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#3a2e25;font-size:15px;line-height:1.85;word-break:break-word;font-family:Georgia,"Songti SC","SimSun",serif;',
+    h1: 'margin:1.7em 0 0.8em;font-size:1.55em;font-weight:700;color:#9e2b25;text-align:center;border-bottom:2px solid #c8a45c;padding-bottom:0.45em;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.3em;font-weight:600;color:#9e2b25;border-bottom:2px solid #c8a45c;padding-bottom:0.35em;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.14em;font-weight:600;color:#9e2b25;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.04em;font-weight:600;color:#7a4a2e;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#5a4636;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#8a7152;',
+    p: 'margin:1em 0;',
+    a: 'color:#9e2b25;text-decoration:none;border-bottom:1px solid #c8a45c;',
+    strong: 'font-weight:700;color:#9e2b25;',
+    em: 'font-style:italic;color:#7a4a2e;',
+    del: 'text-decoration:line-through;color:#a89070;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.8em 1.2em;border-left:4px solid #c8a45c;background:#f5ecdb;color:#5a4636;border-radius:4px;',
+    code: 'background:#f5ecdb;color:#9e2b25;padding:3px 6px;border-radius:4px;font-size:0.85em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.6;color:#9e2b25;',
+    codeBlockWrapper: 'background:#f5ecdb;padding:16px;border-radius:8px;overflow-x:auto;margin:1.4em 0;border:1px solid #c8a45c;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#f5ecdb;padding:9px 13px;text-align:left;font-weight:600;color:#9e2b25;border:1px solid #e3d3b0;',
+    td: 'padding:9px 13px;border:1px solid #e3d3b0;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border-radius:4px;',
+    hr: 'border:none;height:2px;background:#c8a45c;width:60px;margin:2.2em auto;border-radius:2px;',
+  },
+}

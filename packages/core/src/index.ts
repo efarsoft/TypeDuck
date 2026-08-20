@@ -1,4 +1,4 @@
-export { render, withImportant } from './markdown/render'
+export { render, withImportant, scopeCss } from './markdown/render'
 export { themes, getTheme, registerTheme } from './theme/registry'
 export type { Theme, ThemeCategory, ThemeStyles } from './theme/types'
 export { copyHtmlToClipboard } from './clipboard/copy'

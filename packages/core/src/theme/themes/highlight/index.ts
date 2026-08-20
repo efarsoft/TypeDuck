@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsLight } from '../../hljs-maps'
+
+/** 荧光笔记 */
+export const theme: Theme = {
+  id: 'highlight',
+  name: '荧光笔记',
+  description: '荧光划重点，教程干货与读书笔记',
+  category: 'daily',
+  previewBackground: '#ffffff',
+  hljsStyleMap: hljsLight,
+  styles: {
+    root: 'color:#2b2b2b;font-size:15px;line-height:1.8;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.8em 0 0.9em;font-size:1.6em;font-weight:700;color:#1a1a1a;text-align:center;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.32em;font-weight:700;color:#1a1a1a;border-bottom:2px solid #ffd54f;padding-bottom:0.35em;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.15em;font-weight:600;color:#b8860b;',
+    h4: 'margin:1.3em 0 0.5em;font-size:1.05em;font-weight:600;color:#8a6d00;',
+    h5: 'margin:1.2em 0 0.4em;font-size:1em;font-weight:600;color:#8a6d00;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#a08a2a;',
+    p: 'margin:1em 0;',
+    a: 'color:#1a8917;text-decoration:none;border-bottom:1px solid #1a8917;',
+    strong: 'font-weight:700;color:#5c4a00;background:#fff3a3;padding:0 4px;border-radius:3px;',
+    em: 'font-style:italic;color:#6b6b6b;',
+    del: 'text-decoration:line-through;color:#b0a98a;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;',
+    blockquote: 'margin:1.4em 0;padding:0.9em 1.2em;border-left:4px solid #ffb300;background:#fff8e1;color:#6b5a00;border-radius:0 8px 8px 0;',
+    code: 'background:#fff3a3;color:#b8860b;padding:2px 6px;border-radius:4px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#5c4a00;',
+    codeBlockWrapper: 'background:#faf8f0;padding:16px;border:1px solid #f0e6c0;border-radius:8px;overflow-x:auto;margin:1.4em 0;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#fff8e1;padding:9px 13px;font-weight:600;color:#b8860b;border:1px solid #f0e6c0;',
+    td: 'padding:9px 13px;border:1px solid #f0e6c0;',
+    tr: '',
+    img: 'max-width:100%;display:block;margin:1.4em auto;border-radius:6px;border:1px solid #f0e6c0;',
+    hr: 'border:none;border-top:2px dashed #ffd54f;margin:2.2em 0;',
+  },
+}

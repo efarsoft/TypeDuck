@@ -121,14 +121,31 @@ const docsForList = computed(() =>
 
 /** 复制防重复：点击后短暂禁用并切换文案 */
 const copied = ref(false)
+
+/** 检测正文首个标题是否与文档标题重复（粘贴后读者会看到两个大标题） */
+function detectTitleDuplicate(): boolean {
+  const doc = store.activeDoc
+  if (!doc || !doc.title.trim()) return false
+  const heading = doc.content.match(/^#{1,3}\s+(.+)$/m)
+  if (!heading) return false
+  const strip = (s: string) => s.replace(/[#*`~>\[\]()!]/g, '').replace(/\s+/g, '').trim()
+  return strip(heading[1]) === strip(doc.title)
+}
+
 async function onCopy() {
   if (copied.value) return
   const ok = await copyHtmlToClipboard(`<section style="${rootStyle.value}">${store.renderedHtml}</section>`)
   if (ok) {
     copied.value = true
     setTimeout(() => (copied.value = false), 800)
+    if (detectTitleDuplicate()) {
+      store.showToast('已复制 ⚠️ 正文首个标题与标题栏重复，读者会看到两个大标题，建议删掉正文里的 H1')
+      return
+    }
+    store.showToast('已复制，去公众号编辑器粘贴吧！🦆')
+    return
   }
-  store.showToast(ok ? '已复制，去公众号编辑器粘贴吧！🦆' : '复制失败，请重试')
+  store.showToast('复制失败，请重试')
 }
 
 const charCount = computed(() => store.activeDoc?.content.length ?? 0)
@@ -144,9 +161,10 @@ function onExport() {
   if (!store.activeDoc) return
   exportHtmlFile(
     store.activeDoc.title || '未命名文档',
-    store.renderedHtml,
+    store.renderedRichHtml,
     store.theme.previewBackground,
     rootStyle.value,
+    store.customCss,
   )
   store.showToast('已导出 HTML 文件')
 }
@@ -181,7 +199,7 @@ async function onExportAs(format: 'html' | 'markdown' | 'docx' | 'pdf') {
     return
   }
   // PDF：弹出打印窗口，选「另存为 PDF」
-  exportPrintPdf(name, store.renderedHtml, store.theme.previewBackground, rootStyle.value)
+  exportPrintPdf(name, store.renderedRichHtml, store.theme.previewBackground, rootStyle.value, store.customCss)
   store.showToast('在打印窗口选择「另存为 PDF」')
 }
 
@@ -297,10 +315,14 @@ async function onRemove(id: string) {
           <section v-show="viewMode !== 'editor'" class="pane preview-pane">
             <DuckPreview
               ref="previewRef"
-              :html="store.renderedHtml"
+              :html="store.renderedRichHtml"
+              :custom-css="store.customCss"
               :background="store.theme.previewBackground"
               :root-style="rootStyle"
               :theme-name="store.theme.name"
+              :article-title="store.activeDoc?.title"
+              :account-name="store.accountName"
+              @update:account-name="store.accountName = $event"
               @open-theme="rightView = 'theme'"
             />
           </section>

@@ -1,0 +1,40 @@
+import type { Theme } from '../../types'
+import { hljsMonokai } from '../../hljs-maps'
+
+/** 电商带货红 */
+export const theme: Theme = {
+  id: 'ecom-red',
+  name: '带货红',
+  description: '高能正红紧迫感，促销与转化',
+  category: 'expressive',
+  previewBackground: '#fff6f4',
+  hljsStyleMap: hljsMonokai,
+  styles: {
+    root: 'color:#2b2b2b;font-size:15px;line-height:1.8;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;',
+    h1: 'margin:1.6em 0 0.8em;font-size:1.5em;font-weight:800;color:#e1251b;text-align:center;border-bottom:2px solid #e1251b;padding-bottom:0.5em;',
+    h2: 'margin:1.6em 0 0.7em;font-size:1.15em;font-weight:700;color:#ffffff;background:#e1251b;padding:6px 14px 5px;border-radius:4px;display:inline-block;',
+    h3: 'margin:1.4em 0 0.6em;font-size:1.1em;font-weight:700;color:#e1251b;',
+    h4: 'margin:1.3em 0 0.6em;font-size:1.02em;font-weight:700;color:#c0392b;',
+    h5: 'margin:1.2em 0 0.5em;font-size:1em;font-weight:600;color:#555555;',
+    h6: 'margin:1.1em 0 0.4em;font-size:0.92em;font-weight:600;color:#888888;',
+    p: 'margin:1em 0;',
+    a: 'color:#e1251b;text-decoration:none;border-bottom:1px solid #e1251b;',
+    strong: 'color:#e1251b;font-weight:800;',
+    em: 'font-style:italic;color:#c0392b;',
+    del: 'text-decoration:line-through;color:#bbbbbb;',
+    ul: 'margin:1em 0;padding-left:1.6em;',
+    ol: 'margin:1em 0;padding-left:1.6em;',
+    li: 'margin:0.4em 0;line-height:1.7;',
+    blockquote: 'margin:1.4em 0;padding:12px 16px;border-left:4px solid #e1251b;background:#fff0ed;color:#555555;border-radius:0 8px 8px 0;',
+    code: 'color:#e1251b;background:#fff0ed;padding:2px 6px;border-radius:4px;font-size:0.88em;font-family:"SFMono-Regular",Consolas,Menlo,monospace;',
+    codeBlock: 'font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:13px;line-height:1.7;color:#ff9a8f;',
+    codeBlockWrapper: 'background:#2b2b2b;padding:16px;border-radius:8px;overflow-x:auto;margin:1.4em 0;border:1px solid #e1251b;',
+    table: 'border-collapse:collapse;margin:1.4em 0;width:100%;font-size:0.95em;',
+    thead: '',
+    th: 'background:#fff0ed;padding:9px 13px;font-weight:600;border:1px solid #ffd0c8;color:#c0392b;',
+    td: 'padding:9px 13px;border:1px solid #ffd0c8;',
+    tr: '',
+    img: 'max-width:100%;border-radius:8px;display:block;margin:1.4em auto;',
+    hr: 'border:none;height:3px;background:#e1251b;width:40px;margin:2em auto;border-radius:2px;',
+  },
+}
