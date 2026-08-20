@@ -26,15 +26,16 @@ import { useAiStore, type AiTask } from './stores/ai'
 import HistoryPanel from './components/HistoryPanel.vue'
 import AiPanel from './components/AiPanel.vue'
 import AiSettings from './components/AiSettings.vue'
+import HotPanel from './components/HotPanel.vue'
 
 const store = useEditorStore()
 const aiStore = useAiStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
-const rightView = ref<'theme' | 'history' | 'ai' | null>('theme')
+const rightView = ref<'theme' | 'history' | 'ai' | 'hot' | null>('theme')
 
 /** 右侧面板按钮：再次点击已激活的面板则整体收起（编辑区自动变宽） */
-function toggleRightView(view: 'theme' | 'history' | 'ai') {
+function toggleRightView(view: 'theme' | 'history' | 'ai' | 'hot') {
   rightView.value = rightView.value === view ? null : view
 }
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
@@ -486,6 +487,19 @@ function onRemoveTheme(id: string) {
                 <path d="M4 5h14v10H9l-5 4zM8 10h.01M12 10h.01M16 10h.01" />
               </svg>
             </button>
+            <!-- 热点选题面板 -->
+            <button
+              class="icon-btn"
+              :class="{ active: rightView === 'hot' }"
+              title="热点选题"
+              @click="toggleRightView('hot')"
+            >
+              <svg class="ic" viewBox="0 0 22 22">
+                <path
+                  d="M12 3c2 2.5-.5 4.5-.5 6.5 0 1.2.9 2 2 2s2-.8 2-2C17 11 18 12.8 18 15a6 6 0 0 1-12 0c0-3.5 3-5 4.5-8C11.3 5.7 11.5 4.4 12 3z"
+                />
+              </svg>
+            </button>
             <!-- 视图切换：三枚图标分段选择，当前项高亮 -->
             <div class="view-switch">
               <button
@@ -563,6 +577,7 @@ function onRemoveTheme(id: string) {
               @save-theme="onAiSaveTheme"
               @discard="onAiDiscard"
             />
+            <HotPanel v-else-if="rightView === 'hot'" @close="rightView = null" />
             <HistoryPanel
               v-else
               :history="store.history"
