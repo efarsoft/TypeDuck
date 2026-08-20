@@ -13,6 +13,8 @@ extraResources:
 win:
   target: nsis
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
+  # 未做代码签名：跳过签名与图标编辑，规避 winCodeSign 解压需要符号链接权限的问题
+  signAndEditExecutable: false
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

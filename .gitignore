@@ -4,3 +4,4 @@ dist/
 .workbuddy/
 .zcode/
 vite.config.ts.timestamp-*
+packages/desktop/release*/
