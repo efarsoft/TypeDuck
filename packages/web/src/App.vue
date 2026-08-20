@@ -27,15 +27,16 @@ import HistoryPanel from './components/HistoryPanel.vue'
 import AiPanel from './components/AiPanel.vue'
 import AiSettings from './components/AiSettings.vue'
 import HotPanel from './components/HotPanel.vue'
+import ImagePanel from './components/ImagePanel.vue'
 
 const store = useEditorStore()
 const aiStore = useAiStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
-const rightView = ref<'theme' | 'history' | 'ai' | 'hot' | null>('theme')
+const rightView = ref<'theme' | 'history' | 'ai' | 'hot' | 'image' | null>('theme')
 
 /** 右侧面板按钮：再次点击已激活的面板则整体收起（编辑区自动变宽） */
-function toggleRightView(view: 'theme' | 'history' | 'ai' | 'hot') {
+function toggleRightView(view: 'theme' | 'history' | 'ai' | 'hot' | 'image') {
   rightView.value = rightView.value === view ? null : view
 }
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
@@ -500,6 +501,18 @@ function onRemoveTheme(id: string) {
                 />
               </svg>
             </button>
+            <!-- 配图助手面板 -->
+            <button
+              class="icon-btn"
+              :class="{ active: rightView === 'image' }"
+              title="配图助手"
+              @click="toggleRightView('image')"
+            >
+              <svg class="ic" viewBox="0 0 22 22">
+                <path d="M3 5h16v12H3zM3 14l4-4 3 3 3-4 6 6" />
+                <circle cx="8" cy="8.5" r="1.4" />
+              </svg>
+            </button>
             <!-- 视图切换：三枚图标分段选择，当前项高亮 -->
             <div class="view-switch">
               <button
@@ -578,6 +591,11 @@ function onRemoveTheme(id: string) {
               @discard="onAiDiscard"
             />
             <HotPanel v-else-if="rightView === 'hot'" @close="rightView = null" />
+            <ImagePanel
+              v-else-if="rightView === 'image'"
+              @close="rightView = null"
+              @insert="(md: string) => editorRef?.insert(md)"
+            />
             <HistoryPanel
               v-else
               :history="store.history"
