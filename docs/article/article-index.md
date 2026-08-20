@@ -59,7 +59,8 @@
 2. **课程需要真实项目**。接下来我要在公众号连载一套「人人可入门的 AI 开发课程」，用一个真实、完整、可持续迭代的项目当教材，比 demo 有说服力得多；
 3. **反哺社区**。我参考了很多开源项目的主题设计（WeChat-Markdown、neurapress、md2wechat……），把它们的设计思路沉淀成主题，也算一种回馈。
 
-> 开源地址：https://github.com/efarh/typeduck
+> 开源地址：https://github.com/efarsoft/TypeDuck
+> <!-- 原文此处误写为 github.com/efarh/typeduck（404 死链），归档时已修正，公众号原文待作者修改 -->
 >
 > 觉得不错，给个 Star ⭐，这是对一个开源作者最直接的支持。
 
