@@ -20,10 +20,8 @@ export const HOT_SOURCES: HotSource[] = [
   { id: 'baidu', title: '百度热搜' },
   { id: 'zhihu', title: '知乎' },
   { id: 'toutiao', title: '今日头条' },
-  { id: 'douban', title: '豆瓣' },
   { id: '36kr', title: '36氪' },
   { id: 'juejin', title: '稀土掘金' },
-  { id: 'xueqiu', title: '雪球' },
 ]
 
 export const DEFAULT_NEWSNOW_BASE = 'https://newsnow.busiyi.world'

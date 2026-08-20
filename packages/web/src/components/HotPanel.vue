@@ -110,6 +110,7 @@ onMounted(loadItems)
 
     <ol class="hot-list">
       <li v-for="(it, i) in items" :key="it.url + i">
+        <span class="hot-num">{{ i + 1 }}</span>
         <a :href="it.url" target="_blank" rel="noopener" class="hot-title">{{ it.title }}</a>
         <span v-if="it.info" class="hot-info">{{ it.info }}</span>
         <span class="hot-ops">
@@ -270,7 +271,6 @@ onMounted(loadItems)
   list-style: none;
   margin: 0;
   padding: 0;
-  counter-reset: hot;
   display: flex;
   flex-direction: column;
 }
@@ -281,25 +281,11 @@ onMounted(loadItems)
   padding: 10px 2px;
   border-bottom: 1px dashed #eef0f2;
 }
-.hot-title {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #1d2129;
-  text-decoration: none;
-  word-break: break-all;
-}
-.hot-title:hover {
-  color: #07c160;
-}
-.hot-title::before {
-  counter-increment: hot;
-  content: counter(hot);
-  display: inline-block;
+.hot-num {
+  flex-shrink: 0;
   width: 18px;
   height: 18px;
-  margin-right: 6px;
+  margin-top: 2px;
   border-radius: 4px;
   background: #f2f3f5;
   color: #86909c;
@@ -308,12 +294,32 @@ onMounted(loadItems)
   line-height: 18px;
   font-weight: 600;
 }
+.hot-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #1d2129;
+  text-decoration: none;
+  /* 英文单词保持完整（break-all 会把 ThreeJs 拆成两行），中文自然换行 */
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hot-title:hover {
+  color: #07c160;
+}
 .hot-info {
   flex-shrink: 0;
+  max-width: 88px;
   font-size: 10.5px;
   color: #a8adb5;
   padding-top: 3px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .to-topic {
   flex-shrink: 0;
