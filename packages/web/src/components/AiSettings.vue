@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { AI_PRESETS, getPreset, listModels } from '@typeduck/core'
 import { useAiStore } from '../stores/ai'
 
@@ -9,36 +9,54 @@ const ai = useAiStore()
 const preset = computed(() => getPreset(ai.config.providerId))
 const showKey = ref(false)
 
-/** 模型下拉：预设推荐 + 接口拉取的完整列表 */
+/** /models 实时拉取的模型列表（主来源）；预置列表仅作未配 Key / 拉取失败时的兜底 */
 const fetchedModels = ref<string[]>([])
+
+/** /models 会连非对话模型（嵌入/语音/重排等）一起返回，下拉里过滤掉 */
+function filterChatModels(ids: string[]): string[] {
+  const excluded = /embedding|rerank|tts|asr|whisper|speech|voice|audio|realtime|image-gen|video-gen/i
+  return ids.filter((id) => !excluded.test(id))
+}
+
 const modelOptions = computed(() => {
-  const list = [...new Set([...preset.value.models, ...fetchedModels.value])]
-  return list.length ? list : [ai.config.model]
+  const base = fetchedModels.value.length ? fetchedModels.value : preset.value.models
+  if (!ai.config.model || base.includes(ai.config.model)) return base
+  return [ai.config.model, ...base]
 })
 
 const testing = ref(false)
 const testState = ref<'' | 'ok' | 'fail'>('')
 const testMsg = ref('')
 
-async function onFetchModels() {
+/** 拉取模型列表：对话框打开、切换供应商时自动执行；silent 时不打扰（手动刷新才显示错误） */
+async function fetchModels(silent = false) {
+  if (!ai.config.baseUrl || !ai.config.apiKey) {
+    fetchedModels.value = []
+    return
+  }
   testing.value = true
-  testState.value = ''
-  testMsg.value = ''
+  if (!silent) {
+    testState.value = ''
+    testMsg.value = ''
+  }
   try {
-    const ids = await listModels({ ...ai.config })
+    const ids = filterChatModels(await listModels({ ...ai.config }))
     fetchedModels.value = ids
     testState.value = 'ok'
-    testMsg.value = `✓ 连接成功，共 ${ids.length} 个模型`
-    if (ids.length && !ids.includes(ai.config.model) && !preset.value.models.includes(ai.config.model)) {
-      testMsg.value += `（当前模型 ${ai.config.model} 不在列表中，请确认拼写）`
-    }
+    testMsg.value = `✓ 连接成功，共 ${ids.length} 个可用模型，下拉列表已更新`
   } catch (err) {
-    testState.value = 'fail'
-    testMsg.value = err instanceof Error ? err.message : String(err)
+    fetchedModels.value = []
+    if (!silent) {
+      testState.value = 'fail'
+      testMsg.value = err instanceof Error ? err.message : String(err)
+    }
   } finally {
     testing.value = false
   }
 }
+
+onMounted(() => fetchModels(true))
+watch(() => ai.config.providerId, () => fetchModels(true))
 </script>
 
 <template>
@@ -91,8 +109,8 @@ async function onFetchModels() {
 
         <label class="fld-label">
           模型
-          <button class="fetch-btn" :disabled="testing" @click="onFetchModels">
-            {{ testing ? '获取中…' : '获取模型列表' }}
+          <button class="fetch-btn" :disabled="testing" @click="fetchModels()">
+            {{ testing ? '获取中…' : '刷新列表' }}
           </button>
         </label>
         <input v-model="ai.config.model" class="fld" list="ai-model-options" placeholder="模型名" spellcheck="false" />
