@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { AI_PRESETS, getPreset, listModels } from '@typeduck/core'
 import { useAiStore } from '../stores/ai'
 
@@ -9,7 +9,7 @@ const ai = useAiStore()
 const preset = computed(() => getPreset(ai.config.providerId))
 const showKey = ref(false)
 
-/** /models 实时拉取的模型列表（主来源）；预置列表仅作未配 Key / 拉取失败时的兜底 */
+/** /models 拉取的模型列表（主来源）；预置列表仅作未拉取/拉取失败时的兜底 */
 const fetchedModels = ref<string[]>([])
 
 /** /models 会连非对话模型（嵌入/语音/重排等）一起返回，下拉里过滤掉 */
@@ -28,17 +28,16 @@ const testing = ref(false)
 const testState = ref<'' | 'ok' | 'fail'>('')
 const testMsg = ref('')
 
-/** 拉取模型列表：对话框打开、切换供应商时自动执行；silent 时不打扰（手动刷新才显示错误） */
-async function fetchModels(silent = false) {
+/** 手动拉取模型列表：点「获取模型列表」触发，成功更新下拉，失败显示原因 */
+async function fetchModels() {
   if (!ai.config.baseUrl || !ai.config.apiKey) {
-    fetchedModels.value = []
+    testState.value = 'fail'
+    testMsg.value = '请先填写 Base URL 和 API Key'
     return
   }
   testing.value = true
-  if (!silent) {
-    testState.value = ''
-    testMsg.value = ''
-  }
+  testState.value = ''
+  testMsg.value = ''
   try {
     const ids = filterChatModels(await listModels({ ...ai.config }))
     fetchedModels.value = ids
@@ -46,17 +45,12 @@ async function fetchModels(silent = false) {
     testMsg.value = `✓ 连接成功，共 ${ids.length} 个可用模型，下拉列表已更新`
   } catch (err) {
     fetchedModels.value = []
-    if (!silent) {
-      testState.value = 'fail'
-      testMsg.value = err instanceof Error ? err.message : String(err)
-    }
+    testState.value = 'fail'
+    testMsg.value = err instanceof Error ? err.message : String(err)
   } finally {
     testing.value = false
   }
 }
-
-onMounted(() => fetchModels(true))
-watch(() => ai.config.providerId, () => fetchModels(true))
 </script>
 
 <template>
@@ -110,7 +104,7 @@ watch(() => ai.config.providerId, () => fetchModels(true))
         <label class="fld-label">
           模型
           <button class="fetch-btn" :disabled="testing" @click="fetchModels()">
-            {{ testing ? '获取中…' : '刷新列表' }}
+            {{ testing ? '获取中…' : '获取模型列表' }}
           </button>
         </label>
         <input v-model="ai.config.model" class="fld" list="ai-model-options" placeholder="模型名" spellcheck="false" />
