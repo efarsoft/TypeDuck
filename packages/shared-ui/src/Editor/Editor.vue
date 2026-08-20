@@ -173,7 +173,12 @@ defineExpose({
   <section class="editor-panel">
     <div class="format-bar">
       <template v-for="(group, gi) in buttonGroups" :key="gi">
-        <span v-if="gi > 0" class="fdivider"></span>
+        <!-- AI 组前面的分隔符占满整行，强制 AI 按钮另起一行 -->
+        <span
+          v-if="gi > 0"
+          class="fdivider"
+          :class="{ 'fdivider-break': group[0]?.ai }"
+        ></span>
         <button
           v-for="btn in group"
           :key="btn.title"
@@ -223,6 +228,13 @@ defineExpose({
   height: 16px;
   background: #e5e6eb;
   margin: 0 6px;
+}
+/* AI 组换行占位：100% 宽的隐形元素把后续按钮挤到下一行 */
+.fdivider-break {
+  flex-basis: 100%;
+  width: 0;
+  height: 0;
+  margin: 0;
 }
 .fbtn {
   width: 30px;
