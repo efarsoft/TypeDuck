@@ -11,6 +11,7 @@ export type AiActionId =
   | 'outline'
   | 'digest'
   | 'theme'
+  | 'rewrite'
 
 export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boolean }> = {
   polish: { label: 'AI 润色', needsSelection: true },
@@ -22,6 +23,7 @@ export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boo
   outline: { label: '生成大纲', needsSelection: false },
   digest: { label: '生成摘要', needsSelection: false },
   theme: { label: '生成主题', needsSelection: false },
+  rewrite: { label: 'AI 改写', needsSelection: false },
 }
 
 const BASE_STYLE =
@@ -94,6 +96,17 @@ export function buildMessages(action: AiActionId, input: ActionInput): AiMessage
         {
           role: 'user',
           content: `${input.title ? `文档现标题：${input.title}\n\n` : ''}文章内容如下：\n\n${(input.before ?? '').slice(0, 4000)}`,
+        },
+      ]
+    case 'rewrite':
+      return [
+        {
+          role: 'system',
+          content: `${BASE_STYLE}你的任务是编辑部改写：基于提供的原文，产出一篇全新的公众号文章。要求：保留原文的全部核心事实与关键信息，不添加原文没有的事实；用自己的结构重新组织（不要逐句对照翻译式改写）；先输出一个 "## " 开头的 H2 标题；若用户给了风格指令则优先遵循。只输出改写后的文章。`,
+        },
+        {
+          role: 'user',
+          content: `${input.instruction ? `风格要求：${input.instruction}\n\n` : ''}${input.title ? `原文标题：${input.title}\n\n` : ''}原文：\n\n${(input.selection ?? '').slice(0, 12000)}`,
         },
       ]
     case 'custom':

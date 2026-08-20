@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "@typeduck/core": "workspace:*",
     "@typeduck/shared-ui": "workspace:*",
     "pinia": "^2.1.0",

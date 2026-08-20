@@ -19,10 +19,12 @@ import {
   unregisterTheme,
   withImportant,
 } from '@typeduck/core'
-import type { ActionInput, AiActionId, AiThemeTemplate } from '@typeduck/core'
+import type { ActionInput, AiActionId, AiThemeTemplate, HotItem } from '@typeduck/core'
 import { DuckEditor, DuckPreview, DocumentList, ThemeSelector } from '@typeduck/shared-ui'
 import { useEditorStore } from './stores/editor'
 import { useAiStore, type AiTask } from './stores/ai'
+import { fetchText } from './utils/net'
+import { extractArticle } from './utils/article'
 import HistoryPanel from './components/HistoryPanel.vue'
 import AiPanel from './components/AiPanel.vue'
 import AiSettings from './components/AiSettings.vue'
@@ -384,6 +386,42 @@ function onAiRetry() {
   if (task) runAiTask(task.action, task.input, task.range)
 }
 
+/* ---------- 链接改写：抓取原文 → 提取正文 → 新建文档（带出处）→ AI 流式改写 ---------- */
+
+async function doRewrite(url: string, title?: string, instruction?: string) {
+  if (!ensureAiReady()) return
+  if (!/^https?:\/\//.test(url)) {
+    store.showToast('请输入以 http(s):// 开头的文章链接')
+    return
+  }
+  store.showToast('正在抓取原文…')
+  let html: string
+  try {
+    html = await fetchText(url)
+  } catch {
+    store.showToast('抓取失败：站点拒绝访问或跨域受限（桌面版更稳），也可复制正文后用「自定义指令」改写')
+    return
+  }
+  const article = extractArticle(html, url)
+  if (article.text.length < 120) {
+    store.showToast('未能提取正文（该站可能需要 JS 渲染），可复制正文后用「自定义指令」改写')
+    return
+  }
+  const source = article.title || title || url
+  await store.createDoc(`> 原文：[${source}](${url})\n\n`)
+  runAiTask('rewrite', { selection: article.text, title: source, instruction }, null)
+}
+
+/** 热点条目「AI 改写」 */
+function onHotRewrite(item: HotItem) {
+  doRewrite(item.url, item.title)
+}
+
+/** AI 面板「链接改写」表单 */
+function onRewriteUrl(url: string, instruction: string) {
+  doRewrite(url, undefined, instruction || undefined)
+}
+
 /** AI 主题：注册 + 持久化 + 应用到当前文档 */
 function onAiSaveTheme() {
   const theme = aiTask.value?.theme
@@ -587,10 +625,11 @@ function onRemoveTheme(id: string) {
               @run-outline="onAiOutline"
               @run-digest="onAiDigest"
               @run-theme="onAiThemeGen"
+              @run-rewrite="onRewriteUrl"
               @save-theme="onAiSaveTheme"
               @discard="onAiDiscard"
             />
-            <HotPanel v-else-if="rightView === 'hot'" @close="rightView = null" />
+            <HotPanel v-else-if="rightView === 'hot'" @close="rightView = null" @rewrite="onHotRewrite" />
             <ImagePanel
               v-else-if="rightView === 'image'"
               @close="rightView = null"

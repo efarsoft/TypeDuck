@@ -15,18 +15,21 @@ const emit = defineEmits<{
   (e: 'run-outline', topic: string, style: string): void
   (e: 'run-digest'): void
   (e: 'run-theme', description: string, template: string): void
+  (e: 'run-rewrite', url: string, instruction: string): void
   (e: 'save-theme'): void
   (e: 'discard'): void
 }>()
 
 /* ---------- 空态：功能菜单与内联表单 ---------- */
 
-const mode = ref<'menu' | 'custom' | 'outline' | 'theme'>('menu')
+const mode = ref<'menu' | 'custom' | 'outline' | 'theme' | 'rewrite'>('menu')
 const customText = ref('')
 const outlineTopic = ref('')
 const outlineStyle = ref('通用')
 const themeDesc = ref('')
 const themeTemplate = ref('clean')
+const rewriteUrl = ref('')
+const rewriteStyle = ref('')
 
 const outlineStyles = ['通用', '技术教程', '观点评论', '故事叙事']
 const themeTemplates = [
@@ -51,6 +54,9 @@ function submitOutline() {
 }
 function submitTheme() {
   if (themeDesc.value.trim()) emit('run-theme', themeDesc.value.trim(), themeTemplate.value)
+}
+function submitRewrite() {
+  if (rewriteUrl.value.trim()) emit('run-rewrite', rewriteUrl.value.trim(), rewriteStyle.value.trim())
 }
 
 /* ---------- 任务展示 ---------- */
@@ -140,6 +146,11 @@ watch(
           <span class="mc-name">AI 生成主题</span>
           <span class="mc-desc">描述风格，即刻拥有</span>
         </button>
+        <button class="menu-card" @click="mode = 'rewrite'">
+          <span class="mc-icon">🔗</span>
+          <span class="mc-name">链接改写</span>
+          <span class="mc-desc">粘贴文章链接，AI 改写成初稿</span>
+        </button>
       </div>
       <p v-if="mode === 'menu'" class="dim">
         选中文字后，工具栏的 AI 润色 / AI 扩写 / AI 缩写 / AI 续写 随时可用；上方 ✨ 生成标题。BYOK：用你自己的
@@ -162,6 +173,16 @@ watch(
           <option v-for="s in outlineStyles" :key="s">{{ s }}</option>
         </select>
         <button class="run" @click="submitOutline">生成大纲</button>
+      </div>
+
+      <div v-else-if="mode === 'rewrite'" class="form">
+        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <label>文章链接</label>
+        <input v-model="rewriteUrl" placeholder="https:// 任意文章地址（公众号/博客/新闻）" @keyup.enter="submitRewrite" />
+        <label>风格要求（可选）</label>
+        <input v-model="rewriteStyle" placeholder="例如：口语化一点，面向职场新人" @keyup.enter="submitRewrite" />
+        <button class="run" @click="submitRewrite">抓取并改写</button>
+        <p class="dim">抓取原文 → AI 改写为全新初稿（保留事实、重写表达），自动注明原文出处。</p>
       </div>
 
       <div v-else class="form">

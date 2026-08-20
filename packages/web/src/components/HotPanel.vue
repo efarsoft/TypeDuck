@@ -7,8 +7,12 @@ import {
   type HotItem,
 } from '@typeduck/core'
 import { useEditorStore } from '../stores/editor'
+import { fetchText } from '../utils/net'
 
-const emit = defineEmits<{ (e: 'close'): void }>()
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'rewrite', item: HotItem): void
+}>()
 const editor = useEditorStore()
 
 const BASE_STORE = 'typeduck:hotBase'
@@ -27,14 +31,6 @@ const sourceId = ref(
 const items = ref<HotItem[]>([])
 const loading = ref(false)
 const error = ref('')
-
-/** 抓取通道：桌面版走主进程代理（无 CORS 限制），网页版浏览器直连 */
-async function fetchText(url: string): Promise<string> {
-  if (window.desktopAPI?.fetchText) return window.desktopAPI.fetchText(url)
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.text()
-}
 
 async function loadItems() {
   loading.value = true
@@ -116,7 +112,10 @@ onMounted(loadItems)
       <li v-for="(it, i) in items" :key="it.url + i">
         <a :href="it.url" target="_blank" rel="noopener" class="hot-title">{{ it.title }}</a>
         <span v-if="it.info" class="hot-info">{{ it.info }}</span>
-        <button class="to-topic" title="以此热点创建选题文档" @click="toTopic(it)">转选题</button>
+        <span class="hot-ops">
+          <button class="to-topic" title="AI 抓取原文并改写成 Markdown 初稿" @click="emit('rewrite', it)">AI 改写</button>
+          <button class="to-topic plain" title="以此热点创建空白选题文档" @click="toTopic(it)">转选题</button>
+        </span>
       </li>
     </ol>
   </div>
@@ -332,5 +331,18 @@ onMounted(loadItems)
 .to-topic:hover {
   border-color: #07c160;
   color: #07c160;
+}
+.hot-ops {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+/* AI 改写是主推动作，绿色描边突出 */
+.to-topic:not(.plain) {
+  border-color: #07c160;
+  color: #07c160;
+}
+.to-topic:not(.plain):hover {
+  background: #f0faf4;
 }
 </style>
