@@ -31,7 +31,12 @@ const store = useEditorStore()
 const aiStore = useAiStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
-const rightView = ref<'theme' | 'history' | 'ai'>('theme')
+const rightView = ref<'theme' | 'history' | 'ai' | null>('theme')
+
+/** 右侧面板按钮：再次点击已激活的面板则整体收起（编辑区自动变宽） */
+function toggleRightView(view: 'theme' | 'history' | 'ai') {
+  rightView.value = rightView.value === view ? null : view
+}
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
 
 /** 视图模式：双栏 / 仅编辑 / 仅预览（分段图标切换） */
@@ -169,10 +174,11 @@ async function onCopy() {
 const charCount = computed(() => store.activeDoc?.content.length ?? 0)
 const lineCount = computed(() => store.activeDoc?.content.split('\n').length ?? 0)
 
-/** 标题输入框宽度 = 编辑器列宽度 − ✨ 按钮（32px）− 间距（12px）− 内边距（28px） */
+/** 标题输入框宽度 = 编辑器列宽度 − ✨ 按钮（32px）− 间距（12px）− 内边距（28px）；面板收起时编辑列变宽 */
 const titleInputWidth = computed(() => {
   if (viewMode.value === 'editor') return 'calc(100% - 72px)'
-  return 'calc((100% - 300px) / 2 - 72px)'
+  const panel = rightView.value ? 300 : 0
+  return `calc((100% - ${panel}px) / 2 - 72px)`
 })
 
 function onExport() {
@@ -474,7 +480,7 @@ function onRemoveTheme(id: string) {
               class="icon-btn"
               :class="{ active: rightView === 'ai' }"
               title="AI 助手"
-              @click="rightView = 'ai'"
+              @click="toggleRightView('ai')"
             >
               <svg class="ic" viewBox="0 0 22 22">
                 <path d="M4 5h14v10H9l-5 4zM8 10h.01M12 10h.01M16 10h.01" />
@@ -497,7 +503,7 @@ function onRemoveTheme(id: string) {
               class="icon-btn"
               :class="{ active: rightView === 'history' }"
               title="历史版本"
-              @click="rightView = 'history'"
+              @click="toggleRightView('history')"
             >
               <svg class="ic" viewBox="0 0 22 22">
                 <path d="M3 11a8 8 0 1 0 3-6M3 4v4h4M11 7v4l3 2" />
@@ -507,7 +513,7 @@ function onRemoveTheme(id: string) {
               class="icon-btn"
               :class="{ active: rightView === 'theme' }"
               title="主题样式"
-              @click="rightView = 'theme'"
+              @click="toggleRightView('theme')"
             >
               <svg class="ic" viewBox="0 0 22 22">
                 <path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 1 0-16z" />
@@ -534,7 +540,7 @@ function onRemoveTheme(id: string) {
               @open-theme="rightView = 'theme'"
             />
           </section>
-          <aside class="pane right-pane">
+          <aside v-if="rightView" class="pane right-pane">
             <template v-if="rightView === 'theme'">
               <div class="panel-head"><span>主题样式</span></div>
               <div class="right-scroll">
@@ -548,7 +554,7 @@ function onRemoveTheme(id: string) {
               @retry="onAiRetry"
               @apply="onAiApply"
               @use-title="onAiUseTitle"
-              @close="rightView = 'theme'"
+              @close="rightView = null"
               @open-settings="showAiSettings = true"
               @run-custom="onAiCustom"
               @run-outline="onAiOutline"
@@ -561,7 +567,7 @@ function onRemoveTheme(id: string) {
               v-else
               :history="store.history"
               @restore="store.restoreHistory"
-              @close="rightView = 'theme'"
+              @close="rightView = null"
             />
           </aside>
         </div>
