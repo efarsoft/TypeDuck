@@ -148,6 +148,22 @@ ipcMain.handle('file:save-as', async (_event, { content, defaultPath }) => {
   return { filePath: result.filePath }
 })
 
+/* 主进程代理抓取：绕渲染进程 CORS 限制（热点榜单等公开数据），仅放行 https GET */
+ipcMain.handle('net:fetch-text', async (_event, url) => {
+  if (typeof url !== 'string' || !/^https:\/\//i.test(url)) {
+    throw new Error('仅支持 https 地址')
+  }
+  const res = await net.fetch(url, {
+    headers: {
+      // NewsNow 等站点有 Cloudflare UA 过滤，需要浏览器 UA
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+    },
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.text()
+})
+
 /* ---------- 生命周期 ---------- */
 
 app.whenReady().then(() => {

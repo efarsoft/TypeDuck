@@ -18,6 +18,9 @@ contextBridge.exposeInMainWorld('desktopAPI', {
   saveFileDialog: (content, defaultPath) =>
     ipcRenderer.invoke('file:save-as', { content, defaultPath }),
 
+  /** 主进程代理抓取公开数据（仅 https GET，返回响应文本），绕渲染进程 CORS 限制 */
+  fetchText: (url) => ipcRenderer.invoke('net:fetch-text', url),
+
   /** 订阅原生菜单事件（menu:new / menu:open / menu:save / menu:save-as） */
   onMenu: (channel, callback) => {
     const allowed = ['menu:new', 'menu:open', 'menu:save', 'menu:save-as']

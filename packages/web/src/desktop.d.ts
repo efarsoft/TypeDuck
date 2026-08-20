@@ -6,6 +6,8 @@ interface DesktopAPI {
   saveFile(filePath: string, content: string): Promise<{ filePath: string }>
   saveFileDialog(content: string, defaultPath?: string): Promise<{ filePath: string } | null>
   onMenu(channel: string, callback: () => void): () => void
+  /** 主进程代理抓取公开数据（仅 https GET），返回响应文本 */
+  fetchText(url: string): Promise<string>
 }
 
 interface Window {
