@@ -24,8 +24,12 @@ const modelOptions = computed(() => {
   return [ai.config.model, ...base]
 })
 
-/** 自绘下拉（datalist 动态更新选项后浏览器经常不刷新，弃用） */
+/** 自绘下拉（datalist 动态更新选项后浏览器经常不刷新，弃用）。
+ *  列表 Teleport 到 body + fixed 定位，避免被弹窗内容区的 overflow 裁剪 */
 const modelDropdown = ref(false)
+const dropStyle = ref<{ top: string; left: string; width: string }>({ top: '0', left: '0', width: '0' })
+const modelInputEl = ref<HTMLInputElement>()
+
 const filteredModels = computed(() => {
   const all = modelOptions.value
   const kw = ai.config.model.trim().toLowerCase()
@@ -33,6 +37,20 @@ const filteredModels = computed(() => {
   const hit = all.filter((m) => m.toLowerCase().includes(kw))
   return hit.length ? hit : all
 })
+
+function openDropdown() {
+  const el = modelInputEl.value
+  if (el) {
+    const r = el.getBoundingClientRect()
+    dropStyle.value = { top: `${r.bottom + 4}px`, left: `${r.left}px`, width: `${r.width + 46}px` }
+  }
+  modelDropdown.value = true
+}
+
+function toggleDropdown() {
+  if (modelDropdown.value) modelDropdown.value = false
+  else openDropdown()
+}
 
 function pickModel(m: string) {
   ai.config.model = m
@@ -82,7 +100,7 @@ async function fetchModels() {
         <button class="dlg-close" title="关闭" @click="emit('close')">✕</button>
       </header>
 
-      <div class="dlg-body">
+      <div class="dlg-body" @scroll="modelDropdown = false">
         <p class="dlg-intro">
           接入任意 OpenAI 协议兼容的大模型（DeepSeek / 豆包 / 通义千问 / GLM / Kimi / 自定义）。
           <b>你的 API Key 只保存在本机，排版鸭不经过任何服务器。</b>
@@ -130,21 +148,21 @@ async function fetchModels() {
         </label>
         <div class="model-row">
           <input
+            ref="modelInputEl"
             v-model="ai.config.model"
             class="fld model-input"
             placeholder="模型名，可手填或从下拉选择"
             spellcheck="false"
-            @focus="modelDropdown = true"
+            @focus="openDropdown"
           />
-          <button
-            class="model-toggle"
-            title="选择模型"
-            type="button"
-            @click="modelDropdown = !modelDropdown"
-          >
-            ▾
+          <button class="model-toggle" title="选择模型" type="button" @click="toggleDropdown">
+            <svg class="ic" viewBox="0 0 22 22">
+              <path d="M6 9l5 5 5-5" />
+            </svg>
           </button>
-          <ul v-if="modelDropdown && filteredModels.length" class="model-list">
+        </div>
+        <teleport to="body">
+          <ul v-if="modelDropdown && filteredModels.length" class="model-list" :style="dropStyle">
             <li
               v-for="m in filteredModels"
               :key="m"
@@ -154,7 +172,7 @@ async function fetchModels() {
               {{ m }}
             </li>
           </ul>
-        </div>
+        </teleport>
         <p v-if="testMsg" class="test-msg" :data-state="testState">{{ testMsg }}</p>
       </div>
 
@@ -300,6 +318,8 @@ async function fetchModels() {
 }
 .model-input {
   flex: 1;
+  width: auto;
+  min-width: 0;
 }
 .model-toggle {
   width: 40px;
@@ -309,18 +329,27 @@ async function fetchModels() {
   background: #fff;
   cursor: pointer;
   color: #4e5969;
-  font-size: 12px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .model-toggle:hover {
   background: #f2f3f5;
 }
+.model-toggle .ic {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Teleport 到 body，fixed 定位绕开弹窗内容区的 overflow 裁剪 */
 .model-list {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
+  position: fixed;
+  z-index: 300;
   max-height: 200px;
   overflow-y: auto;
   margin: 0;
