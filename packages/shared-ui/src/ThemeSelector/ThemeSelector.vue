@@ -4,13 +4,17 @@ import { themes } from '@typeduck/core'
 import type { Theme, ThemeCategory } from '@typeduck/core'
 
 const props = defineProps<{ modelValue: string }>()
-const emit = defineEmits<{ (e: 'update:modelValue', id: string): void }>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', id: string): void
+  (e: 'remove-theme', id: string): void
+}>()
 
 const categoryLabels: Record<ThemeCategory, string> = {
   daily: '📝 日常写作',
   expressive: '🎨 个性撞色',
   narrative: '🖋 文艺叙事',
   dark: '🌙 深色沉浸',
+  ai: '🤖 AI 生成',
 }
 
 const grouped = computed(() => {
@@ -102,17 +106,25 @@ function isTooLight(color: string): boolean {
 <template>
   <div class="theme-selector">
     <div v-for="[category, list] in grouped" :key="category" class="group">
-      <div class="group-label">{{ categoryLabels[category] }}</div>
-      <div class="theme-list">
-        <button
-          v-for="theme in list"
-          :key="theme.id"
-          class="theme-card"
-          :class="{ active: theme.id === modelValue }"
-          :style="{ background: theme.previewBackground }"
-          :title="`${theme.name}：${theme.description}`"
-          @click="emit('update:modelValue', theme.id)"
-        >
+        <div class="group-label">{{ categoryLabels[category] }}</div>
+        <div class="theme-list">
+          <button
+            v-for="theme in list"
+            :key="theme.id"
+            class="theme-card"
+            :class="{ active: theme.id === modelValue }"
+            :style="{ background: theme.previewBackground }"
+            :title="`${theme.name}：${theme.description}`"
+            @click="emit('update:modelValue', theme.id)"
+          >
+            <!-- AI 生成主题可删除；内置主题不可删 -->
+            <span
+              v-if="theme.category === 'ai'"
+              class="card-del"
+              title="删除该 AI 主题"
+              @click.stop="emit('remove-theme', theme.id)"
+              >✕</span
+            >
           <!-- 顶部签名色条：一眼区分相似主题 -->
           <span class="mini-accent" :style="{ background: signatureColor(theme) }"></span>
           <!-- 迷你排版预览：标题（还原 h2）+ 正文 + 链接 + 引用 -->
@@ -184,6 +196,30 @@ function isTooLight(color: string): boolean {
   left: 0;
   right: 0;
   height: 3px;
+}
+.card-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+}
+.theme-card:hover .card-del {
+  opacity: 1;
+}
+.card-del:hover {
+  background: #e5554e;
 }
 .mini-title {
   font-size: 12px;

@@ -3,16 +3,23 @@ import { computed, onMounted, ref } from 'vue'
 import {
   AI_ACTIONS,
   buildMessages,
+  compileAiTheme,
   copyHtmlToClipboard,
   exportHtmlFile,
   exportPrintPdf,
   exportWordDoc,
+  extractAiTokens,
   getTheme,
+  loadSavedAiThemes,
   parseTitles,
+  persistAiTheme,
+  registerTheme,
+  removeSavedAiTheme,
   streamChat,
+  unregisterTheme,
   withImportant,
 } from '@typeduck/core'
-import type { ActionInput, AiActionId } from '@typeduck/core'
+import type { ActionInput, AiActionId, AiThemeTemplate } from '@typeduck/core'
 import { DuckEditor, DuckPreview, DocumentList, ThemeSelector } from '@typeduck/shared-ui'
 import { useEditorStore } from './stores/editor'
 import { useAiStore, type AiTask } from './stores/ai'
@@ -38,6 +45,8 @@ onMounted(() => {
   store.load()
   setupSyncScroll()
   document.addEventListener('click', onDocClickForExport)
+  // 恢复上次保存的 AI 生成主题（localStorage → 运行时注册）
+  loadSavedAiThemes().forEach(registerTheme)
   // 桌面版：接住原生菜单事件
   if (window.desktopAPI) {
     const api = window.desktopAPI
@@ -230,13 +239,17 @@ const showAiSettings = ref(false)
 const aiTask = ref<AiTask | null>(null)
 let aiAbort: AbortController | undefined
 
+/** 未配置时弹设置 + 提示，已配置返回 true */
+function ensureAiReady(): boolean {
+  if (aiStore.isConfigured) return true
+  showAiSettings.value = true
+  store.showToast('先配置 AI：选厂商、填你自己的 API Key')
+  return false
+}
+
 /** 编辑器工具栏 AI 按钮：润色 / 扩写 / 缩写 / 续写 */
 function onAiAction(action: AiActionId) {
-  if (!aiStore.isConfigured) {
-    showAiSettings.value = true
-    store.showToast('先配置 AI：选厂商、填你自己的 API Key')
-    return
-  }
+  if (!ensureAiReady()) return
   const info = editorRef.value?.getSelectionInfo()
   if (!info) return
   if (AI_ACTIONS[action].needsSelection && !info.text.trim()) {
@@ -252,17 +265,44 @@ function onAiAction(action: AiActionId) {
 
 /** 子标题栏 ✨：基于正文生成 5 个候选标题 */
 function onGenerateTitles() {
-  if (!aiStore.isConfigured) {
-    showAiSettings.value = true
-    store.showToast('先配置 AI：选厂商、填你自己的 API Key')
-    return
-  }
+  if (!ensureAiReady()) return
   const doc = store.activeDoc
   if (!doc || doc.content.trim().length < 50) {
     store.showToast('先写点正文，再来生成标题')
     return
   }
   runAiTask('titles', { before: doc.content, title: doc.title }, null)
+}
+
+/** AI 面板：自定义指令（作用于当前选区） */
+function onAiCustom(instruction: string) {
+  if (!ensureAiReady()) return
+  const info = editorRef.value?.getSelectionInfo()
+  if (!info || !info.text.trim()) {
+    store.showToast('请先在编辑器中选中要处理的文字')
+    return
+  }
+  runAiTask('custom', { selection: info.text, instruction }, { from: info.from, to: info.to })
+}
+
+function onAiOutline(topic: string, style: string) {
+  if (!ensureAiReady()) return
+  runAiTask('outline', { topic, style }, null)
+}
+
+function onAiDigest() {
+  if (!ensureAiReady()) return
+  const doc = store.activeDoc
+  if (!doc || doc.content.trim().length < 50) {
+    store.showToast('先写点正文，再来生成摘要')
+    return
+  }
+  runAiTask('digest', { before: doc.content, title: doc.title }, null)
+}
+
+function onAiThemeGen(description: string, template: string) {
+  if (!ensureAiReady()) return
+  runAiTask('theme', { description, template }, null)
 }
 
 async function runAiTask(action: AiActionId, input: ActionInput, range: AiTask['range']) {
@@ -282,6 +322,15 @@ async function runAiTask(action: AiActionId, input: ActionInput, range: AiTask['
       aiTask.value.status = 'error'
       aiTask.value.text = '模型没有按格式返回标题，点「重试」或换个模型'
       return
+    }
+    if (action === 'theme') {
+      const tokens = extractAiTokens(full)
+      if (!tokens) {
+        aiTask.value.status = 'error'
+        aiTask.value.text = '未能解析出主题设计令牌，点「重试」或换个模型'
+        return
+      }
+      aiTask.value.theme = compileAiTheme(tokens, (input.template as AiThemeTemplate) ?? 'clean')
     }
     aiTask.value.status = 'done'
   } catch (err) {
@@ -325,6 +374,35 @@ function onAiUseTitle(title: string) {
 function onAiRetry() {
   const task = aiTask.value
   if (task) runAiTask(task.action, task.input, task.range)
+}
+
+/** AI 主题：注册 + 持久化 + 应用到当前文档 */
+function onAiSaveTheme() {
+  const theme = aiTask.value?.theme
+  if (!theme || !store.activeDoc) return
+  registerTheme(theme)
+  persistAiTheme(theme)
+  store.activeDoc.themeId = theme.id
+  store.markUnsaved()
+  aiTask.value = null
+  store.showToast(`主题「${theme.name}」已保存并应用 🎨`)
+  // 面板切走再切回会重新挂载主题列表，新主题立即可见
+  rightView.value = 'theme'
+}
+
+function onAiDiscard() {
+  aiTask.value = null
+}
+
+/** 删除 AI 生成主题（内置主题不受影响） */
+function onRemoveTheme(id: string) {
+  removeSavedAiTheme(id)
+  unregisterTheme(id)
+  if (store.activeDoc?.themeId === id) {
+    store.activeDoc.themeId = 'minimal-white'
+    store.markUnsaved()
+  }
+  store.showToast('已删除该 AI 主题')
 }
 </script>
 
@@ -460,7 +538,7 @@ function onAiRetry() {
             <template v-if="rightView === 'theme'">
               <div class="panel-head"><span>主题样式</span></div>
               <div class="right-scroll">
-                <ThemeSelector v-model="themeId" />
+                <ThemeSelector v-model="themeId" @remove-theme="onRemoveTheme" />
               </div>
             </template>
             <AiPanel
@@ -472,6 +550,12 @@ function onAiRetry() {
               @use-title="onAiUseTitle"
               @close="rightView = 'theme'"
               @open-settings="showAiSettings = true"
+              @run-custom="onAiCustom"
+              @run-outline="onAiOutline"
+              @run-digest="onAiDigest"
+              @run-theme="onAiThemeGen"
+              @save-theme="onAiSaveTheme"
+              @discard="onAiDiscard"
             />
             <HistoryPanel
               v-else

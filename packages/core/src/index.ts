@@ -1,6 +1,15 @@
 export { render, withImportant, scopeCss } from './markdown/render'
-export { themes, getTheme, registerTheme } from './theme/registry'
+export { themes, getTheme, registerTheme, unregisterTheme } from './theme/registry'
 export type { Theme, ThemeCategory, ThemeStyles } from './theme/types'
+export {
+  extractAiTokens,
+  compileAiTheme,
+  loadSavedAiThemes,
+  persistAiTheme,
+  removeSavedAiTheme,
+  AI_THEME_LIMIT,
+} from './theme/aiTheme'
+export type { AiThemeTokens, AiThemeTemplate } from './theme/aiTheme'
 export { copyHtmlToClipboard } from './clipboard/copy'
 export { exportHtmlFile } from './exporter/exportHtml'
 export { exportWordDoc, exportPrintPdf } from './exporter/exportOffice'

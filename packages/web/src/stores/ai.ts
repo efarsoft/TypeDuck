@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, watch } from 'vue'
-import { defaultConfig, getPreset, type AiActionId, type ActionInput, type AiConfig } from '@typeduck/core'
+import { defaultConfig, getPreset, type AiActionId, type ActionInput, type AiConfig, type Theme } from '@typeduck/core'
 
 const STORAGE_KEY = 'typeduck:ai'
 
@@ -14,6 +14,8 @@ export interface AiTask {
   input: ActionInput
   /** 选区范围（替换用）；续写/标题为 null */
   range: { from: number; to: number } | null
+  /** 生成主题动作编译出的 Theme 预览 */
+  theme?: Theme
 }
 
 function loadConfig(): AiConfig {

@@ -84,6 +84,12 @@ export function registerTheme(theme: Theme): void {
   }
 }
 
+/** 注销运行时注册的主题（仅 AI 生成主题会用到；内置主题不受影响） */
+export function unregisterTheme(id: string): void {
+  const idx = themes.findIndex((t) => t.id === id)
+  if (idx > 0) themes.splice(idx, 1)
+}
+
 export function getTheme(id: string): Theme {
   return themes.find((t) => t.id === id) ?? themes[0]
 }

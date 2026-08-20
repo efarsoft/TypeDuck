@@ -1,7 +1,16 @@
 import type { AiMessage } from './types'
 
-/** AI 写作动作：id 与编辑器工具栏一一对应 */
-export type AiActionId = 'polish' | 'expand' | 'shorten' | 'continue' | 'titles'
+/** AI 写作动作：id 与编辑器工具栏 / AI 面板功能卡一一对应 */
+export type AiActionId =
+  | 'polish'
+  | 'expand'
+  | 'shorten'
+  | 'continue'
+  | 'titles'
+  | 'custom'
+  | 'outline'
+  | 'digest'
+  | 'theme'
 
 export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boolean }> = {
   polish: { label: '润色', needsSelection: true },
@@ -9,18 +18,32 @@ export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boo
   shorten: { label: '缩写', needsSelection: true },
   continue: { label: '续写', needsSelection: false },
   titles: { label: '生成标题', needsSelection: false },
+  custom: { label: '自定义指令', needsSelection: true },
+  outline: { label: '生成大纲', needsSelection: false },
+  digest: { label: '生成摘要', needsSelection: false },
+  theme: { label: '生成主题', needsSelection: false },
 }
 
 const BASE_STYLE =
   '你是一位资深微信公众号写作助手。输出使用简体中文，保留 Markdown 格式（标题、列表、加粗、代码块等原样保留）。'
 
 export interface ActionInput {
-  /** 选中的文字（润色/扩写/缩写） */
+  /** 选中的文字（润色/扩写/缩写/自定义指令） */
   selection?: string
-  /** 光标前全文（续写上文、标题生成的正文来源） */
+  /** 光标前全文（续写上文、摘要的正文来源） */
   before?: string
-  /** 文档标题（标题生成时作为参考） */
+  /** 文档标题（标题/摘要生成时作为参考） */
   title?: string
+  /** 自定义指令内容 */
+  instruction?: string
+  /** 大纲主题 */
+  topic?: string
+  /** 大纲风格 */
+  style?: string
+  /** AI 主题的风格描述 */
+  description?: string
+  /** AI 主题的布局模板 */
+  template?: string
 }
 
 /** 分层 Prompt：每个动作一组消息，system 定风格、user 给素材 */
@@ -73,6 +96,49 @@ export function buildMessages(action: AiActionId, input: ActionInput): AiMessage
           content: `${input.title ? `文档现标题：${input.title}\n\n` : ''}文章内容如下：\n\n${(input.before ?? '').slice(0, 4000)}`,
         },
       ]
+    case 'custom':
+      return [
+        {
+          role: 'system',
+          content: `${BASE_STYLE}你的任务是严格按照用户给出的指令处理文字。指令与文字内容冲突时以指令为准，只输出处理结果，不要任何解释。`,
+        },
+        { role: 'user', content: `指令：${input.instruction ?? ''}\n\n文字：\n\n${selection}` },
+      ]
+    case 'outline':
+      return [
+        {
+          role: 'system',
+          content:
+            '你是一位公众号文章结构设计师。根据主题产出一份 Markdown 大纲：以「# 标题」开头（给文章起一个可直接使用的标题），下设 4～6 个「## 二级标题」章节，每个章节下用一行「> 要点：……」说明这节要写什么（结构复杂时可加「### 三级标题」）。只输出 Markdown 大纲本身，不要解释。',
+        },
+        {
+          role: 'user',
+          content: `主题：${input.topic ?? ''}\n文章风格：${input.style || '通用'}\n\n请输出文章大纲。`,
+        },
+      ]
+    case 'digest':
+      return [
+        {
+          role: 'system',
+          content:
+            '你是公众号摘要写手。基于文章内容写一条不超过 120 字的摘要：概括核心信息，语气与正文一致，不要用「本文介绍了」这类套话开头，不加引号、不加解释、不换行，直接输出摘要文本。',
+        },
+        {
+          role: 'user',
+          content: `${input.title ? `文档标题：${input.title}\n\n` : ''}正文：\n\n${(input.before ?? '').slice(0, 6000)}`,
+        },
+      ]
+    case 'theme':
+      return [
+        {
+          role: 'system',
+          content: buildThemeTokenPrompt(),
+        },
+        {
+          role: 'user',
+          content: `风格描述：${input.description ?? ''}\n\n请输出主题设计令牌 JSON。`,
+        },
+      ]
   }
 }
 
@@ -83,4 +149,28 @@ export function parseTitles(text: string): string[] {
     .map((line) => line.trim().replace(/^[-*·•>\d.、()\s]+/, '').replace(/["“”']/g, ''))
     .filter((line) => line.length >= 4 && line.length <= 40)
     .slice(0, 5)
+}
+
+/** 「生成主题」的 system prompt：令牌 schema 写死在提示词里，模型只允许填空 */
+function buildThemeTokenPrompt(): string {
+  return [
+    '你是公众号排版主题设计师。根据用户的风格描述，产出一份主题设计令牌 JSON。',
+    '严格遵守以下模式——字段名和枚举值一字不差，全部字段必须给出，只输出 JSON 本体，不要 markdown 代码块，不要任何解释：',
+    '{',
+    '  "name": "主题名，2-6 个字",',
+    '  "description": "一句话定位，10-20 字",',
+    '  "primary": "#RRGGBB 主强调色，用于标题/链接/引用点缀",',
+    '  "headingColor": "#RRGGBB 标题文字色",',
+    '  "textColor": "#RRGGBB 正文文字色，要足够深保证可读",',
+    '  "backgroundTone": "white | warm | gray | tint",',
+    '  "headingFont": "sans | serif",',
+    '  "headingStyle": "plain | left-bar | underline | block",',
+    '  "quoteStyle": "left-border | background | italic",',
+    '  "linkStyle": "color | underline",',
+    '  "codeStyle": "light | dark",',
+    '  "radius": "none | small | large",',
+    '  "density": "compact | normal | airy"',
+    '}',
+    '设计要求：主强调色鲜明但不刺眼；正文色与背景对比度足够；深色背景时正文色必须用浅色；整体协调、适合微信公众号长文阅读。',
+  ].join('\n')
 }

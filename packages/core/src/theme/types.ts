@@ -31,9 +31,9 @@ export interface ThemeStyles {
 
 /**
  * 主题分组按使用场景划分（而非视觉风格）——用户选主题时想的是"我写什么文章"。
- * daily 日常写作（干净通用）/ expressive 个性撞色（强对比彩色）/ narrative 文艺叙事（衬线阅读）/ dark 深色沉浸。
+ * daily 日常写作 / expressive 个性撞色 / narrative 文艺叙事 / dark 深色沉浸 / ai 运行时注册（AI 生成）。
  */
-export type ThemeCategory = 'daily' | 'expressive' | 'narrative' | 'dark'
+export type ThemeCategory = 'daily' | 'expressive' | 'narrative' | 'dark' | 'ai'
 
 export interface Theme {
   id: string
