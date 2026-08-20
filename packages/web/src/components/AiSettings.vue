@@ -51,7 +51,7 @@ async function onFetchModels() {
 
       <div class="dlg-body">
         <p class="dlg-intro">
-          接入任意 OpenAI 协议兼容的大模型（DeepSeek / 通义千问 / GLM / Kimi / 自定义）。
+          接入任意 OpenAI 协议兼容的大模型（DeepSeek / 豆包 / 通义千问 / GLM / Kimi / 自定义）。
           <b>你的 API Key 只保存在本机，排版鸭不经过任何服务器。</b>
         </p>
 

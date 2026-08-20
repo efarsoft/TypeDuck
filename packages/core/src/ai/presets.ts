@@ -48,6 +48,14 @@ export const AI_PRESETS: AiProviderPreset[] = [
     note: 'kimi-k3 需账户充值至少 10 元解锁',
   },
   {
+    id: 'doubao',
+    name: '豆包（火山方舟）',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
+    models: ['doubao-seed-2-1-turbo-260628', 'doubao-seed-2-1-pro-260628', 'doubao-seed-2-0-lite-260428'],
+    keyUrl: 'https://console.volcengine.com/ark/region:cn-beijing/apiKey',
+    note: '模型名需带日期后缀，也可填接入点 ep-xxx；turbo 便宜够用',
+  },
+  {
     id: 'custom',
     name: '自定义（OpenAI 兼容）',
     baseUrl: '',
