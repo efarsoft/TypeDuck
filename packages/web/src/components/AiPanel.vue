@@ -16,6 +16,7 @@ const emit = defineEmits<{
   (e: 'run-digest'): void
   (e: 'run-theme', description: string, template: string): void
   (e: 'run-rewrite', url: string, instruction: string): void
+  (e: 'run-rewrite-text', url: string, text: string, instruction: string): void
   (e: 'save-theme'): void
   (e: 'discard'): void
 }>()
@@ -30,6 +31,9 @@ const themeDesc = ref('')
 const themeTemplate = ref('clean')
 const rewriteUrl = ref('')
 const rewriteStyle = ref('')
+/** 粘贴模式：自动抓取失败时出现正文输入区 */
+const pasteMode = ref(false)
+const pasteText = ref('')
 
 const outlineStyles = ['通用', '技术教程', '观点评论', '故事叙事']
 const themeTemplates = [
@@ -58,6 +62,23 @@ function submitTheme() {
 function submitRewrite() {
   if (rewriteUrl.value.trim()) emit('run-rewrite', rewriteUrl.value.trim(), rewriteStyle.value.trim())
 }
+
+function submitRewritePaste() {
+  const text = pasteText.value.trim()
+  if (!text) return
+  emit('run-rewrite-text', rewriteUrl.value.trim() || '(手动粘贴)', text, rewriteStyle.value.trim())
+}
+
+/** 自动抓取失败时切入粘贴模式（App 调用）：保留链接，引导新窗口打开原文复制正文 */
+function openRewritePaste(url: string, instruction?: string) {
+  mode.value = 'rewrite'
+  if (url) rewriteUrl.value = url
+  if (instruction) rewriteStyle.value = instruction
+  pasteMode.value = true
+  pasteText.value = ''
+}
+
+defineExpose({ openRewritePaste })
 
 /* ---------- 任务展示 ---------- */
 
@@ -181,7 +202,30 @@ watch(
         <input v-model="rewriteUrl" placeholder="https:// 任意文章地址（公众号/博客/新闻）" @keyup.enter="submitRewrite" />
         <label>风格要求（可选）</label>
         <input v-model="rewriteStyle" placeholder="例如：口语化一点，面向职场新人" @keyup.enter="submitRewrite" />
-        <button class="run" @click="submitRewrite">抓取并改写</button>
+
+        <!-- 粘贴模式：自动抓取失败时出现 -->
+        <template v-if="pasteMode">
+          <label>正文（自动抓取失败，请粘贴）</label>
+          <a
+            class="open-link"
+            :href="rewriteUrl"
+            target="_blank"
+            rel="noopener"
+            title="在新窗口打开原文"
+          >
+            ↗ 新窗口打开原文，全选复制正文粘贴到下面
+          </a>
+          <textarea
+            v-model="pasteText"
+            rows="7"
+            placeholder="把原文正文粘贴到这里，然后点下方按钮改写…"
+          ></textarea>
+          <button class="run" :disabled="!pasteText.trim()" @click="submitRewritePaste">
+            改写粘贴的正文
+          </button>
+        </template>
+        <button v-else class="run" @click="submitRewrite">抓取并改写</button>
+
         <p class="dim">抓取原文 → AI 改写为全新初稿（保留事实、重写表达），自动注明原文出处。</p>
       </div>
 
@@ -436,6 +480,15 @@ watch(
 .form textarea {
   resize: vertical;
   line-height: 1.6;
+}
+.open-link {
+  font-size: 12.5px;
+  color: #07c160;
+  text-decoration: none;
+  line-height: 1.6;
+}
+.open-link:hover {
+  text-decoration: underline;
 }
 .run {
   height: 32px;

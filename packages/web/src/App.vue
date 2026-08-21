@@ -35,6 +35,7 @@ const store = useEditorStore()
 const aiStore = useAiStore()
 const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
+const aiPanelRef = ref<InstanceType<typeof AiPanel>>()
 const rightView = ref<'theme' | 'history' | 'ai' | 'hot' | 'image' | null>('theme')
 
 /** 右侧面板按钮：再次点击已激活的面板则整体收起（编辑区自动变宽） */
@@ -388,6 +389,13 @@ function onAiRetry() {
 
 /* ---------- 链接改写：抓取原文 → 提取正文 → 新建文档（带出处）→ AI 流式改写 ---------- */
 
+/** 抓取/提取失败：切到粘贴模式，引导用户新窗口打开原文复制正文 */
+function fallbackToPaste(url: string, instruction?: string, reason?: string) {
+  rightView.value = 'ai'
+  aiPanelRef.value?.openRewritePaste(url, instruction)
+  store.showToast(reason ?? '未能提取正文：请在新窗口打开原文，复制内容粘贴到面板')
+}
+
 async function doRewrite(url: string, title?: string, instruction?: string) {
   if (!ensureAiReady()) return
   if (!/^https?:\/\//.test(url)) {
@@ -399,12 +407,12 @@ async function doRewrite(url: string, title?: string, instruction?: string) {
   try {
     html = await fetchText(url)
   } catch {
-    store.showToast('抓取失败：站点拒绝访问或跨域受限（桌面版更稳），也可复制正文后用「自定义指令」改写')
+    fallbackToPaste(url, instruction, '抓取失败：请在新窗口打开原文，复制内容粘贴到面板')
     return
   }
   const article = extractArticle(html, url)
   if (article.text.length < 120) {
-    store.showToast('未能提取正文（该站可能需要 JS 渲染），可复制正文后用「自定义指令」改写')
+    fallbackToPaste(url, instruction)
     return
   }
   const source = article.title || title || url
@@ -420,6 +428,17 @@ function onHotRewrite(item: { title: string; url: string }) {
 /** AI 面板「链接改写」表单 */
 function onRewriteUrl(url: string, instruction: string) {
   doRewrite(url, undefined, instruction || undefined)
+}
+
+/** 粘贴正文的改写（自动抓取失败的兜底路径） */
+async function onRewriteText(url: string, text: string, instruction: string) {
+  if (!ensureAiReady()) return
+  if (text.trim().length < 50) {
+    store.showToast('粘贴的正文太短了')
+    return
+  }
+  await store.createDoc(`> 原文：${url && url !== '(手动粘贴)' ? `[链接](${url})` : '（手动粘贴正文）'}\n\n`)
+  runAiTask('rewrite', { selection: text, instruction: instruction || undefined }, null)
 }
 
 /** AI 主题：注册 + 持久化 + 应用到当前文档 */
@@ -614,6 +633,7 @@ function onRemoveTheme(id: string) {
             </template>
             <AiPanel
               v-else-if="rightView === 'ai'"
+              ref="aiPanelRef"
               :task="aiTask"
               @stop="aiAbort?.abort()"
               @retry="onAiRetry"
@@ -626,6 +646,7 @@ function onRemoveTheme(id: string) {
               @run-digest="onAiDigest"
               @run-theme="onAiThemeGen"
               @run-rewrite="onRewriteUrl"
+              @run-rewrite-text="onRewriteText"
               @save-theme="onAiSaveTheme"
               @discard="onAiDiscard"
             />
