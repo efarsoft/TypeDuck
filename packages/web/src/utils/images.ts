@@ -142,8 +142,9 @@ export async function insertImage(file: File): Promise<InsertedImage> {
     return { src: url, alt }
   }
 
-  // 本地暂存路径
+  // 本地暂存路径：存 IndexedDB + 立即创建 blob URL 供预览
   const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   await putImage(id, file)
+  rememberBlob(id, file)
   return { src: tdimgUrl(id), alt }
 }
