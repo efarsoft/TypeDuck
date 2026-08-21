@@ -192,20 +192,23 @@
     .feature-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
     .feature-desc { font-size: 13.5px; line-height: 1.7; color: #6b7280; }
 
-    /* ---------- 主题预览 ---------- */
-    .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 36px; }
-    .theme-card {
-      position: relative; background: #fff; border: 1px solid #eef0f3; border-radius: 16px;
-      padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 10px;
+    /* ---------- 主题橱窗（内容由生成脚本产出，卡片背景/标题/引用均为主题真实样式） ---------- */
+    .tgroup + .tgroup { margin-top: 30px; }
+    .tgroup-label { display: block; font-size: 13px; font-weight: 700; color: #86909c; margin-bottom: 12px; letter-spacing: 0.5px; }
+    .tgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .tcard {
+      position: relative; border: 1px solid #eef0f3; border-radius: 16px;
+      padding: 24px 20px 18px; display: flex; flex-direction: column; gap: 10px;
       text-decoration: none; overflow: hidden;
       transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
-    .theme-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.07); border-color: #cdeede; }
-    .tc-accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
-    .tc-title { font-size: 15px; font-weight: 800; }
+    .tcard:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.09); border-color: #cdeede; }
+    .tc-tag { position: absolute; top: 10px; right: 12px; font-size: 10.5px; font-weight: 600; }
+    .tc-h2 { font-size: 15px; font-weight: 800; }
     .tc-line { height: 7px; border-radius: 4px; width: 100%; }
-    .tc-line.short { width: 58%; }
-    .themes-cta { text-align: center; }
+    .tc-short { width: 58%; }
+    .tc-quote { height: 10px; border-radius: 0 4px 4px 0; width: 62%; }
+    .themes-cta { text-align: center; margin-top: 40px; }
 
     /* ---------- CTA ---------- */
     .cta {
@@ -302,7 +305,7 @@
       .hero-sub { margin-left: auto; margin-right: auto; }
       .hero-actions, .cta-actions { justify-content: center; }
       .hero-title { font-size: 40px; }
-      .feature-grid, .theme-grid { grid-template-columns: repeat(2, 1fr); }
+      .feature-grid, .tgrid { grid-template-columns: repeat(2, 1fr); }
       .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 22px 0; }
       .stat + .stat::before { display: none; }
       .nav-links { display: none; }
@@ -310,7 +313,7 @@
       .footer-col.nav-col { margin-left: 0; }
     }
     @media (max-width: 560px) {
-      .feature-grid, .theme-grid, .download-grid { grid-template-columns: 1fr; }
+      .feature-grid, .tgrid, .download-grid { grid-template-columns: 1fr; }
       .hero-title { font-size: 32px; }
       .section { padding: 60px 20px; }
       .hero-actions { flex-direction: column; align-items: stretch; }
@@ -436,21 +439,161 @@
     </div>
   </section>
 
-  <!-- 主题展示 -->
+  <!-- 主题展示（内容由 scripts/gen-theme-showcase.mjs 从主题注册表生成） -->
   <section id="themes" class="section section-alt">
     <span class="eyebrow">主题</span>
     <h2 class="section-title">一套主题，一种语气</h2>
-    <p class="section-sub">按使用场景分组：日常写作、个性撞色、文艺叙事、深色沉浸。描述一句话，AI 还能给你现造一套。</p>
-    <div class="theme-grid">
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#1a1a1a"></span><span class="tc-title" style="color:#1a1a1a">极简白</span><span class="tc-line" style="background:#1a1a1a;opacity:.25"></span><span class="tc-line" style="background:#1a1a1a;opacity:.18"></span><span class="tc-line short" style="background:#1a1a1a;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#07c160"></span><span class="tc-title" style="color:#07c160">微信绿</span><span class="tc-line" style="background:#07c160;opacity:.25"></span><span class="tc-line" style="background:#07c160;opacity:.18"></span><span class="tc-line short" style="background:#07c160;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#0969da"></span><span class="tc-title" style="color:#0969da">GitHub</span><span class="tc-line" style="background:#0969da;opacity:.25"></span><span class="tc-line" style="background:#0969da;opacity:.18"></span><span class="tc-line short" style="background:#0969da;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#b5651d"></span><span class="tc-title" style="color:#b5651d">燕麦稿</span><span class="tc-line" style="background:#b5651d;opacity:.25"></span><span class="tc-line" style="background:#b5651d;opacity:.18"></span><span class="tc-line short" style="background:#b5651d;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#9e2b25"></span><span class="tc-title" style="color:#9e2b25">新中式</span><span class="tc-line" style="background:#9e2b25;opacity:.25"></span><span class="tc-line" style="background:#9e2b25;opacity:.18"></span><span class="tc-line short" style="background:#9e2b25;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#ff5c8a"></span><span class="tc-title" style="color:#ff5c8a">孟菲斯</span><span class="tc-line" style="background:#ff5c8a;opacity:.25"></span><span class="tc-line" style="background:#ff5c8a;opacity:.18"></span><span class="tc-line short" style="background:#ff5c8a;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#00cfe5"></span><span class="tc-title" style="color:#00cfe5">全息镭射</span><span class="tc-line" style="background:#00cfe5;opacity:.25"></span><span class="tc-line" style="background:#00cfe5;opacity:.18"></span><span class="tc-line short" style="background:#00cfe5;opacity:.12"></span></a>
-      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#ff2e97"></span><span class="tc-title" style="color:#ff2e97">赛博霓虹</span><span class="tc-line" style="background:#ff2e97;opacity:.25"></span><span class="tc-line" style="background:#ff2e97;opacity:.18"></span><span class="tc-line short" style="background:#ff2e97;opacity:.12"></span></a>
+    <p class="section-sub">四大场景 32 套主题，下面每张卡片都是真实样式渲染——描述一句话，AI 还能现造一套。</p>
+    <!-- THEME-SHOWCASE:START -->
+    <div class="tgroup">
+      <span class="tgroup-label">📝 日常写作 · 极简白 / 微信绿 / GitHub / Medium</span>
+      <div class="tgrid">
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">极简白</span>
+        <span class="tc-h2" style="color:#1a1a1a;border-bottom:1px solid #eaeaea;padding-bottom:4px;">极简白</span>
+        <span class="tc-line" style="background:#2f2f2f;opacity:.22"></span>
+        <span class="tc-line" style="background:#2f2f2f;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#2f2f2f;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #d9d9d9;background:#f7f7f7;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">微信绿</span>
+        <span class="tc-h2" style="color:#07c160;border-left:4px solid #07c160;padding-left:10px;">微信绿</span>
+        <span class="tc-line" style="background:#333333;opacity:.22"></span>
+        <span class="tc-line" style="background:#333333;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#333333;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #07c160;background:#f3fbf6;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">GitHub</span>
+        <span class="tc-h2" style="color:#1f2328;border-bottom:1px solid #eaecef;padding-bottom:4px;">GitHub</span>
+        <span class="tc-line" style="background:#24292e;opacity:.22"></span>
+        <span class="tc-line" style="background:#24292e;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#24292e;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #dfe2e5;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#fcfcfc">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">Medium</span>
+        <span class="tc-h2" style="color:#111111;">Medium</span>
+        <span class="tc-line" style="background:#242424;opacity:.22"></span>
+        <span class="tc-line" style="background:#242424;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#242424;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:3px solid #1a8917;"></span>
+      </a>
+      </div>
     </div>
+    <div class="tgroup">
+      <span class="tgroup-label">🎨 个性撞色 · 经典蓝 / Bauhaus / 暖橙 / 秋日暖光</span>
+      <div class="tgrid">
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">经典蓝</span>
+        <span class="tc-h2" style="color:#ffffff;background:#1a6db5;padding:3px 10px;border-radius:4px;align-self:flex-start;">经典蓝</span>
+        <span class="tc-line" style="background:#3a3a3a;opacity:.22"></span>
+        <span class="tc-line" style="background:#3a3a3a;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#3a3a3a;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #1a6db5;background:#f2f8fd;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">Bauhaus</span>
+        <span class="tc-h2" style="color:#212121;border-left:6px solid #e63946;padding-left:10px;">Bauhaus</span>
+        <span class="tc-line" style="background:#212121;opacity:.22"></span>
+        <span class="tc-line" style="background:#212121;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#212121;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:6px solid #1d3557;background:#f5f5f5;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">暖橙</span>
+        <span class="tc-h2" style="color:#ffffff;background:#ef7060;padding:3px 10px;border-radius:4px;align-self:flex-start;">暖橙</span>
+        <span class="tc-line" style="background:#3e3e3e;opacity:.22"></span>
+        <span class="tc-line" style="background:#3e3e3e;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#3e3e3e;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #ef7060;background:#fff7f5;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#faf9f5">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">秋日暖光</span>
+        <span class="tc-h2" style="color:#d97758;border-bottom:1px dashed rgba(74,65,61,0.3);padding-bottom:4px;">秋日暖光</span>
+        <span class="tc-line" style="background:#4a413d;opacity:.22"></span>
+        <span class="tc-line" style="background:#4a413d;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#4a413d;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:5px solid #d97758;background:#fef4e7;"></span>
+      </a>
+      </div>
+    </div>
+    <div class="tgroup">
+      <span class="tgroup-label">🖋 文艺叙事 · Claude 燕麦 / 新闻纸 / 羊皮纸 / 水墨</span>
+      <div class="tgrid">
+      <a class="tcard" href="editor.html" style="background:#f8f6f0">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">Claude 燕麦</span>
+        <span class="tc-h2" style="color:#b75c3d;">Claude 燕麦</span>
+        <span class="tc-line" style="background:#2b2b2b;opacity:.22"></span>
+        <span class="tc-line" style="background:#2b2b2b;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#2b2b2b;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #b75c3d;background:rgba(183,92,61,0.05);"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#fdfaf6">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">新闻纸</span>
+        <span class="tc-h2" style="color:#111111;">新闻纸</span>
+        <span class="tc-line" style="background:#1a1a1a;opacity:.22"></span>
+        <span class="tc-line" style="background:#1a1a1a;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#1a1a1a;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #326891;background:#f0ede8;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#f4ecd8">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">羊皮纸</span>
+        <span class="tc-h2" style="color:#8c2211;">羊皮纸</span>
+        <span class="tc-line" style="background:#2b2621;opacity:.22"></span>
+        <span class="tc-line" style="background:#2b2621;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#2b2621;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #8c2211;background:#efe5cc;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#faf9f6">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">水墨</span>
+        <span class="tc-h2" style="color:#1f1f1f;">水墨</span>
+        <span class="tc-line" style="background:#1f1f1f;opacity:.22"></span>
+        <span class="tc-line" style="background:#1f1f1f;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#1f1f1f;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:2px solid #555555;"></span>
+      </a>
+      </div>
+    </div>
+    <div class="tgroup">
+      <span class="tgroup-label">🌙 深色沉浸 · 极夜黑 / Linear / 极简黑 / 科技终端</span>
+      <div class="tgrid">
+      <a class="tcard" href="editor.html" style="background:#242424">
+        <span class="tc-tag" style="color:rgba(255,255,255,.45)">极夜黑</span>
+        <span class="tc-h2" style="color:#ffffff;border-left:4px solid #61afef;padding-left:10px;">极夜黑</span>
+        <span class="tc-line" style="background:#d7dae0;opacity:.22"></span>
+        <span class="tc-line" style="background:#d7dae0;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#d7dae0;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #61afef;background:#2c313a;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#101114">
+        <span class="tc-tag" style="color:rgba(255,255,255,.45)">Linear</span>
+        <span class="tc-h2" style="color:#eeeeee;">Linear</span>
+        <span class="tc-line" style="background:#f1f1f2;opacity:.22"></span>
+        <span class="tc-line" style="background:#f1f1f2;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#f1f1f2;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #5e6ad2;background:#1a1a1a;"></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#ffffff">
+        <span class="tc-tag" style="color:rgba(0,0,0,.35)">极简黑</span>
+        <span class="tc-h2" style="color:#18181b;">极简黑</span>
+        <span class="tc-line" style="background:#333333;opacity:.22"></span>
+        <span class="tc-line" style="background:#333333;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#333333;opacity:.10"></span>
+        <span class="tc-quote" style=""></span>
+      </a>
+      <a class="tcard" href="editor.html" style="background:#010409">
+        <span class="tc-tag" style="color:rgba(255,255,255,.45)">科技终端</span>
+        <span class="tc-h2" style="color:#58e6b0;border-left:4px solid #58e6b0;padding-left:10px;">科技终端</span>
+        <span class="tc-line" style="background:#c9d1d9;opacity:.22"></span>
+        <span class="tc-line" style="background:#c9d1d9;opacity:.15"></span>
+        <span class="tc-line tc-short" style="background:#c9d1d9;opacity:.10"></span>
+        <span class="tc-quote" style="border-left:4px solid #56d4ff;background:#161b22;"></span>
+      </a>
+      </div>
+    </div>
+    <!-- THEME-SHOWCASE:END -->
     <div class="themes-cta"><a class="btn-primary" href="editor.html">进编辑器挑主题 →</a></div>
   </section>
 
