@@ -5,7 +5,7 @@ publish:
   provider: github
   owner: efarsoft
   repo: TypeDuck
-  draft: true
+  releaseType: draft
 directories:
   output: release
 files:
