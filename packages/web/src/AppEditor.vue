@@ -540,8 +540,12 @@ function onRemoveTheme(id: string) {
           {{ copied ? '已复制' : '复制到公众号' }}
         </button>
         <!-- 一键发布到公众号草稿箱 -->
-        <button class="btn-export" title="一键发布到公众号草稿箱（需配置开发者信息）" @click="showPublish = true">
-          <svg class="ic" viewBox="0 0 22 22">
+        <button
+          style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 16px;border:1px solid #e5e6eb;border-radius:6px;background:#fff;color:#4e5969;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;"
+          title="一键发布到公众号草稿箱（需配置开发者信息）"
+          @click="showPublish = true"
+        >
+          <svg viewBox="0 0 22 22" style="width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;">
             <path d="M3 11l16-7-5 14-4-5-7-2zM10 13l7-7" />
           </svg>
           草稿箱
