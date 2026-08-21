@@ -39,7 +39,7 @@
       "name": "排版鸭 TypeDuck",
       "url": "https://typeduck.vercel.app/",
       "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web, Windows, macOS, Linux",
+      "operatingSystem": "Web, Windows, macOS",
       "description": "免费开源的微信公众号 Markdown 排版工具，支持 AI 辅助写作（BYOK）、热点选题、配图助手与草稿箱直发，本地优先无需登录。",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
       "featureList": "Markdown 实时预览,一键复制到公众号,32+ 主题样式,AI 润色扩写改写,热点榜单选题,配图助手与封面裁剪,草稿箱直发,多格式导出",
@@ -256,7 +256,7 @@
     .faq-a { font-size: 14.5px; line-height: 1.8; color: #6b7280; padding-left: 34px; }
 
     /* ---------- 下载 ---------- */
-    .download-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .download-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 760px; margin: 0 auto; }
     .dl-card {
       background: #fff; border: 1px solid #eef0f3; border-radius: 18px;
       padding: 32px 26px 26px; text-align: center;
@@ -646,7 +646,7 @@
       <div class="faq-item">
         <h3 class="faq-q">支持哪些平台？</h3>
         <p class="faq-a">
-          网页版打开即用（本页面「开始使用」）；桌面版支持 Windows、macOS、Linux，安装包发布在 GitHub
+          网页版打开即用（本页面「开始使用」）；桌面版支持 Windows 与 macOS，安装包发布在 GitHub
           Releases，还额外支持热点抓取、公众号草稿箱直发等桌面专属能力。
         </p>
       </div>
@@ -669,12 +669,6 @@
         <span class="dl-icon"><svg viewBox="0 0 24 24"><path d="M12 3c2 2 3 4 3 6a4 4 0 1 1-8 0c0-2 1-4 3-6zM5 20h14v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4z"/></svg></span>
         <h3 class="dl-os">macOS</h3>
         <p class="dl-note">Apple Silicon / Intel · dmg</p>
-        <span class="dl-btn soon">即将推出</span>
-      </div>
-      <div class="dl-card">
-        <span class="dl-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 7v5l3 2"/></svg></span>
-        <h3 class="dl-os">Linux</h3>
-        <p class="dl-note">AppImage · x86_64</p>
         <span class="dl-btn soon">即将推出</span>
       </div>
     </div>

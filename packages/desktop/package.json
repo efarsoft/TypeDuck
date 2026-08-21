@@ -8,8 +8,7 @@
     "dev": "electron .",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build:mac": "electron-builder --mac"
   },
   "devDependencies": {
     "electron": "^28.0.0",
