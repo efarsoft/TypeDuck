@@ -417,6 +417,11 @@ async function doRewrite(url: string, title?: string, instruction?: string) {
   }
   const source = article.title || title || url
   await store.createDoc(`> 原文：[${source}](${url})\n\n`)
+  // 标题显式取文章原标题，避免自动提取把「原文：…链接」引用行当标题
+  if (store.activeDoc) {
+    store.activeDoc.title = source
+    store.markUnsaved()
+  }
   runAiTask('rewrite', { selection: article.text, title: source, instruction }, null)
 }
 
@@ -438,6 +443,11 @@ async function onRewriteText(url: string, text: string, instruction: string) {
     return
   }
   await store.createDoc(`> 原文：${url && url !== '(手动粘贴)' ? `[链接](${url})` : '（手动粘贴正文）'}\n\n`)
+  // 粘贴模式没有可靠标题，先给占位，改写完成后用户自行调整
+  if (store.activeDoc) {
+    store.activeDoc.title = 'AI 改写初稿'
+    store.markUnsaved()
+  }
   runAiTask('rewrite', { selection: text, instruction: instruction || undefined }, null)
 }
 
