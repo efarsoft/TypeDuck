@@ -377,18 +377,18 @@
 
     /* ---------- 界面截图（多主题堆叠 + 点击切换） ---------- */
     .shot-sec { padding-top: 0; }
-    .shots { position: relative; padding: 0 26px 44px; }
+    .shots { position: relative; padding: 0 26px 44px; max-width: 860px; margin: 0 auto; }
     .shot-frame {
       border-radius: 16px; border: 1px solid #e6e8ec; overflow: hidden; background: #fff;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
       transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
     }
+    .shot-frame img { width: 100%; height: auto; display: block; }
     .shot-frame.front { position: relative; z-index: 4; }
     .shot-frame.front:hover { transform: translateY(-4px); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16); }
     .shot-frame.stack {
       position: absolute; top: 0; left: 26px; right: 26px; z-index: 1; pointer-events: none;
     }
-    .shot-frame.stack img { width: 100%; height: auto; display: block; }
     .shot-frame.s1 { transform: translate(16px, 12px) rotate(1.4deg); opacity: 0.75; z-index: 3; }
     .shot-frame.s2 { transform: translate(-14px, 20px) rotate(-1.6deg); opacity: 0.5; z-index: 2; }
     .shot-frame.s3 { transform: translate(6px, 28px) rotate(0.8deg); opacity: 0.3; z-index: 1; }
