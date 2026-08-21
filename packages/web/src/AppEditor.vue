@@ -25,12 +25,14 @@ import { useEditorStore } from './stores/editor'
 import { useAiStore, type AiTask } from './stores/ai'
 import { fetchText } from './utils/net'
 import { extractArticle } from './utils/article'
+import { insertImage, hydrateTdimgs, resolveTdimgs } from './utils/images'
 import HistoryPanel from './components/HistoryPanel.vue'
 import AiPanel from './components/AiPanel.vue'
 import AiSettings from './components/AiSettings.vue'
 import HotPanel from './components/HotPanel.vue'
 import ImagePanel from './components/ImagePanel.vue'
 import PublishDialog from './components/PublishDialog.vue'
+import OssSettings from './components/OssSettings.vue'
 
 const store = useEditorStore()
 const aiStore = useAiStore()
@@ -63,6 +65,8 @@ onMounted(() => {
   document.addEventListener('click', onDocClickForExport)
   // 恢复上次保存的 AI 生成主题（localStorage → 运行时注册）
   loadSavedAiThemes().forEach(registerTheme)
+  // 恢复文档里的本地图片引用（tdimg → blob URL，供预览）
+  hydrateTdimgs(store.activeDoc?.content ?? '')
   // 桌面版：接住原生菜单事件
   if (window.desktopAPI) {
     const api = window.desktopAPI
@@ -71,6 +75,32 @@ onMounted(() => {
     api.onMenu('menu:save', () => store.saveToDisk())
     api.onMenu('menu:save-as', () => store.saveToDisk(true))
   }
+})
+
+/* ---------- 图片插入管线：图床上传或本地暂存，插入 markdown ---------- */
+
+const imgVersion = ref(0)
+
+async function onInsertImages(files: FileList) {
+  const results: string[] = []
+  for (const file of [...files]) {
+    try {
+      const { src, alt } = await insertImage(file)
+      results.push(`![${alt}](${src})`)
+    } catch (err) {
+      store.showToast(err instanceof Error ? err.message : '图片插入失败')
+    }
+  }
+  if (results.length) {
+    editorRef.value?.insert(results.join('\n\n') + '\n\n')
+    imgVersion.value++
+  }
+}
+
+/** 预览 HTML：tdimg 引用换成 blob URL */
+const previewHtml = computed(() => {
+  void imgVersion.value
+  return resolveTdimgs(store.renderedRichHtml)
 })
 
 /** 双栏按比例同步滚动（加锁防回环，rAF 防抖） */
@@ -168,7 +198,7 @@ function detectTitleDuplicate(): boolean {
 
 async function onCopy() {
   if (copied.value) return
-  const ok = await copyHtmlToClipboard(`<section style="${rootStyle.value}">${store.renderedHtml}</section>`)
+  const ok = await copyHtmlToClipboard(`<section style="${rootStyle.value}">${resolveTdimgs(store.renderedHtml)}</section>`)
   if (ok) {
     copied.value = true
     setTimeout(() => (copied.value = false), 800)
@@ -247,6 +277,7 @@ function onDocClickForExport(e: MouseEvent) {
 /* ---------- 发布到公众号草稿箱 ---------- */
 
 const showPublish = ref(false)
+const showOss = ref(false)
 
 async function onRemove(id: string) {
   if (confirm('确定删除该文档及其历史版本？此操作不可恢复。')) {
@@ -635,12 +666,12 @@ function onRemoveTheme(id: string) {
 
         <div class="content">
           <section v-show="viewMode !== 'preview'" class="pane editor-pane">
-            <DuckEditor ref="editorRef" v-model="content" @ai="onAiAction" />
+            <DuckEditor ref="editorRef" v-model="content" @ai="onAiAction" @insert-image="onInsertImages" />
           </section>
           <section v-show="viewMode !== 'editor'" class="pane preview-pane">
             <DuckPreview
               ref="previewRef"
-              :html="store.renderedRichHtml"
+              :html="previewHtml"
               :custom-css="store.customCss"
               :background="store.theme.previewBackground"
               :root-style="rootStyle"
@@ -682,6 +713,7 @@ function onRemoveTheme(id: string) {
               v-else-if="rightView === 'image'"
               @close="rightView = null"
               @insert="(md: string) => editorRef?.insert(md)"
+              @open-oss="showOss = true"
             />
             <HistoryPanel
               v-else
@@ -705,6 +737,7 @@ function onRemoveTheme(id: string) {
 
     <AiSettings v-if="showAiSettings" @close="showAiSettings = false" />
     <PublishDialog v-if="showPublish" @close="showPublish = false" />
+    <OssSettings :open="showOss" @close="showOss = false" />
 
     <transition name="toast">
       <div v-if="store.toast" class="toast">{{ store.toast }}</div>

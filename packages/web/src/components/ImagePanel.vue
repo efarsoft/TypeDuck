@@ -8,6 +8,7 @@ import ImageCropDialog from './ImageCropDialog.vue'
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'insert', markdown: string): void
+  (e: 'open-oss'): void
 }>()
 
 const editor = useEditorStore()
@@ -156,6 +157,7 @@ onMounted(() => {
   <div class="panel-head">
     <span>🖼 配图助手</span>
     <span class="head-btns">
+      <button class="mini-btn" title="图床设置（S3 兼容，可选）" @click="emit('open-oss')">☁</button>
       <button class="mini-btn" title="收起面板" @click="emit('close')">✕</button>
     </span>
   </div>

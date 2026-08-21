@@ -10,6 +10,7 @@ const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'ai', action: AiActionId): void
+  (e: 'insert-image', files: FileList): void
 }>()
 
 const host = ref<HTMLElement>()
@@ -63,6 +64,41 @@ function replaceRange(from: number, to: number, text: string) {
   view.focus()
 }
 
+const fileInput = ref<HTMLInputElement>()
+
+function onImagePick(e: Event) {
+  const files = (e.target as HTMLInputElement).files
+  if (files && files.length > 0) emit('insert-image', files)
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+/** 拖拽 / 粘贴图片文件 */
+function extractImages(dt: DataTransfer | null): File[] | null {
+  if (!dt) return null
+  const imgs = [...dt.files].filter((f) => f.type.startsWith('image/'))
+  return imgs.length ? imgs : null
+}
+
+function handleDrop(e: DragEvent) {
+  const imgs = extractImages(e.dataTransfer)
+  if (imgs) {
+    e.preventDefault()
+    const dt = new DataTransfer()
+    imgs.forEach((f) => dt.items.add(f))
+    emit('insert-image', dt.files)
+  }
+}
+
+function handlePaste(e: ClipboardEvent) {
+  const imgs = extractImages(e.clipboardData)
+  if (imgs) {
+    e.preventDefault()
+    const dt = new DataTransfer()
+    imgs.forEach((f) => dt.items.add(f))
+    emit('insert-image', dt.files)
+  }
+}
+
 const icons: Record<string, string> = {
   bold: '<path d="M7 5h5a3 3 0 0 1 0 6H7zM7 11h6a3 3 0 0 1 0 6H7z"/>',
   italic: '<path d="M9 5h5M9 17h5M12 5l-3 12"/>',
@@ -110,7 +146,7 @@ const buttonGroups: {
   ],
   [
     { icon: 'link', title: '链接', action: () => doInsert('[标题](https://)') },
-    { icon: 'image', title: '图片', action: () => doInsert('![描述](https://)') },
+    { icon: 'image', title: '插入图片（也可直接拖入 / 粘贴）', action: () => fileInput.value?.click() },
   ],
   [
     { label: 'AI 润色', title: 'AI 润色选中文字', ai: true, action: () => emit('ai', 'polish'), disabled: () => !hasSelection.value },
@@ -193,7 +229,15 @@ defineExpose({
         </button>
       </template>
     </div>
-    <div ref="host" class="editor-host"></div>
+    <div ref="host" class="editor-host" @drop="handleDrop" @dragover.prevent @paste="handlePaste"></div>
+    <input
+      ref="fileInput"
+      type="file"
+      accept="image/*"
+      multiple
+      hidden
+      @change="onImagePick"
+    />
   </section>
 </template>
 

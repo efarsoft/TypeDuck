@@ -1,0 +1,15 @@
+{
+  "name": "排版鸭 TypeDuck — 公众号 Markdown 排版工具",
+  "short_name": "排版鸭",
+  "description": "本地优先的公众号 Markdown 排版工具：32+ 主题、AI 辅助写作、一键复制到公众号",
+  "start_url": "/editor.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#07c160",
+  "icons": [
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "favicon.png", "sizes": "64x64", "type": "image/png", "purpose": "any" }
+  ]
+}

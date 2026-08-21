@@ -4,12 +4,14 @@ import {
   getWechatAccessToken,
   publishWechatDraft,
   streamChat,
+  transferImagesToWechat,
   uploadWechatCover,
   withImportant,
   type WechatCoverFile,
 } from '@typeduck/core'
 import { useEditorStore } from '../stores/editor'
 import { useAiStore } from '../stores/ai'
+import { fetchImageBytes, getOssConfig } from '../utils/images'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 const editor = useEditorStore()
@@ -136,6 +138,40 @@ async function genDigest() {
   }
 }
 
+/* ---------- 发布前体检 ---------- */
+
+interface CheckItem { label: string; state: 'ok' | 'warn' | 'fail' }
+
+const checks = computed<CheckItem[]>(() => {
+  const items: CheckItem[] = []
+  const t = title.value
+  const c = doc.value?.content ?? ''
+  // 标题
+  if (!t) items.push({ label: '标题为空', state: 'fail' })
+  else if (t.length > 64) items.push({ label: `标题超长（${t.length}/64）`, state: 'fail' })
+  else items.push({ label: `标题 ${t.length}/64 字`, state: 'ok' })
+  // 正文
+  const words = c.replace(/\s/g, '').length
+  if (words < 30) items.push({ label: '正文太短', state: 'warn' })
+  else items.push({ label: `正文约 ${words} 字`, state: 'ok' })
+  // 摘要
+  if (!digest.value.trim()) items.push({ label: '摘要为空（发布时需手填或留空默认）', state: 'warn' })
+  else items.push({ label: `摘要 ${digest.value.length}/120 字`, state: 'ok' })
+  // 封面
+  items.push(cover.value
+    ? { label: '封面已选择', state: 'ok' }
+    : { label: '封面未选择（必填）', state: 'fail' })
+  // 外链图片
+  const imgs = [...c.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]).filter((s) => !s.includes('mmbiz.qpic.cn'))
+  if (imgs.length) items.push({ label: `${imgs.length} 张图片将自动转传素材库`, state: 'warn' })
+  else items.push({ label: '无外链图片', state: 'ok' })
+  // 图床
+  items.push(getOssConfig()
+    ? { label: '图床已配置（图片走自己的存储）', state: 'ok' }
+    : { label: '未配图床：本地图片发布时直传素材库', state: 'warn' })
+  return items
+})
+
 async function publish() {
   error.value = ''
   if (title.value.length > 64) {
@@ -153,8 +189,31 @@ async function publish() {
   step.value = 'working'
   try {
     stepLabel.value = '正在获取 access_token…'
-    const contentHtml = `<section style="${withImportant(editor.theme.styles.root)}">${editor.renderedHtml}</section>`
+    let contentHtml = `<section style="${withImportant(editor.theme.styles.root)}">${editor.renderedHtml}</section>`
     const coverFile: WechatCoverFile = { name: cover.value.name, type: cover.value.type, bytes: cover.value.bytes }
+
+    // 外链/本地图片 → 公众号素材库（HTML 层回写，markdown 源不被污染）
+    const tdimgs = [...doc.value.content.matchAll(/tdimg:\/\/[\w-]+/g)].length
+    const extImgs = [...contentHtml.matchAll(/<img\s[^>]*src="(https?[^"]+)"/gi)]
+      .map((m) => m[1]).filter((s) => !s.includes('mmbiz.qpic.cn'))
+    if (tdimgs || extImgs.length) {
+      stepLabel.value = `正在转传图片到素材库（0/${tdimgs + extImgs.length}）…`
+      const result = await transferImagesToWechat(
+        cfg.value,
+        wechatRequest,
+        contentHtml,
+        async (url) => {
+          const file = await fetchImageBytes(url)
+          if (!file) throw new Error('取回图片失败：' + url.slice(0, 60))
+          return file
+        },
+        (done, total) => { stepLabel.value = `正在转传图片到素材库（${done}/${total}）…` },
+      )
+      contentHtml = result.html
+      if (result.failed.length) {
+        error.value = `⚠ ${result.failed.length} 张图片转传失败（可能是图床未开 CORS），对应图片在草稿中可能不显示`
+      }
+    }
 
     stepLabel.value = '正在上传封面…'
     const uploaded = await uploadWechatCover(cfg.value, wechatRequest, coverFile)
@@ -247,6 +306,17 @@ async function publish() {
             </div>
 
             <p v-if="error" class="error-msg">{{ error }}</p>
+
+            <!-- 发布前体检 -->
+            <div v-if="step === 'idle'" class="checklist">
+              <span class="check-title">📋 发布前体检</span>
+              <ul class="check-list">
+                <li v-for="(c, i) in checks" :key="i" :data-state="c.state">
+                  <span class="check-icon">{{ c.state === 'ok' ? '✓' : c.state === 'warn' ? '⚠' : '✕' }}</span>
+                  {{ c.label }}
+                </li>
+              </ul>
+            </div>
 
             <p v-if="step === 'working'" class="working">{{ stepLabel }}</p>
           </template>
@@ -514,6 +584,16 @@ textarea.fld {
   color: #e5554e;
   line-height: 1.6;
 }
+/* 发布前体检 */
+.checklist { margin-top: 14px; padding: 12px 14px; background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px; }
+.check-title { font-size: 12.5px; font-weight: 700; color: #4e5969; }
+.check-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.check-list li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #4e5960; padding: 4px 0; }
+.check-icon { width: 16px; text-align: center; font-weight: 700; flex-shrink: 0; }
+.check-list li[data-state='ok'] .check-icon { color: #07c160; }
+.check-list li[data-state='warn'] .check-icon { color: #e6a23c; }
+.check-list li[data-state='fail'] { color: #e5554e; }
+.check-list li[data-state='fail'] .check-icon { color: #e5554e; }
 .working {
   margin: 12px 0 0;
   font-size: 12.5px;

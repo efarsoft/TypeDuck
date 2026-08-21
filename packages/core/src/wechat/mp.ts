@@ -140,6 +140,69 @@ function buildMultipart(file: WechatCoverFile): { body: ArrayBuffer; contentType
   return { body: body.buffer, contentType: `multipart/form-data; boundary=${boundary}` }
 }
 
+/** 上传正文图片（uploadimg 接口）：返回可直接在公众号文章内显示的 URL */
+export async function uploadWechatImage(
+  config: WechatConfig,
+  requester: WechatRequester,
+  file: WechatCoverFile,
+): Promise<{ url: string }> {
+  const { body, contentType } = buildMultipart(file)
+  return withToken(config, requester, async (token) => {
+    const data = await callApi(requester, `${API}/media/uploadimg?access_token=${token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': contentType },
+      body,
+    })
+    if (!data.url) throw new WechatApiError('接口未返回图片 URL', 0)
+    return { url: String(data.url) }
+  })
+}
+
+/**
+ * 把 HTML 里所有外链/本地图片批量转传公众号素材库，回写为微信 URL。
+ * 只处理发布管线的 HTML——markdown 源文保留原图床地址（博客等其他平台不受影响）。
+ */
+export async function transferImagesToWechat(
+  config: WechatConfig,
+  requester: WechatRequester,
+  contentHtml: string,
+  fetchBytes: (url: string) => Promise<{ bytes: ArrayBuffer; type: string; name: string }>,
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ html: string; transferred: number; failed: string[] }> {
+  const imgRegex = /<img\s[^>]*src="([^"]+)"[^>]*>/gi
+  const matches = [...contentHtml.matchAll(imgRegex)]
+  // 仅处理非微信域名图片（微信素材 URL 以 https://mmbiz.qpic.cn 开头）
+  const external = matches
+    .map((m) => m[1])
+    .filter((src) => src && !src.includes('mmbiz.qpic.cn'))
+  if (external.length === 0) return { html: contentHtml, transferred: 0, failed: [] }
+
+  const urlMap = new Map<string, string>()
+  const failed: string[] = []
+  let done = 0
+  for (const src of new Set(external)) {
+    try {
+      const file = await fetchBytes(src)
+      const { url } = await uploadWechatImage(config, requester, {
+        name: file.name,
+        type: file.type,
+        bytes: file.bytes,
+      })
+      urlMap.set(src, url)
+    } catch {
+      failed.push(src)
+    }
+    done++
+    onProgress?.(done, new Set(external).size)
+  }
+
+  let html = contentHtml
+  for (const [from, to] of urlMap) {
+    html = html.split(from).join(to)
+  }
+  return { html, transferred: urlMap.size, failed }
+}
+
 /** 上传封面为永久图片素材，返回 thumb_media_id */
 export async function uploadWechatCover(
   config: WechatConfig,
