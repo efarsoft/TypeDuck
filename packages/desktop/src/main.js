@@ -6,6 +6,29 @@ const fs = require('fs')
 const DEV_URL = 'http://localhost:5173/editor.html'
 const isDev = !app.isPackaged
 
+function isTrustedRendererUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl)
+    if (isDev) return url.origin === new URL(DEV_URL).origin
+    return url.protocol === 'file:' && path.normalize(url.pathname).includes(path.normalize('/web/dist/'))
+  } catch {
+    return false
+  }
+}
+
+function isSafeExternalUrl(rawUrl) {
+  try {
+    const protocol = new URL(rawUrl).protocol
+    return protocol === 'https:' || protocol === 'http:' || protocol === 'mailto:'
+  } catch {
+    return false
+  }
+}
+
+function assertTrustedSender(event) {
+  if (!isTrustedRendererUrl(event.senderFrame.url)) throw new Error('拒绝来自非受信页面的桌面请求')
+}
+
 /** 轮询等待 dev server 就绪（超时后仍尝试加载一次，让错误可见） */
 async function waitForServer(url, timeoutMs) {
   const started = Date.now()
@@ -50,8 +73,13 @@ async function createWindow() {
 
   // 外部链接用系统浏览器打开，不在应用内跳走
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    if (isSafeExternalUrl(url)) void shell.openExternal(url)
     return { action: 'deny' }
+  })
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (isTrustedRendererUrl(url)) return
+    event.preventDefault()
+    if (isSafeExternalUrl(url)) void shell.openExternal(url)
   })
 }
 
@@ -121,7 +149,8 @@ function buildMenu() {
 
 /* ---------- IPC：文件对话框与读写（主进程独占 Node 能力） ---------- */
 
-ipcMain.handle('file:open', async () => {
+ipcMain.handle('file:open', async (event) => {
+  assertTrustedSender(event)
   const result = await dialog.showOpenDialog(mainWindow, {
     title: '打开 Markdown 文件',
     filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'txt'] }],
@@ -134,11 +163,16 @@ ipcMain.handle('file:open', async () => {
 })
 
 ipcMain.handle('file:save', async (_event, { filePath, content }) => {
+  assertTrustedSender(_event)
+  if (typeof filePath !== 'string' || typeof content !== 'string') throw new Error('无效的保存参数')
+  if (!/\.(?:md|markdown|txt)$/i.test(filePath)) throw new Error('仅允许保存 Markdown 或文本文件')
   await fs.promises.writeFile(filePath, content, 'utf-8')
   return { filePath }
 })
 
 ipcMain.handle('file:save-as', async (_event, { content, defaultPath }) => {
+  assertTrustedSender(_event)
+  if (typeof content !== 'string') throw new Error('无效的保存内容')
   const result = await dialog.showSaveDialog(mainWindow, {
     title: '另存为 Markdown 文件',
     defaultPath: defaultPath || '未命名文档.md',
@@ -151,6 +185,7 @@ ipcMain.handle('file:save-as', async (_event, { content, defaultPath }) => {
 
 /* 主进程代理抓取：绕渲染进程 CORS 限制（热点榜单等公开数据），仅放行 https GET */
 ipcMain.handle('net:fetch-text', async (_event, url) => {
+  assertTrustedSender(_event)
   if (typeof url !== 'string' || !/^https:\/\//i.test(url)) {
     throw new Error('仅支持 https 地址')
   }
@@ -168,10 +203,15 @@ ipcMain.handle('net:fetch-text', async (_event, url) => {
 /* 主进程通用请求通道（https）：微信草稿箱等需要 POST 的接口用，
  * 微信接口有 IP 白名单机制，从本机出口正好是用户自己的 IP */
 ipcMain.handle('net:request', async (_event, url, options = {}) => {
+  assertTrustedSender(_event)
   if (typeof url !== 'string' || !/^https:\/\//i.test(url)) {
     throw new Error('仅支持 https 地址')
   }
-  const init = { method: options.method || 'GET', headers: options.headers || {} }
+  const target = new URL(url)
+  if (target.hostname !== 'api.weixin.qq.com') throw new Error('通用请求通道仅允许微信 API')
+  const method = String(options.method || 'GET').toUpperCase()
+  if (!['GET', 'POST'].includes(method)) throw new Error('不支持的请求方法')
+  const init = { method, headers: options.headers || {} }
   if (options.body != null) init.body = options.body
   const res = await net.fetch(url, init)
   return { status: res.status, text: await res.text() }

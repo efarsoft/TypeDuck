@@ -157,6 +157,13 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   async function removeDoc(id: string) {
+    const target = docs.value.find((d) => d.id === id)
+    if (target && activeDoc.value?.id === id) {
+      clearTimeout(saveTimer)
+      saveTimer = undefined
+      // The document is being deleted, so discard its pending debounced write.
+      saveState.value = 'saved'
+    }
     await db.deleteDoc(id)
     docs.value = docs.value.filter((d) => d.id !== id)
     if (activeDoc.value?.id === id) {

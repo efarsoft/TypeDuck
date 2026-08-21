@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node scripts/sync-brand.mjs && vite",
     "build": "node scripts/sync-brand.mjs && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
@@ -20,6 +21,7 @@
     "esbuild": "^0.28.2",
     "sharp": "^0.35.3",
     "typescript": "^5.0.0",
+    "vue-tsc": "^2.2.0",
     "vite": "^5.0.0"
   }
 }

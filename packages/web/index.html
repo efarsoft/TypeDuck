@@ -26,7 +26,9 @@
     content="免费开源的公众号 Markdown 排版工具：32+ 主题、AI 辅助写作、热点选题、配图助手、草稿箱直发。本地优先，无需登录。"
   />
   <meta property="og:url" content="https://typeduck.vercel.app/" />
-  <meta property="og:image" content="https://typeduck.vercel.app/logo.png" />
+  <meta property="og:image" content="https://typeduck.vercel.app/og-cover.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="zh_CN" />
 
   <!-- 结构化数据：软件应用 -->
@@ -42,6 +44,56 @@
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
       "featureList": "Markdown 实时预览,一键复制到公众号,32+ 主题样式,AI 润色扩写改写,热点榜单选题,配图助手与封面裁剪,草稿箱直发,多格式导出",
       "inLanguage": "zh-CN"
+    }
+  </script>
+
+  <!-- 结构化数据：FAQ（富摘要 / 生成式引擎引用） -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "排版鸭是什么？和 mdnice、Doocs md 有什么区别？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "排版鸭（TypeDuck）是一款免费开源的微信公众号 Markdown 排版工具，MIT 协议。区别在于：不需要注册登录、数据 100% 存本地、AI 功能自带 Key 自助使用（BYOK）、提供桌面客户端，且从热点选题到草稿直发覆盖写作全流程。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "复制到公众号后，样式会丢失吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "不会。排版鸭把所有样式转成内联样式（inline style）并做加固，避开微信编辑器会剥离的 class 与 style 标签；标题、引用、代码高亮、表格粘贴后所见即所得。导出 Word 时自动切换为兼容样式。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "需要注册或登录吗？我的文章存在哪里？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "不需要注册登录。文档存在你浏览器的本地存储（IndexedDB）里，桌面版存在本机——全程不经过任何服务器，离线也能用。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "以后会收费吗？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "不会。排版鸭采用 MIT 协议开源，所有功能永久免费——无会员、无广告、无阉割，功能只增不减，这一点写进了开源协议。AI 采用 BYOK 模式：在 DeepSeek、豆包、通义千问、GLM、Kimi 等厂商自助申请免费 API Key 填入即可，额度和内容都在你自己手里。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "支持哪些平台？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "网页版打开即用；桌面版支持 Windows 与 macOS，安装包发布在 GitHub Releases，还额外支持热点抓取、公众号草稿箱直发等桌面专属能力。"
+          }
+        }
+      ]
     }
   </script>
 
@@ -322,13 +374,70 @@
       .section { padding: 60px 20px; }
       .hero-actions { flex-direction: column; align-items: stretch; }
     }
+
+    /* ---------- 三步上手 ---------- */
+    .steps-sec { padding-top: 64px; }
+    .steps { display: flex; gap: 0; align-items: stretch; justify-content: center; flex-wrap: wrap; }
+    .step-card {
+      flex: 1; min-width: 240px; max-width: 320px;
+      background: #fff; border: 1px solid #eef0f3; border-radius: 18px; padding: 28px 24px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .step-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.07); }
+    .step-no {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 12px; margin-bottom: 14px;
+      background: linear-gradient(135deg, #07c160, #2ad381); color: #fff;
+      font-size: 18px; font-weight: 800; box-shadow: 0 6px 14px rgba(7, 193, 96, 0.3);
+    }
+    .step-card h3 { font-size: 17px; font-weight: 700; margin: 0 0 8px; }
+    .step-card p { font-size: 13.5px; color: #6b7280; line-height: 1.7; margin: 0; }
+    .step-arrow { align-self: center; font-size: 26px; color: #b9e6cb; padding: 0 14px; font-weight: 700; }
+
+    /* ---------- 品类对比表 ---------- */
+    .cmp-wrap { overflow-x: auto; border-radius: 18px; }
+    .cmp {
+      width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 0;
+      background: #fff; border: 1px solid #eef0f3; border-radius: 18px; overflow: hidden; font-size: 14px;
+    }
+    .cmp th, .cmp td { padding: 14px 18px; text-align: center; border-bottom: 1px solid #f2f4f6; }
+    .cmp tr:last-child td { border-bottom: none; }
+    .cmp thead th { background: #fafbfc; font-size: 13.5px; color: #4e5969; font-weight: 700; }
+    .cmp td:first-child, .cmp th:first-child { text-align: left; color: #1a1a1a; font-weight: 600; white-space: nowrap; }
+    .cmp .hl { background: #f0faf4; color: #07c160; font-weight: 700; }
+    .cmp-note { text-align: center; font-size: 12px; color: #a8adb5; margin-top: 14px; }
+
+    /* ---------- 教程故事 ---------- */
+    .story { display: flex; gap: 48px; align-items: center; max-width: 980px; margin: 0 auto; }
+    .story-text { flex: 1; font-size: 15.5px; line-height: 2.05; color: #4e5969; }
+    .story-text .story-note { color: #1a1a1a; font-weight: 600; margin-top: 14px; }
+    .story-qr {
+      display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0;
+      background: #fff; border: 1px solid #eef0f3; border-radius: 18px; padding: 26px 30px;
+    }
+    .story-qr-img { width: 140px; height: 140px; border-radius: 12px; }
+    .story-qr-cap { font-size: 12.5px; color: #6b7280; text-align: center; line-height: 1.8; font-weight: 600; }
+
+    /* ---------- 微动效 ---------- */
+    .rv { opacity: 0; transform: translateY(18px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .rv-in { opacity: 1; transform: none; }
+    .nav.scrolled { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); border-bottom-color: transparent; }
+    @media (prefers-reduced-motion: reduce) {
+      .rv { opacity: 1; transform: none; transition: none; }
+      .step-card, .feature-card, .tcard { transition: none; }
+    }
+    @media (max-width: 860px) {
+      .step-arrow { display: none; }
+      .step-card { max-width: none; }
+      .story { flex-direction: column; gap: 24px; }
+    }
   </style>
 </head>
 <body>
   <!-- 顶部导航 -->
   <header class="nav">
     <a class="nav-brand" href="#">
-      <img class="nav-logo-img" src="logo-h.png" alt="排版鸭 TypeDuck" height="30" />
+      <img class="nav-logo-img" src="logo-h.webp" alt="排版鸭 TypeDuck" height="30" />
       <span class="nav-slogan">TypeDuck</span>
     </a>
     <nav class="nav-links">
@@ -358,7 +467,7 @@
       </div>
       <div class="hero-art">
         <div class="mascot-card">
-          <img class="mascot" src="logo.png" alt="排版鸭 TypeDuck" width="220" height="220" />
+          <img class="mascot" src="logo.webp" alt="排版鸭 TypeDuck" width="220" height="220" />
           <span class="bubble bubble-1">一键复制 📋</span>
           <span class="bubble bubble-2">AI 帮你写 ✨</span>
           <span class="bubble bubble-3">32+ 主题 🎨</span>
@@ -370,10 +479,36 @@
   <!-- 统计条 -->
   <section class="stats">
     <div class="stats-inner">
-      <div class="stat"><span class="stat-num">32+</span><span class="stat-label">主题样式</span></div>
-      <div class="stat"><span class="stat-num">10</span><span class="stat-label">AI 能力</span></div>
-      <div class="stat"><span class="stat-num">50+</span><span class="stat-label">热点源</span></div>
-      <div class="stat"><span class="stat-num">4</span><span class="stat-label">导出格式</span></div>
+      <div class="stat"><span class="stat-num" data-count="32" data-suffix="+">32+</span><span class="stat-label">主题样式</span></div>
+      <div class="stat"><span class="stat-num" data-count="10">10</span><span class="stat-label">AI 能力</span></div>
+      <div class="stat"><span class="stat-num" data-count="50" data-suffix="+">50+</span><span class="stat-label">热点源</span></div>
+      <div class="stat"><span class="stat-num" data-count="4">4</span><span class="stat-label">导出格式</span></div>
+    </div>
+  </section>
+
+  <!-- 三步上手 -->
+  <section class="section steps-sec">
+    <span class="eyebrow">上手</span>
+    <h2 class="section-title">三步，出一篇排版好的公众号文章</h2>
+    <p class="section-sub">没有学习成本，会写字就会用。</p>
+    <div class="steps">
+      <div class="step-card">
+        <span class="step-no">1</span>
+        <h3>写 Markdown</h3>
+        <p>左边写，右边实时预览，格式即时可见；AI 润色、续写、改写随手可用。</p>
+      </div>
+      <span class="step-arrow">→</span>
+      <div class="step-card">
+        <span class="step-no">2</span>
+        <h3>挑一套主题</h3>
+        <p>32 套场景化主题一键切换；不满意？描述一句话，AI 给你现造一套。</p>
+      </div>
+      <span class="step-arrow">→</span>
+      <div class="step-card">
+        <span class="step-no">3</span>
+        <h3>复制发布</h3>
+        <p>一键复制进公众号编辑器，或直推草稿箱——样式零丢失。</p>
+      </div>
     </div>
   </section>
 
@@ -600,6 +735,59 @@
     <div class="themes-cta"><a class="btn-primary" href="editor.html">进编辑器挑主题 →</a></div>
   </section>
 
+  <!-- 品类对比（不点名具体产品，以各品类普遍情况为准） -->
+  <section class="section">
+    <span class="eyebrow">对比</span>
+    <h2 class="section-title">和你用过的工具比一比</h2>
+    <p class="section-sub">同类工具各有擅长，按你的习惯选——这里只列事实。</p>
+    <div class="cmp-wrap">
+      <table class="cmp">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th class="hl">排版鸭</th>
+            <th>Markdown 排版工具</th>
+            <th>老牌 HTML 编辑器</th>
+            <th>AI 写作订阅工具</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>价格</td><td class="hl">全功能永久免费</td><td>基础免费，主题/导出常要会员</td><td>免费或买断</td><td>按月 / 按年订阅</td></tr>
+          <tr><td>登录要求</td><td class="hl">无需注册</td><td>多数需注册</td><td>多数本地免登录</td><td>需账号 + 联网</td></tr>
+          <tr><td>公众号排版适配</td><td class="hl">专为公众号优化</td><td>较好</td><td>差，需手工调样式</td><td>弱，产出常需二次排版</td></tr>
+          <tr><td>AI 辅助写作</td><td class="hl">内置 10 项 · BYOK 本地</td><td>少数内置</td><td>无</td><td>强，但内容经服务器</td></tr>
+          <tr><td>桌面端离线</td><td class="hl">支持 · 全功能</td><td>多为纯网页</td><td>支持</td><td>不支持</td></tr>
+          <tr><td>数据归属</td><td class="hl">100% 本地</td><td>常含云端同步</td><td>本地</td><td>云端</td></tr>
+          <tr><td>开源可审计</td><td class="hl">MIT 开源</td><td>多闭源</td><td>闭源</td><td>闭源</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cmp-note">对比为各品类普遍情况，具体以各产品实际为准。</p>
+  </section>
+
+  <!-- 教程故事 -->
+  <section id="story" class="section section-alt">
+    <span class="eyebrow">这个故事</span>
+    <h2 class="section-title">一个普通人 + AI，从零到发布</h2>
+    <p class="section-sub">排版鸭不是大厂产品——它是一门公开课的实战作业，每一步决策、每一个坑，全程公开。</p>
+    <div class="story">
+      <div class="story-text">
+        <p>
+          「我不是什么大佬，就是一个被排版折磨过的普通开发者。」Day 1，用 48 分钟从零写出排版工具的雏形；
+          Day 3 给它装上大脑（AI 辅助写作）；Day 5 让它学会把稿子送进草稿箱……7 天连载，
+          把「普通人用 AI 能做出什么」这个问题，用代码回答了一遍。
+        </p>
+        <p class="story-note">
+          连载正在公众号「AI猿叔」进行中，关注即可追完全部过程——包括你眼前这个网站本身是怎么造出来的。
+        </p>
+      </div>
+      <div class="story-qr">
+        <img class="story-qr-img" src="wechat-qrcode.jpg" alt="扫码关注公众号 AI猿叔" width="140" height="140" />
+        <span class="story-qr-cap">扫码关注「AI猿叔」<br />《人人可入门的 AI 开发课》连载中</span>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA -->
   <section class="cta">
     <div class="cta-inner">
@@ -682,7 +870,7 @@
   <footer class="footer">
     <div class="footer-top">
       <div class="footer-brand">
-        <img class="footer-logo" src="logo.png" alt="排版鸭" width="34" height="34" />
+        <img class="footer-logo" src="logo.webp" alt="排版鸭" width="34" height="34" />
         <div>
           <div class="footer-name">排版鸭 <span class="footer-en">TypeDuck</span></div>
           <div class="footer-slogan">排版呀，交给我吧！</div>
@@ -709,9 +897,63 @@
     <p class="footer-copy">© 2026 排版鸭 TypeDuck · MIT License · 本地优先的公众号排版工具</p>
   </footer>
 
-  <!-- 兼容旧 SPA 链接：/#/editor → editor.html（全站唯一的 JS） -->
+  <!-- 兼容旧 SPA 链接：/#/editor → editor.html -->
   <script>
     if (location.hash === '#/editor') location.replace('editor.html')
+  </script>
+
+  <!-- 微动效（内容均在 DOM 中，不影响 SEO / 无 JS 降级） -->
+  <script>
+    ;(function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      if (!reduce && 'IntersectionObserver' in window) {
+        // 进场淡入
+        var els = document.querySelectorAll(
+          '.stat, .step-card, .feature-card, .tcard, .cmp-wrap, .story-text, .story-qr, .faq-item, .dl-card'
+        )
+        els.forEach(function (el, i) {
+          el.classList.add('rv')
+          el.style.transitionDelay = (i % 4) * 70 + 'ms'
+        })
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (e) {
+              if (e.isIntersecting) {
+                e.target.classList.add('rv-in')
+                io.unobserve(e.target)
+              }
+            })
+          },
+          { threshold: 0.12 }
+        )
+        els.forEach(function (el) { io.observe(el) })
+
+        // 统计数字滚动
+        document.querySelectorAll('[data-count]').forEach(function (el) {
+          var target = parseInt(el.getAttribute('data-count'), 10)
+          var suffix = el.getAttribute('data-suffix') || ''
+          var t0 = null
+          function tick(t) {
+            if (!t0) t0 = t
+            var p = Math.min((t - t0) / 900, 1)
+            var eased = 1 - Math.pow(1 - p, 3)
+            el.textContent = Math.round(target * eased) + suffix
+            if (p < 1) requestAnimationFrame(tick)
+            else el.textContent = target + suffix
+          }
+          requestAnimationFrame(tick)
+        })
+      }
+
+      // 导航滚动投影
+      var nav = document.querySelector('.nav')
+      window.addEventListener(
+        'scroll',
+        function () { nav.classList.toggle('scrolled', window.scrollY > 8) },
+        { passive: true }
+      )
+    })()
   </script>
 </body>
 </html>
