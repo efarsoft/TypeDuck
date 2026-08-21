@@ -436,10 +436,10 @@
     /* ---------- 品类对比表 ---------- */
     .cmp-wrap { overflow-x: auto; border-radius: 18px; }
     .cmp {
-      width: 100%; min-width: 980px; border-collapse: separate; border-spacing: 0;
-      background: #fff; border: 1px solid #eef0f3; border-radius: 18px; overflow: hidden; font-size: 13px;
+      width: 100%; min-width: 720px; border-collapse: separate; border-spacing: 0;
+      background: #fff; border: 1px solid #eef0f3; border-radius: 18px; overflow: hidden; font-size: 13.5px;
     }
-    .cmp th, .cmp td { padding: 12px 12px; text-align: center; border-bottom: 1px solid #f2f4f6; }
+    .cmp th, .cmp td { padding: 13px 14px; text-align: center; border-bottom: 1px solid #f2f4f6; }
     .cmp tr:last-child td { border-bottom: none; }
     .cmp thead th { background: #fafbfc; font-size: 13.5px; color: #4e5969; font-weight: 700; }
     .cmp td:first-child, .cmp th:first-child { text-align: left; color: #1a1a1a; font-weight: 600; white-space: nowrap; }
@@ -799,37 +799,34 @@
     <div class="themes-cta"><a class="btn-primary" href="editor.html">进编辑器挑主题 →</a></div>
   </section>
 
-  <!-- 品类对比（2026-08 官网/文档核实，只列事实） -->
+  <!-- 品类对比（基于 2026-08 对主流产品的逐家调研，呈现用品类泛称） -->
   <section class="section">
     <span class="eyebrow">对比</span>
     <h2 class="section-title">和你用过的工具比一比</h2>
-    <p class="section-sub">同类工具各有擅长，按你的习惯选——以下为 2026 年 8 月公开信息核实的事实。</p>
+    <p class="section-sub">同类工具各有擅长，按你的习惯选——这里只列事实。</p>
     <div class="cmp-wrap">
       <table class="cmp">
         <thead>
           <tr>
             <th>维度</th>
             <th class="hl">排版鸭</th>
-            <th>mdnice</th>
-            <th>135编辑器</th>
-            <th>壹伴助手</th>
-            <th>WeDown</th>
-            <th>WeMD</th>
+            <th>Markdown 排版工具</th>
+            <th>模板富文本编辑器</th>
+            <th>后台增强插件</th>
             <th>AI 技能类</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>形态</td><td class="hl">网页 + 桌面</td><td>网页 + 桌面 + 插件</td><td>网页富文本</td><td>浏览器插件</td><td>网页</td><td>网页 / PWA</td><td>Agent 技能</td></tr>
-          <tr><td>免费范围</td><td class="hl">全功能免费</td><td>100 篇 / 100MB / 20 次 AI</td><td>基础排版 + 30 次 AI</td><td>基础排版</td><td>完整编辑</td><td>全功能</td><td>开源免费</td></tr>
-          <tr><td>收费点</td><td class="hl">无</td><td>按档订阅</td><td>¥6.8~62/月</td><td>¥199/年级</td><td>Pro ¥15/月</td><td>无</td><td>自付 token</td></tr>
-          <tr><td>需要登录</td><td class="hl">否</td><td>是</td><td>是</td><td>是</td><td>否</td><td>否</td><td>自备 Key</td></tr>
-          <tr><td>AI 能力</td><td class="hl">内置 10 项 · BYOK 本地</td><td>云端 · 按档限额</td><td>云端 · 双会员体系</td><td>云端 · 会员制</td><td>无</td><td>无</td><td>全流程 · BYOK</td></tr>
-          <tr><td>数据路径</td><td class="hl">100% 本地</td><td>云端</td><td>云端</td><td>云端</td><td>本地</td><td>本地</td><td>本地</td></tr>
-          <tr><td>开源</td><td class="hl">MIT</td><td>旧版已停更</td><td>否</td><td>否</td><td>未证实</td><td>MIT</td><td>Apache-2.0</td></tr>
+          <tr><td>免费范围</td><td class="hl">全功能免费</td><td>常见篇数/容量/AI 次数限制</td><td>基础排版 + 少量 AI 次数</td><td>基础排版</td><td>开源免费</td></tr>
+          <tr><td>收费点</td><td class="hl">无</td><td>按档订阅</td><td>¥6~62/月 多档会员</td><td>¥199/年级</td><td>自付 token</td></tr>
+          <tr><td>需要登录</td><td class="hl">否</td><td>是</td><td>是</td><td>是</td><td>自备 Key</td></tr>
+          <tr><td>AI 能力</td><td class="hl">内置 10 项 · BYOK 本地</td><td>云端 · 按档限额</td><td>云端 · 常为独立会员</td><td>云端 · 会员制</td><td>全流程 · BYOK</td></tr>
+          <tr><td>数据路径</td><td class="hl">100% 本地</td><td>云端</td><td>云端</td><td>云端</td><td>本地</td></tr>
+          <tr><td>开源</td><td class="hl">MIT · 持续维护</td><td>多为闭源或停更</td><td>闭源</td><td>闭源</td><td>多为开源</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="cmp-note">调研于 2026-08，价格为公开渠道可查档位，以各产品官方页面实时为准；「AI 技能类」以 wechat-article-skills 等开源技能包为代表。</p>
+    <p class="cmp-note">基于 2026 年 8 月对各品类主流产品的逐家调研，具体以各产品官方页面实时为准。</p>
   </section>
 
   <!-- 教程故事 -->
