@@ -1,49 +1,90 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import {
-  DEFAULT_NEWSNOW_BASE,
-  HOT_SOURCES,
-  fetchHotItems,
-  type HotItem,
-} from '@typeduck/core'
+import { computed, onMounted, ref } from 'vue'
+import { fetchHotItems, fetchHotSources, HotApiError, type HotItem, type HotSource } from '@typeduck/core'
 import { useEditorStore } from '../stores/editor'
-import { fetchText } from '../utils/net'
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'rewrite', item: HotItem): void
+  (e: 'rewrite', item: { title: string; url: string }): void
 }>()
+
 const editor = useEditorStore()
 
-const BASE_STORE = 'typeduck:hotBase'
-const SOURCE_STORE = 'typeduck:hotSource'
+const KEY_STORE = 'typeduck:hotKey'
+const SOURCE_STORE = 'typeduck:hotSourceId'
+const SOURCES_CACHE = 'typeduck:hotSources'
+const SOURCES_AT = 'typeduck:hotSourcesAt'
+/** 源列表缓存 1 小时，省调用额度 */
+const CACHE_TTL = 60 * 60 * 1000
 
-const baseUrl = ref(localStorage.getItem(BASE_STORE) || DEFAULT_NEWSNOW_BASE)
-const baseInput = ref(baseUrl.value)
-const showConfig = ref(false)
+const apiKey = ref(localStorage.getItem(KEY_STORE) ?? '')
+const keyInput = ref(apiKey.value)
+const hasKey = computed(() => !!apiKey.value)
 
-const sourceId = ref(
-  HOT_SOURCES.some((s) => s.id === localStorage.getItem(SOURCE_STORE))
-    ? (localStorage.getItem(SOURCE_STORE) as string)
-    : HOT_SOURCES[0].id,
-)
-
+const sources = ref<HotSource[]>([])
+const sourceId = ref<number | null>(null)
 const items = ref<HotItem[]>([])
 const loading = ref(false)
 const error = ref('')
 
-async function loadItems() {
+async function saveKey() {
+  const k = keyInput.value.trim()
+  if (!k) return
+  apiKey.value = k
+  localStorage.setItem(KEY_STORE, k)
+  await loadSources(true)
+}
+
+async function loadSources(force = false) {
   loading.value = true
   error.value = ''
   try {
-    items.value = await fetchHotItems(baseUrl.value, sourceId.value, fetchText)
-  } catch (e) {
-    // 浏览器 fetch 遇 CORS 直接抛 TypeError，换成可读的提示
-    if (e instanceof TypeError) {
-      error.value = '该实例未开放跨域（CORS），网页版受限——桌面版不受影响，或点 ⚙ 更换实例地址'
-    } else {
-      error.value = e instanceof Error ? e.message : String(e)
+    if (!force) {
+      try {
+        const at = Number(localStorage.getItem(SOURCES_AT) || 0)
+        if (Date.now() - at < CACHE_TTL) {
+          const cached = JSON.parse(localStorage.getItem(SOURCES_CACHE) || '[]') as HotSource[]
+          if (cached.length) {
+            applySources(cached)
+            return
+          }
+        }
+      } catch {
+        /* 缓存损坏按无缓存处理 */
+      }
     }
+    const list = await fetchHotSources(apiKey.value)
+    localStorage.setItem(SOURCES_CACHE, JSON.stringify(list))
+    localStorage.setItem(SOURCES_AT, String(Date.now()))
+    applySources(list)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : String(e)
+    // Key 失效：清掉回到输入态重新填
+    if (e instanceof HotApiError && e.status === 401) {
+      apiKey.value = ''
+      keyInput.value = ''
+      localStorage.removeItem(KEY_STORE)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function applySources(list: HotSource[]) {
+  sources.value = list
+  const saved = Number(localStorage.getItem(SOURCE_STORE))
+  sourceId.value = list.some((s) => s.id === saved) ? saved : (list[0]?.id ?? null)
+  loadItems()
+}
+
+async function loadItems() {
+  if (sourceId.value == null) return
+  loading.value = true
+  error.value = ''
+  try {
+    items.value = await fetchHotItems(apiKey.value, sourceId.value)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : String(e)
     items.value = []
   } finally {
     loading.value = false
@@ -51,74 +92,78 @@ async function loadItems() {
 }
 
 function onSourceChange() {
-  localStorage.setItem(SOURCE_STORE, sourceId.value)
-  loadItems()
-}
-
-function saveBase() {
-  const b = baseInput.value.trim().replace(/\/+$/, '')
-  if (!b.startsWith('https://')) {
-    error.value = '实例地址必须是 https:// 开头'
-    return
-  }
-  baseUrl.value = b
-  localStorage.setItem(BASE_STORE, b)
-  showConfig.value = false
+  if (sourceId.value != null) localStorage.setItem(SOURCE_STORE, String(sourceId.value))
   loadItems()
 }
 
 /** 热点一键转选题：新建文档，标题自动提取自 H1，原文链接留在引用里 */
 async function toTopic(item: HotItem) {
-  await editor.createDoc(`# ${item.title}\n\n> 原文：[${item.title}](${item.url})\n\n`)
+  await editor.createDoc(`# ${item.title}\n\n> 原文：[${item.title}](${item.jump_url})\n\n`)
   editor.showToast('已创建选题文档，开写吧 ✍️')
 }
 
-onMounted(loadItems)
+onMounted(() => {
+  if (hasKey.value) loadSources()
+})
 </script>
 
 <template>
   <div class="panel-head">
     <span>🔥 热点选题</span>
     <span class="head-btns">
-      <button class="mini-btn" title="实例地址（默认公共实例，可换自部署）" @click="showConfig = !showConfig">⚙</button>
       <button class="mini-btn" title="收起面板" @click="emit('close')">✕</button>
     </span>
   </div>
 
   <div class="hot-scroll">
-    <!-- 实例地址配置 -->
-    <div v-if="showConfig" class="base-form">
-      <label>NewsNow 实例地址</label>
-      <input v-model="baseInput" placeholder="https://newsnow.busiyi.world" spellcheck="false" @keyup.enter="saveBase" />
-      <div class="base-ops">
-        <button class="run" @click="saveBase">保存</button>
-        <button class="reset" @click="baseInput = DEFAULT_NEWSNOW_BASE">恢复默认</button>
+    <!-- 未配置 Key -->
+    <div v-if="!hasKey" class="key-form">
+      <p class="dim">
+        填写 allnet.hot 的 API Key（免费注册，每日 2000 次调用），即可订阅知乎热榜、微博热搜等约 50 个热点源。
+      </p>
+      <input
+        v-model="keyInput"
+        type="password"
+        placeholder="粘贴你的 X-API-Key"
+        spellcheck="false"
+        @keyup.enter="saveKey"
+      />
+      <button class="run" :disabled="!keyInput.trim()" @click="saveKey">保 存</button>
+      <a class="key-link" href="https://allnet.hot/" target="_blank" rel="noopener">去 allnet.hot 获取 Key ↗</a>
+    </div>
+
+    <template v-else>
+      <div class="hot-toolbar">
+        <select v-model="sourceId" @change="onSourceChange">
+          <option v-for="s in sources" :key="s.id" :value="s.id">{{ s.title }}</option>
+        </select>
+        <button class="refresh" title="刷新当前榜单" @click="loadItems">⟳</button>
       </div>
-      <p class="dim">默认为公共实例。网页版若受跨域限制，可换成自部署实例地址；桌面版不受限制。</p>
-    </div>
 
-    <div class="hot-toolbar">
-      <select v-model="sourceId" @change="onSourceChange">
-        <option v-for="s in HOT_SOURCES" :key="s.id" :value="s.id">{{ s.title }}</option>
-      </select>
-      <button class="refresh" title="刷新当前榜单" @click="loadItems">⟳</button>
-    </div>
+      <p v-if="error" class="hot-error">
+        {{ error }}
+        <button class="retry" @click="loadSources(true)">重试</button>
+      </p>
+      <p v-else-if="loading" class="dim">加载中…</p>
+      <p v-else-if="!items.length && sources.length" class="dim">该源暂无内容</p>
 
-    <p v-if="error" class="hot-error">{{ error }}</p>
-    <p v-else-if="loading" class="dim">加载中…</p>
-    <p v-else-if="!items.length" class="dim">该源暂无内容</p>
-
-    <ol class="hot-list">
-      <li v-for="(it, i) in items" :key="it.url + i">
-        <span class="hot-num">{{ i + 1 }}</span>
-        <a :href="it.url" target="_blank" rel="noopener" class="hot-title">{{ it.title }}</a>
-        <span v-if="it.info" class="hot-info">{{ it.info }}</span>
-        <span class="hot-ops">
-          <button class="to-topic" title="AI 抓取原文并改写成 Markdown 初稿" @click="emit('rewrite', it)">AI 改写</button>
-          <button class="to-topic plain" title="以此热点创建空白选题文档" @click="toTopic(it)">转选题</button>
-        </span>
-      </li>
-    </ol>
+      <ol class="hot-list">
+        <li v-for="(it, i) in items" :key="it.jump_url + i">
+          <span class="hot-num">{{ i + 1 }}</span>
+          <a :href="it.jump_url" target="_blank" rel="noopener" class="hot-title">{{ it.title }}</a>
+          <span class="hot-ops">
+            <button
+              class="to-topic"
+              title="AI 抓取原文并改写成 Markdown 初稿"
+              @click="emit('rewrite', { title: it.title, url: it.jump_url })"
+            >
+              AI 改写
+            </button>
+            <button class="to-topic plain" title="以此热点创建空白选题文档" @click="toTopic(it)">转选题</button>
+          </span>
+        </li>
+      </ol>
+    </template>
   </div>
 </template>
 
@@ -158,6 +203,8 @@ onMounted(loadItems)
   overflow-y: auto;
   padding: 14px;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 .dim {
   font-size: 12px;
@@ -166,65 +213,50 @@ onMounted(loadItems)
   margin: 0 0 10px;
 }
 
-/* 实例地址配置 */
-.base-form {
+/* Key 配置态 */
+.key-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 12px;
-  border: 1px solid #e5e6eb;
-  border-radius: 8px;
-  background: #fafbfc;
+  gap: 10px;
 }
-.base-form label {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #4e5969;
-}
-.base-form input {
-  height: 32px;
+.key-form input {
+  height: 34px;
   border: 1px solid #e5e6eb;
   border-radius: 7px;
   padding: 0 10px;
-  font-size: 12.5px;
+  font-size: 13px;
   color: #1d2129;
   outline: none;
   font-family: Menlo, Consolas, monospace;
 }
-.base-form input:focus {
+.key-form input:focus {
   border-color: #07c160;
 }
-.base-ops {
-  display: flex;
-  gap: 8px;
-}
 .run {
-  height: 28px;
-  padding: 0 14px;
+  height: 32px;
   border: none;
   border-radius: 7px;
   background: #07c160;
   color: #fff;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 .run:hover {
   background: #06ad56;
 }
-.reset {
-  height: 28px;
-  padding: 0 12px;
-  border: 1px solid #e5e6eb;
-  border-radius: 7px;
-  background: #fff;
-  color: #4e5969;
-  font-size: 12.5px;
-  cursor: pointer;
+.run:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
-.reset:hover {
-  background: #f2f3f5;
+.key-link {
+  font-size: 12.5px;
+  color: #07c160;
+  text-decoration: none;
+  text-align: center;
+}
+.key-link:hover {
+  text-decoration: underline;
 }
 
 /* 榜单 */
@@ -267,6 +299,16 @@ onMounted(loadItems)
   line-height: 1.6;
   margin: 0 0 10px;
 }
+.retry {
+  border: none;
+  background: transparent;
+  color: #07c160;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .hot-list {
   list-style: none;
   margin: 0;
@@ -301,7 +343,7 @@ onMounted(loadItems)
   line-height: 1.6;
   color: #1d2129;
   text-decoration: none;
-  /* 英文单词保持完整（break-all 会把 ThreeJs 拆成两行），中文自然换行 */
+  /* 英文单词保持完整（break-all 会把术语从中间拆开），中文自然换行 */
   overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -311,15 +353,10 @@ onMounted(loadItems)
 .hot-title:hover {
   color: #07c160;
 }
-.hot-info {
+.hot-ops {
+  display: inline-flex;
+  gap: 4px;
   flex-shrink: 0;
-  max-width: 88px;
-  font-size: 10.5px;
-  color: #a8adb5;
-  padding-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .to-topic {
   flex-shrink: 0;
@@ -337,11 +374,6 @@ onMounted(loadItems)
 .to-topic:hover {
   border-color: #07c160;
   color: #07c160;
-}
-.hot-ops {
-  display: inline-flex;
-  gap: 4px;
-  flex-shrink: 0;
 }
 /* AI 改写是主推动作，绿色描边突出 */
 .to-topic:not(.plain) {

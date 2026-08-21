@@ -19,7 +19,7 @@ import {
   unregisterTheme,
   withImportant,
 } from '@typeduck/core'
-import type { ActionInput, AiActionId, AiThemeTemplate, HotItem } from '@typeduck/core'
+import type { ActionInput, AiActionId, AiThemeTemplate } from '@typeduck/core'
 import { DuckEditor, DuckPreview, DocumentList, ThemeSelector } from '@typeduck/shared-ui'
 import { useEditorStore } from './stores/editor'
 import { useAiStore, type AiTask } from './stores/ai'
@@ -413,7 +413,7 @@ async function doRewrite(url: string, title?: string, instruction?: string) {
 }
 
 /** 热点条目「AI 改写」 */
-function onHotRewrite(item: HotItem) {
+function onHotRewrite(item: { title: string; url: string }) {
   doRewrite(item.url, item.title)
 }
 
