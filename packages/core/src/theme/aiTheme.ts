@@ -226,7 +226,7 @@ export function compileAiTheme(tokens: AiThemeTokens, template: AiThemeTemplate 
 /* ---------- localStorage 持久化（与文档、AI Key 同一套本地优先机制） ---------- */
 
 const STORAGE_KEY = 'typeduck:aiThemes'
-export const AI_THEME_LIMIT = 20
+const AI_THEME_LIMIT = 20
 
 export function loadSavedAiThemes(): Theme[] {
   try {

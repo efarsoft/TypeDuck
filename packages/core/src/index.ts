@@ -7,7 +7,6 @@ export {
   loadSavedAiThemes,
   persistAiTheme,
   removeSavedAiTheme,
-  AI_THEME_LIMIT,
 } from './theme/aiTheme'
 export type { AiThemeTokens, AiThemeTemplate } from './theme/aiTheme'
 export { copyHtmlToClipboard } from './clipboard/copy'
