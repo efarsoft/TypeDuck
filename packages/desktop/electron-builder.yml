@@ -1,5 +1,11 @@
 appId: cn.efarsoft.typeduck
 productName: 排版鸭
+# CI 打 tag 时自动发布到 GitHub Releases（草稿态，人工确认后 Publish）
+publish:
+  provider: github
+  owner: efarsoft
+  repo: TypeDuck
+  draft: true
 directories:
   output: release
 files:
