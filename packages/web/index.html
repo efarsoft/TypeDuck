@@ -14,10 +14,8 @@
   />
   <link rel="canonical" href="https://typeduck.vercel.app/" />
   <meta name="theme-color" content="#07c160" />
-  <link
-    rel="icon"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦆</text></svg>"
-  />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
 
   <!-- Open Graph / 社交分享 -->
   <meta property="og:type" content="website" />
@@ -68,9 +66,8 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #f0f0f0;
     }
-    .nav-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
-    .nav-logo { font-size: 24px; }
-    .nav-name { font-size: 18px; font-weight: 800; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-img { height: 30px; width: auto; display: block; }
     .nav-slogan { font-size: 12px; font-weight: 600; color: #b0b3b8; letter-spacing: 0.5px; }
     .nav-links { margin-left: 28px; display: flex; gap: 4px; }
     .nav-link {
@@ -286,6 +283,7 @@
       display: flex; gap: 64px; align-items: flex-start;
     }
     .footer-brand { display: flex; align-items: center; gap: 12px; }
+    .footer-logo { width: 34px; height: 34px; }
     .footer-name { font-size: 17px; font-weight: 800; }
     .footer-en { font-size: 12px; font-weight: 600; color: #b0b3b8; margin-left: 4px; }
     .footer-slogan { font-size: 12.5px; color: #9aa0a6; margin-top: 2px; }
@@ -330,8 +328,7 @@
   <!-- 顶部导航 -->
   <header class="nav">
     <a class="nav-brand" href="#">
-      <span class="nav-logo">🦆</span>
-      <span class="nav-name">排版鸭</span>
+      <img class="nav-logo-img" src="logo-h.png" alt="排版鸭 TypeDuck" height="30" />
       <span class="nav-slogan">TypeDuck</span>
     </a>
     <nav class="nav-links">
@@ -685,7 +682,7 @@
   <footer class="footer">
     <div class="footer-top">
       <div class="footer-brand">
-        <span style="font-size: 24px">🦆</span>
+        <img class="footer-logo" src="logo.png" alt="排版鸭" width="34" height="34" />
         <div>
           <div class="footer-name">排版鸭 <span class="footer-en">TypeDuck</span></div>
           <div class="footer-slogan">排版呀，交给我吧！</div>

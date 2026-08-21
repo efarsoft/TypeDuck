@@ -496,7 +496,7 @@ function onRemoveTheme(id: string) {
     <!-- 通栏顶栏：品牌 + 主操作（横贯整个窗口） -->
     <header class="appbar">
       <div class="brand" role="button" tabindex="0" title="返回首页" @click="goHome" @keyup.enter="goHome">
-        <span class="brand-logo">🦆</span>
+        <img class="brand-img" src="/logo.png" alt="排版鸭" width="24" height="24" />
         <span class="brand-name">排版鸭</span>
         <span class="brand-slogan">排版呀，交给我吧！</span>
       </div>
@@ -759,9 +759,10 @@ function onRemoveTheme(id: string) {
 .brand:active {
   opacity: 0.7;
 }
-.brand-logo {
-  font-size: 18px;
-  line-height: 1;
+.brand-img {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 .brand-name {
   font-size: 15px;
