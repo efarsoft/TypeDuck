@@ -510,7 +510,7 @@ function onRemoveTheme(id: string) {
         </button>
         <!-- 一键发布到公众号草稿箱 -->
         <button class="btn-export" title="一键发布到公众号草稿箱（需配置开发者信息）" @click="showPublish = true">
-          <svg class="ic" viewBox="0 0 22 22" style="margin-right: 3px">
+          <svg class="ic" viewBox="0 0 22 22">
             <path d="M3 11l16-7-5 14-4-5-7-2zM10 13l7-7" />
           </svg>
           草稿箱
@@ -800,6 +800,15 @@ function onRemoveTheme(id: string) {
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.btn-export .ic {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .btn-export:hover {
   border-color: #07c160;
