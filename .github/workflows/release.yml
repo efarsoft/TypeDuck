@@ -31,6 +31,6 @@ jobs:
         run: pnpm build:web
 
       - name: 打包并发布 Draft Release
-        run: pnpm --filter @typeduck/desktop exec electron-builder --win --publish always
+        run: pnpm --filter typeduck-desktop exec electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
