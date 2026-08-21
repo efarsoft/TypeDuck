@@ -164,6 +164,18 @@ ipcMain.handle('net:fetch-text', async (_event, url) => {
   return res.text()
 })
 
+/* 主进程通用请求通道（https）：微信草稿箱等需要 POST 的接口用，
+ * 微信接口有 IP 白名单机制，从本机出口正好是用户自己的 IP */
+ipcMain.handle('net:request', async (_event, url, options = {}) => {
+  if (typeof url !== 'string' || !/^https:\/\//i.test(url)) {
+    throw new Error('仅支持 https 地址')
+  }
+  const init = { method: options.method || 'GET', headers: options.headers || {} }
+  if (options.body != null) init.body = options.body
+  const res = await net.fetch(url, init)
+  return { status: res.status, text: await res.text() }
+})
+
 /* ---------- 生命周期 ---------- */
 
 app.whenReady().then(() => {

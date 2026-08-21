@@ -8,6 +8,11 @@ interface DesktopAPI {
   onMenu(channel: string, callback: () => void): () => void
   /** 主进程代理抓取公开数据（仅 https GET），返回响应文本 */
   fetchText(url: string): Promise<string>
+  /** 主进程通用 https 请求（微信草稿箱等 POST 接口用） */
+  request(
+    url: string,
+    options: { method?: string; headers?: Record<string, string>; body?: ArrayBuffer | string },
+  ): Promise<{ status: number; text: string }>
 }
 
 interface Window {
