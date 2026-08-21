@@ -53,12 +53,11 @@ if (existsSync(join(brandDir, 'logo-h.svg'))) {
   console.log('brand/logo-h.svg → logo-h.png / logo-h.webp（白底裁边，高度 200）')
 }
 
-// 界面截图：转 webp 供首页引用（源 png 保留）
-if (existsSync(join(brandDir, 'editor-shot.png'))) {
-  await sharp(join(brandDir, 'editor-shot.png'))
-    .webp({ quality: 82 })
-    .toFile(join(publicDir, 'editor-shot.webp'))
-  console.log('brand/editor-shot.png → editor-shot.webp')
+// 界面截图：转 webp 供首页引用（源 png 保留，editor-shot*.png 全部处理）
+const shots = readdirSync(brandDir).filter((f) => /^editor-shot.*\.png$/i.test(f))
+for (const f of shots) {
+  await sharp(join(brandDir, f)).webp({ quality: 82 }).toFile(join(publicDir, f.replace(/\.png$/i, '.webp')))
+  console.log(`brand/${f} → ${f.replace(/\.png$/i, '.webp')}`)
 }
 
 // og 分享卡 1200×630：绿渐变底 + slogan + LOGO 合成

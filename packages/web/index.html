@@ -375,14 +375,22 @@
       .hero-actions { flex-direction: column; align-items: stretch; }
     }
 
-    /* ---------- 界面截图 ---------- */
+    /* ---------- 界面截图（多主题堆叠 + 点击切换） ---------- */
     .shot-sec { padding-top: 0; }
+    .shots { position: relative; padding: 0 26px 26px; }
     .shot-frame {
       border-radius: 16px; border: 1px solid #e6e8ec; overflow: hidden; background: #fff;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
     }
-    .shot-frame:hover { transform: translateY(-4px); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16); }
+    .shots .shot-frame { position: relative; }
+    .shot-frame.front { position: relative; z-index: 4; }
+    .shot-frame.front:hover { transform: translateY(-4px); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16); }
+    .shot-frame.stack { position: absolute; inset: 26px 26px 26px; z-index: 1; pointer-events: none; }
+    .shot-frame.stack img { width: 100%; height: 100%; object-fit: cover; }
+    .shot-frame.s1 { transform: translate(16px, 12px) rotate(1.4deg); opacity: 0.75; z-index: 3; }
+    .shot-frame.s2 { transform: translate(-14px, 20px) rotate(-1.6deg); opacity: 0.5; z-index: 2; }
+    .shot-frame.s3 { transform: translate(6px, 28px) rotate(0.8deg); opacity: 0.3; z-index: 1; }
     .shot-bar { display: flex; gap: 7px; align-items: center; padding: 10px 14px; background: #f5f6f8; border-bottom: 1px solid #e9ebef; }
     .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
     .dot.r { background: #ff5f57; }
@@ -390,6 +398,21 @@
     .dot.g { background: #28c840; }
     .shot-url { margin-left: 10px; font-size: 11.5px; color: #9aa0a6; background: #fff; border-radius: 6px; padding: 3px 12px; }
     .shot-img { width: 100%; display: block; }
+    .shot-tabs { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+    .shot-tab {
+      border: 1px solid #e5e7eb; border-radius: 999px; background: #fff;
+      color: #4e5969; font-size: 13px; font-weight: 600; padding: 8px 18px; cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+      font-family: inherit;
+    }
+    .shot-tab:hover { border-color: #07c160; color: #07c160; }
+    .shot-tab.active { background: #07c160; border-color: #07c160; color: #fff; }
+    @media (max-width: 860px) {
+      .shots { padding: 0 10px 16px; }
+      .shot-frame.s1 { transform: translate(8px, 8px) rotate(1.2deg); }
+      .shot-frame.s2 { transform: translate(-7px, 13px) rotate(-1.2deg); }
+      .shot-frame.s3 { transform: translate(3px, 18px) rotate(0.6deg); }
+    }
 
     /* ---------- 三步上手 ---------- */
     .steps-sec { padding-top: 64px; }
@@ -528,17 +551,28 @@
     </div>
   </section>
 
-  <!-- 界面截图 -->
+  <!-- 界面截图：多主题堆叠，点击切换 -->
   <section class="section shot-sec">
     <span class="eyebrow">产品</span>
     <h2 class="section-title">左边写，右边看，一目了然</h2>
-    <p class="section-sub">双栏实时预览，主题即点即换，AI 触手可及。</p>
-    <div class="shot-frame">
-      <div class="shot-bar">
-        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-        <span class="shot-url">typeduck.vercel.app/editor.html</span>
+    <p class="section-sub">双栏实时预览——点下面的主题名，看排版怎么换装。</p>
+    <div class="shots">
+      <div class="shot-frame stack s3"><img src="editor-shot-4.webp" alt="极夜黑主题界面" width="1600" height="1000" /></div>
+      <div class="shot-frame stack s2"><img src="editor-shot-3.webp" alt="小红书种草主题界面" width="1600" height="1000" /></div>
+      <div class="shot-frame stack s1"><img src="editor-shot-2.webp" alt="经典蓝主题界面" width="1600" height="1000" /></div>
+      <div class="shot-frame front">
+        <div class="shot-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="shot-url">typeduck.vercel.app/editor.html</span>
+        </div>
+        <img class="shot-img" src="editor-shot.webp" alt="排版鸭编辑器界面：左侧 Markdown 编辑，右侧公众号样式实时预览（Claude 燕麦主题）" width="1600" height="1000" />
       </div>
-      <img class="shot-img" src="editor-shot.webp" alt="排版鸭编辑器界面：左侧 Markdown 编辑，右侧公众号样式实时预览" width="1600" height="1000" />
+    </div>
+    <div class="shot-tabs">
+      <button class="shot-tab active" data-src="editor-shot.webp">Claude 燕麦</button>
+      <button class="shot-tab" data-src="editor-shot-2.webp">经典蓝</button>
+      <button class="shot-tab" data-src="editor-shot-3.webp">小红书种草</button>
+      <button class="shot-tab" data-src="editor-shot-4.webp">极夜黑</button>
     </div>
   </section>
 
@@ -940,7 +974,7 @@
       if (!reduce && 'IntersectionObserver' in window) {
         // 进场淡入
         var els = document.querySelectorAll(
-          '.stat, .step-card, .feature-card, .tcard, .cmp-wrap, .story-text, .story-qr, .faq-item, .dl-card, .shot-frame'
+          '.stat, .step-card, .feature-card, .tcard, .cmp-wrap, .story-text, .story-qr, .faq-item, .dl-card, .shots'
         )
         els.forEach(function (el, i) {
           el.classList.add('rv')
@@ -983,6 +1017,17 @@
         function () { nav.classList.toggle('scrolled', window.scrollY > 8) },
         { passive: true }
       )
+
+      // 截图主题切换（点击换装）
+      var shotTabs = document.querySelectorAll('.shot-tab')
+      var frontImg = document.querySelector('.shot-frame.front .shot-img')
+      shotTabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          shotTabs.forEach(function (b) { b.classList.remove('active') })
+          btn.classList.add('active')
+          frontImg.src = btn.getAttribute('data-src')
+        })
+      })
     })()
   </script>
 </body>
