@@ -375,6 +375,22 @@
       .hero-actions { flex-direction: column; align-items: stretch; }
     }
 
+    /* ---------- 界面截图 ---------- */
+    .shot-sec { padding-top: 0; }
+    .shot-frame {
+      border-radius: 16px; border: 1px solid #e6e8ec; overflow: hidden; background: #fff;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .shot-frame:hover { transform: translateY(-4px); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16); }
+    .shot-bar { display: flex; gap: 7px; align-items: center; padding: 10px 14px; background: #f5f6f8; border-bottom: 1px solid #e9ebef; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .dot.r { background: #ff5f57; }
+    .dot.y { background: #febc2e; }
+    .dot.g { background: #28c840; }
+    .shot-url { margin-left: 10px; font-size: 11.5px; color: #9aa0a6; background: #fff; border-radius: 6px; padding: 3px 12px; }
+    .shot-img { width: 100%; display: block; }
+
     /* ---------- 三步上手 ---------- */
     .steps-sec { padding-top: 64px; }
     .steps { display: flex; gap: 0; align-items: stretch; justify-content: center; flex-wrap: wrap; }
@@ -509,6 +525,20 @@
         <h3>复制发布</h3>
         <p>一键复制进公众号编辑器，或直推草稿箱——样式零丢失。</p>
       </div>
+    </div>
+  </section>
+
+  <!-- 界面截图 -->
+  <section class="section shot-sec">
+    <span class="eyebrow">产品</span>
+    <h2 class="section-title">左边写，右边看，一目了然</h2>
+    <p class="section-sub">双栏实时预览，主题即点即换，AI 触手可及。</p>
+    <div class="shot-frame">
+      <div class="shot-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="shot-url">typeduck.vercel.app/editor.html</span>
+      </div>
+      <img class="shot-img" src="editor-shot.webp" alt="排版鸭编辑器界面：左侧 Markdown 编辑，右侧公众号样式实时预览" width="1600" height="1000" />
     </div>
   </section>
 
@@ -910,7 +940,7 @@
       if (!reduce && 'IntersectionObserver' in window) {
         // 进场淡入
         var els = document.querySelectorAll(
-          '.stat, .step-card, .feature-card, .tcard, .cmp-wrap, .story-text, .story-qr, .faq-item, .dl-card'
+          '.stat, .step-card, .feature-card, .tcard, .cmp-wrap, .story-text, .story-qr, .faq-item, .dl-card, .shot-frame'
         )
         els.forEach(function (el, i) {
           el.classList.add('rv')
