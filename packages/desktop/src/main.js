@@ -5,12 +5,31 @@ const fs = require('fs')
 
 const DEV_URL = 'http://localhost:5173/editor.html'
 const isDev = !app.isPackaged
+const grantedFilePaths = new Set()
 
 function isTrustedRendererUrl(rawUrl) {
   try {
     const url = new URL(rawUrl)
     if (isDev) return url.origin === new URL(DEV_URL).origin
-    return url.protocol === 'file:' && path.normalize(url.pathname).includes(path.normalize('/web/dist/'))
+    const editorPath = path.join(process.resourcesPath, 'web', 'dist', 'editor.html')
+    const loadedPath = path.normalize(decodeURIComponent(url.pathname).replace(/^\/(?:[A-Za-z]:)/, (m) => m.slice(1)))
+    return url.protocol === 'file:' && loadedPath === path.normalize(editorPath)
+  } catch {
+    return false
+  }
+}
+
+function isPublicHttpsUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl)
+    if (url.protocol !== 'https:' || url.username || url.password) return false
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '')
+    if (host === 'localhost' || host === '::1' || host.endsWith('.localhost') || host.endsWith('.local')) return false
+    if (/^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^169\.254\./.test(host)) return false
+    const match172 = host.match(/^172\.(\d+)\./)
+    if (match172 && Number(match172[1]) >= 16 && Number(match172[1]) <= 31) return false
+    if (/^(?:0|224|240)\./.test(host) || host === '100.100.100.200') return false
+    return true
   } catch {
     return false
   }
@@ -158,6 +177,7 @@ ipcMain.handle('file:open', async (event) => {
   })
   if (result.canceled || result.filePaths.length === 0) return null
   const filePath = result.filePaths[0]
+  grantedFilePaths.add(path.resolve(filePath))
   const content = await fs.promises.readFile(filePath, 'utf-8')
   return { filePath, content, title: path.basename(filePath, path.extname(filePath)) }
 })
@@ -166,6 +186,7 @@ ipcMain.handle('file:save', async (_event, { filePath, content }) => {
   assertTrustedSender(_event)
   if (typeof filePath !== 'string' || typeof content !== 'string') throw new Error('无效的保存参数')
   if (!/\.(?:md|markdown|txt)$/i.test(filePath)) throw new Error('仅允许保存 Markdown 或文本文件')
+  if (!grantedFilePaths.has(path.resolve(filePath))) throw new Error('该路径未经用户授权')
   await fs.promises.writeFile(filePath, content, 'utf-8')
   return { filePath }
 })
@@ -179,6 +200,7 @@ ipcMain.handle('file:save-as', async (_event, { content, defaultPath }) => {
     filters: [{ name: 'Markdown', extensions: ['md'] }],
   })
   if (result.canceled) return null
+  grantedFilePaths.add(path.resolve(result.filePath))
   await fs.promises.writeFile(result.filePath, content, 'utf-8')
   return { filePath: result.filePath }
 })
@@ -186,9 +208,7 @@ ipcMain.handle('file:save-as', async (_event, { content, defaultPath }) => {
 /* 主进程代理抓取：绕渲染进程 CORS 限制（热点榜单等公开数据），仅放行 https GET */
 ipcMain.handle('net:fetch-text', async (_event, url) => {
   assertTrustedSender(_event)
-  if (typeof url !== 'string' || !/^https:\/\//i.test(url)) {
-    throw new Error('仅支持 https 地址')
-  }
+  if (typeof url !== 'string' || !isPublicHttpsUrl(url)) throw new Error('仅支持公开的 https 地址')
   const res = await net.fetch(url, {
     headers: {
       // NewsNow 等站点有 Cloudflare UA 过滤，需要浏览器 UA

@@ -28,7 +28,6 @@ ${bodyHtml}
   const blob = await htmlDocxAsBlob(html, {
     orientation: 'portrait',
     margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, // Word twips：2.54cm 默认页边距
-    title,
   })
   const url = URL.createObjectURL(blob as Blob)
   const a = document.createElement('a')
