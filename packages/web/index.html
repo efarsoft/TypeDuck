@@ -1,13 +1,541 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <title>排版鸭 —— 排版呀，交给我吧！</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>排版鸭 TypeDuck — 免费开源的微信公众号 Markdown 排版工具 | AI 辅助写作 · 本地优先</title>
+  <meta
+    name="description"
+    content="排版鸭是一款免费开源的微信公众号排版工具：左边写 Markdown，右边实时预览，一键复制到公众号样式不丢失。内置 32+ 主题、10 项 AI 能力（润色/扩写/改写/起标题）、50+ 热点榜单源、配图助手与草稿箱直发。本地优先、无需登录、MIT 开源。"
+  />
+  <meta
+    name="keywords"
+    content="公众号排版,Markdown 排版,微信编辑器,公众号 Markdown,AI 写作,BYOK,排版工具,mdnice 替代,免费开源"
+  />
+  <link rel="canonical" href="https://typeduck.vercel.app/" />
+  <meta name="theme-color" content="#07c160" />
+  <link
+    rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦆</text></svg>"
+  />
+
+  <!-- Open Graph / 社交分享 -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="排版鸭 TypeDuck" />
+  <meta property="og:title" content="排版鸭 TypeDuck — 排版呀，交给我吧！" />
+  <meta
+    property="og:description"
+    content="免费开源的公众号 Markdown 排版工具：32+ 主题、AI 辅助写作、热点选题、配图助手、草稿箱直发。本地优先，无需登录。"
+  />
+  <meta property="og:url" content="https://typeduck.vercel.app/" />
+  <meta property="og:image" content="https://typeduck.vercel.app/logo-mascot.webp" />
+  <meta property="og:locale" content="zh_CN" />
+
+  <!-- 结构化数据：软件应用 -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "排版鸭 TypeDuck",
+      "url": "https://typeduck.vercel.app/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, Windows, macOS, Linux",
+      "description": "免费开源的微信公众号 Markdown 排版工具，支持 AI 辅助写作（BYOK）、热点选题、配图助手与草稿箱直发，本地优先无需登录。",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+      "featureList": "Markdown 实时预览,一键复制到公众号,32+ 主题样式,AI 润色扩写改写,热点榜单选题,配图助手与封面裁剪,草稿箱直发,多格式导出",
+      "inLanguage": "zh-CN"
+    }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #fff;
+      color: #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    img { display: block; }
+
+    /* ---------- 导航 ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; gap: 16px;
+      height: 64px; padding: 0 32px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo { font-size: 24px; }
+    .nav-name { font-size: 18px; font-weight: 800; }
+    .nav-slogan { font-size: 12px; font-weight: 600; color: #b0b3b8; letter-spacing: 0.5px; }
+    .nav-links { margin-left: 28px; display: flex; gap: 4px; }
+    .nav-link {
+      font-size: 14px; color: #4e5969; padding: 8px 14px; border-radius: 8px;
+      text-decoration: none; transition: background 0.15s ease, color 0.15s ease;
+    }
+    .nav-link:hover { background: #f3f4f6; color: #1a1a1a; }
+    .nav-cta {
+      margin-left: auto; height: 40px; display: inline-flex; align-items: center;
+      padding: 0 22px; border-radius: 10px; background: #07c160; color: #fff;
+      font-size: 14px; font-weight: 700; text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .nav-cta:hover { background: #06ad56; }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      position: relative; overflow: hidden;
+      background:
+        radial-gradient(640px 320px at 82% 18%, rgba(7, 193, 96, 0.08), transparent 70%),
+        radial-gradient(520px 280px at 12% 82%, rgba(9, 105, 218, 0.05), transparent 70%),
+        linear-gradient(#fbfdfc, #fff);
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, #e6e8ec 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: radial-gradient(720px 420px at 60% 30%, rgba(0, 0, 0, 0.5), transparent 75%);
+      -webkit-mask-image: radial-gradient(720px 420px at 60% 30%, rgba(0, 0, 0, 0.5), transparent 75%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative; max-width: 1120px; margin: 0 auto;
+      padding: 84px 32px 72px;
+      display: grid; grid-template-columns: 1.12fr 0.88fr; gap: 48px; align-items: center;
+    }
+    .hero-tag {
+      display: inline-block; font-size: 13px; font-weight: 600; color: #07c160;
+      background: #e8f9ef; border: 1px solid #d3f2e0; padding: 6px 14px;
+      border-radius: 999px; margin-bottom: 20px;
+    }
+    .hero-title { font-size: 54px; line-height: 1.14; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; }
+    .hero-title .hl {
+      background: linear-gradient(120deg, #07c160 30%, #35d07f 70%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { font-size: 17px; line-height: 1.85; color: #4e5969; margin-bottom: 30px; max-width: 540px; }
+    .hero-actions { display: flex; gap: 14px; margin-bottom: 16px; }
+    .btn-primary {
+      height: 50px; display: inline-flex; align-items: center; padding: 0 30px;
+      border: none; border-radius: 12px; background: #07c160; color: #fff;
+      font-size: 16px; font-weight: 700; text-decoration: none;
+      box-shadow: 0 8px 22px rgba(7, 193, 96, 0.28);
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit; cursor: pointer;
+    }
+    .btn-primary:hover { background: #06ad56; box-shadow: 0 10px 26px rgba(7, 193, 96, 0.34); }
+    .btn-ghost {
+      height: 50px; display: inline-flex; align-items: center; padding: 0 28px;
+      border: 1.5px solid #d8dbe1; border-radius: 12px; background: #fff;
+      font-size: 16px; font-weight: 600; text-decoration: none;
+      transition: border-color 0.15s ease, color 0.15s ease; font-family: inherit; cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: #07c160; color: #07c160; }
+    .hero-note { font-size: 13px; color: #9aa0a6; }
+    .hero-art { display: flex; justify-content: center; }
+    .mascot-card {
+      position: relative; width: 320px; height: 320px; border-radius: 32px;
+      background: linear-gradient(135deg, #e8f9ef 0%, #eef6ff 100%);
+      border: 1px solid #dcefe4;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 24px 56px rgba(7, 193, 96, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .mascot { width: 210px; height: 210px; object-fit: contain; }
+    .bubble {
+      position: absolute; background: #fff; border: 1px solid #e7e9ee; border-radius: 999px;
+      padding: 7px 14px; font-size: 12.5px; font-weight: 600;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.09);
+      animation: float 3.4s ease-in-out infinite;
+    }
+    .bubble-1 { top: 18px; left: -22px; }
+    .bubble-2 { top: 128px; right: -30px; animation-delay: 1.1s; }
+    .bubble-3 { bottom: 10px; left: -12px; animation-delay: 2.2s; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ---------- 统计条 ---------- */
+    .stats { border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; background: #fcfdfd; }
+    .stats-inner {
+      max-width: 1120px; margin: 0 auto; padding: 30px 32px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+    .stat + .stat::before { content: ''; position: absolute; left: 0; top: 15%; bottom: 15%; width: 1px; background: #eceef1; }
+    .stat-num { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; }
+    .stat-num::after { content: ''; display: block; width: 28px; height: 4px; border-radius: 2px; background: #07c160; margin: 6px auto 0; }
+    .stat-label { font-size: 13.5px; color: #6b7280; margin-top: 8px; }
+
+    /* ---------- 区块通用 ---------- */
+    .section { max-width: 1120px; margin: 0 auto; padding: 84px 32px; }
+    .section-alt { max-width: none; background: #fafbfc; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
+    .section-alt > * { max-width: 1120px; margin-left: auto; margin-right: auto; }
+    .eyebrow { display: block; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 4px; color: #07c160; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-size: 34px; font-weight: 800; text-align: center; letter-spacing: -0.5px; margin-bottom: 12px; }
+    .section-sub { font-size: 15.5px; line-height: 1.75; color: #6b7280; text-align: center; margin: 0 auto 48px; max-width: 620px; }
+
+    /* ---------- 功能 ---------- */
+    .feature-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .feature-card {
+      background: #fff; border: 1px solid #eef0f3; border-radius: 18px; padding: 26px 22px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .feature-card:hover { transform: translateY(-5px); box-shadow: 0 16px 34px rgba(0, 0, 0, 0.07); border-color: #cdeede; }
+    .feature-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 46px; height: 46px; border-radius: 13px; margin-bottom: 15px;
+      background: linear-gradient(135deg, #e8f9ef, #f2fbf6);
+    }
+    .feature-icon svg { width: 24px; height: 24px; stroke: #07c160; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .feature-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 13.5px; line-height: 1.7; color: #6b7280; }
+
+    /* ---------- 主题预览 ---------- */
+    .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 36px; }
+    .theme-card {
+      position: relative; background: #fff; border: 1px solid #eef0f3; border-radius: 16px;
+      padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 10px;
+      text-decoration: none; overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .theme-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.07); border-color: #cdeede; }
+    .tc-accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .tc-title { font-size: 15px; font-weight: 800; }
+    .tc-line { height: 7px; border-radius: 4px; width: 100%; }
+    .tc-line.short { width: 58%; }
+    .themes-cta { text-align: center; }
+
+    /* ---------- CTA ---------- */
+    .cta {
+      background:
+        radial-gradient(560px 280px at 88% 10%, rgba(255, 255, 255, 0.14), transparent 70%),
+        linear-gradient(130deg, #07c160 0%, #06b26f 55%, #059c63 100%);
+    }
+    .cta-inner { max-width: 1120px; margin: 0 auto; padding: 72px 32px; text-align: center; }
+    .cta-title { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 12px; }
+    .cta-sub { font-size: 15.5px; color: rgba(255, 255, 255, 0.85); margin-bottom: 30px; }
+    .cta-actions { display: flex; gap: 14px; justify-content: center; }
+    .btn-light {
+      height: 48px; display: inline-flex; align-items: center; padding: 0 32px;
+      border: none; border-radius: 12px; background: #fff; color: #06ad56;
+      font-size: 15.5px; font-weight: 700; text-decoration: none;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16); font-family: inherit; cursor: pointer;
+    }
+    .btn-outline {
+      display: inline-flex; align-items: center; height: 48px; padding: 0 28px;
+      border: 1.5px solid rgba(255, 255, 255, 0.65); border-radius: 12px;
+      color: #fff; font-size: 15.5px; font-weight: 600; text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.12); }
+
+    /* ---------- FAQ（SEO/GEO） ---------- */
+    .faq { max-width: 780px; }
+    .faq-item { border-bottom: 1px solid #eef0f3; padding: 22px 4px; }
+    .faq-q { font-size: 16px; font-weight: 700; margin-bottom: 10px; display: flex; gap: 10px; }
+    .faq-q::before { content: 'Q'; flex-shrink: 0; width: 24px; height: 24px; border-radius: 7px; background: #e8f9ef; color: #07c160; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+    .faq-a { font-size: 14.5px; line-height: 1.8; color: #6b7280; padding-left: 34px; }
+
+    /* ---------- 下载 ---------- */
+    .download-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .dl-card {
+      background: #fff; border: 1px solid #eef0f3; border-radius: 18px;
+      padding: 32px 26px 26px; text-align: center;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .dl-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.06); }
+    .dl-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px; border-radius: 16px; background: #f3f7f5; margin-bottom: 16px;
+    }
+    .dl-icon svg { width: 30px; height: 30px; stroke: #07c160; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .dl-os { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+    .dl-note { font-size: 13px; color: #9aa0a6; margin-bottom: 20px; min-height: 36px; }
+    .dl-btn {
+      display: block; width: 100%; height: 44px; line-height: 44px; border-radius: 11px;
+      background: #07c160; color: #fff; font-size: 14.5px; font-weight: 700;
+      text-decoration: none; transition: background 0.15s ease;
+    }
+    .dl-btn:hover { background: #06ad56; }
+    .dl-btn.soon { background: #f3f4f6; color: #9aa0a6; }
+    .dl-foot { text-align: center; font-size: 13px; color: #9aa0a6; margin-top: 26px; }
+
+    /* ---------- 页脚 ---------- */
+    .footer { border-top: 1px solid #f0f0f0; background: #fcfdfd; }
+    .footer-top {
+      max-width: 1120px; margin: 0 auto; padding: 48px 32px 36px;
+      display: flex; gap: 64px; align-items: flex-start;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 12px; }
+    .footer-name { font-size: 17px; font-weight: 800; }
+    .footer-en { font-size: 12px; font-weight: 600; color: #b0b3b8; margin-left: 4px; }
+    .footer-slogan { font-size: 12.5px; color: #9aa0a6; margin-top: 2px; }
+    .footer-col { display: flex; flex-direction: column; gap: 10px; }
+    .footer-col.nav-col { margin-left: auto; }
+    .footer-head { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .footer-link { font-size: 13.5px; color: #6b7280; text-decoration: none; background: none; border: none; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
+    a.footer-link:hover { color: #07c160; }
+    .footer-link.strong { color: #1a1a1a; font-weight: 600; }
+    .footer-link.dim { color: #9aa0a6; cursor: default; }
+    .footer-copy { border-top: 1px solid #f0f0f0; padding: 18px 32px 22px; font-size: 12.5px; color: #b0b3b8; text-align: center; }
+
+    /* ---------- 响应式 ---------- */
+    @media (max-width: 960px) {
+      .hero-inner { grid-template-columns: 1fr; padding: 56px 24px 48px; text-align: center; }
+      .hero-art { order: -1; }
+      .hero-sub { margin-left: auto; margin-right: auto; }
+      .hero-actions, .cta-actions { justify-content: center; }
+      .hero-title { font-size: 40px; }
+      .feature-grid, .theme-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 22px 0; }
+      .stat + .stat::before { display: none; }
+      .nav-links { display: none; }
+      .footer-top { flex-direction: column; gap: 28px; }
+      .footer-col.nav-col { margin-left: 0; }
+    }
+    @media (max-width: 560px) {
+      .feature-grid, .theme-grid, .download-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 32px; }
+      .section { padding: 60px 20px; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+    }
+  </style>
 </head>
 <body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
+  <!-- 顶部导航 -->
+  <header class="nav">
+    <a class="nav-brand" href="#">
+      <span class="nav-logo">🦆</span>
+      <span class="nav-name">排版鸭</span>
+      <span class="nav-slogan">TypeDuck</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="#features">功能</a>
+      <a class="nav-link" href="#themes">主题</a>
+      <a class="nav-link" href="#faq">常见问题</a>
+      <a class="nav-link" href="#download">下载</a>
+    </nav>
+    <a class="nav-cta" href="editor.html">开始使用</a>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <span class="hero-tag">Markdown → 公众号精美排版</span>
+        <h1 class="hero-title">排版呀，<span class="hl">交给我吧！</span></h1>
+        <p class="hero-sub">
+          排版鸭是写作者专用的公众号排版工具。左边写 Markdown，右边实时预览，点一下把带样式的文章粘进微信编辑器。
+          从热点选题、AI 初稿到配图封面、草稿直发，一整个流程都在这里。
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="editor.html">开始使用 →</a>
+          <a class="btn-ghost" href="#download">下载客户端</a>
+        </div>
+        <p class="hero-note">免费 · 本地优先 · 无需登录 · 开源 MIT</p>
+      </div>
+      <div class="hero-art">
+        <div class="mascot-card">
+          <img class="mascot" src="logo-mascot.webp" alt="排版鸭 TypeDuck 吉祥物" width="210" height="210" />
+          <span class="bubble bubble-1">一键复制 📋</span>
+          <span class="bubble bubble-2">AI 帮你写 ✨</span>
+          <span class="bubble bubble-3">32+ 主题 🎨</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 统计条 -->
+  <section class="stats">
+    <div class="stats-inner">
+      <div class="stat"><span class="stat-num">32+</span><span class="stat-label">主题样式</span></div>
+      <div class="stat"><span class="stat-num">10</span><span class="stat-label">AI 能力</span></div>
+      <div class="stat"><span class="stat-num">50+</span><span class="stat-label">热点源</span></div>
+      <div class="stat"><span class="stat-num">4</span><span class="stat-label">导出格式</span></div>
+    </div>
+  </section>
+
+  <!-- 功能 -->
+  <section id="features" class="section">
+    <span class="eyebrow">功能</span>
+    <h2 class="section-title">从选题到发布，一个工具全包了</h2>
+    <p class="section-sub">写什么、怎么写、配什么图、怎么发——每一步都有顺手的功能接住你。</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M9 7l-4 4 4 4M13 7l4 4-4 4"/></svg></span>
+        <h3 class="feature-title">一键复制到公众号</h3>
+        <p class="feature-desc">Markdown 实时渲染成带内联样式的 HTML，点一下就能粘进微信编辑器，排版不丢失。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M4 5h14v10H9l-5 4zM8 10h.01M12 10h.01M16 10h.01"/></svg></span>
+        <h3 class="feature-title">AI 辅助写作（BYOK）</h3>
+        <p class="feature-desc">润色、扩写、续写、起标题、写摘要。用自己的 Key，DeepSeek / 豆包 / 千问 / GLM / Kimi 任选。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M3 5h16v12H3zM3 14l4-4 3 3 3-4 6 6"/></svg></span>
+        <h3 class="feature-title">链接一键改写</h3>
+        <p class="feature-desc">粘贴文章链接，自动抓取正文、AI 流式改写成带出处的初稿，选题不再从零开始。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M12 3c2 2.5-.5 4.5-.5 6.5 0 1.2.9 2 2 2s2-.8 2-2C17 11 18 12.8 18 15a6 6 0 0 1-12 0c0-3.5 3-5 4.5-8C11.3 5.7 11.5 4.4 12 3z"/></svg></span>
+        <h3 class="feature-title">热点选题</h3>
+        <p class="feature-desc">微博、知乎、百度等 50+ 热榜聚合一处，看到能写的，一键转选题或直接改写。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M3 5h16v12H3zM8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2M3 14l4-4 3 3 3-4 6 6"/></svg></span>
+        <h3 class="feature-title">配图助手</h3>
+        <p class="feature-desc">AI 推荐关键词，搜索 Unsplash / Pexels 免费图库，封面一键裁成公众号 2.35:1。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6zM9 12l2 2 4-4"/></svg></span>
+        <h3 class="feature-title">草稿箱直发</h3>
+        <p class="feature-desc">配置公众号开发者信息后，标题、正文、封面、摘要一键推进草稿箱——发布永远人工。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M4 6h16v3H4zM4 11h16v3H4zM4 16h10v3H4z"/></svg></span>
+        <h3 class="feature-title">32+ 主题样式</h3>
+        <p class="feature-desc">日常写作、个性撞色、文艺叙事、深色沉浸四大场景分组，还能用 AI 生成专属主题。</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon"><svg viewBox="0 0 22 22"><path d="M6 10V7a4 4 0 0 1 8 0v3M5 10h12v10H5z"/></svg></span>
+        <h3 class="feature-title">本地优先 · 隐私</h3>
+        <p class="feature-desc">文档和密钥都存本地、不强制登录；桌面端离线可用。你的内容始终在你自己手里。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主题展示 -->
+  <section id="themes" class="section section-alt">
+    <span class="eyebrow">主题</span>
+    <h2 class="section-title">一套主题，一种语气</h2>
+    <p class="section-sub">按使用场景分组：日常写作、个性撞色、文艺叙事、深色沉浸。描述一句话，AI 还能给你现造一套。</p>
+    <div class="theme-grid">
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#1a1a1a"></span><span class="tc-title" style="color:#1a1a1a">极简白</span><span class="tc-line" style="background:#1a1a1a;opacity:.25"></span><span class="tc-line" style="background:#1a1a1a;opacity:.18"></span><span class="tc-line short" style="background:#1a1a1a;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#07c160"></span><span class="tc-title" style="color:#07c160">微信绿</span><span class="tc-line" style="background:#07c160;opacity:.25"></span><span class="tc-line" style="background:#07c160;opacity:.18"></span><span class="tc-line short" style="background:#07c160;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#0969da"></span><span class="tc-title" style="color:#0969da">GitHub</span><span class="tc-line" style="background:#0969da;opacity:.25"></span><span class="tc-line" style="background:#0969da;opacity:.18"></span><span class="tc-line short" style="background:#0969da;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#b5651d"></span><span class="tc-title" style="color:#b5651d">燕麦稿</span><span class="tc-line" style="background:#b5651d;opacity:.25"></span><span class="tc-line" style="background:#b5651d;opacity:.18"></span><span class="tc-line short" style="background:#b5651d;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#9e2b25"></span><span class="tc-title" style="color:#9e2b25">新中式</span><span class="tc-line" style="background:#9e2b25;opacity:.25"></span><span class="tc-line" style="background:#9e2b25;opacity:.18"></span><span class="tc-line short" style="background:#9e2b25;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#ff5c8a"></span><span class="tc-title" style="color:#ff5c8a">孟菲斯</span><span class="tc-line" style="background:#ff5c8a;opacity:.25"></span><span class="tc-line" style="background:#ff5c8a;opacity:.18"></span><span class="tc-line short" style="background:#ff5c8a;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#00cfe5"></span><span class="tc-title" style="color:#00cfe5">全息镭射</span><span class="tc-line" style="background:#00cfe5;opacity:.25"></span><span class="tc-line" style="background:#00cfe5;opacity:.18"></span><span class="tc-line short" style="background:#00cfe5;opacity:.12"></span></a>
+      <a class="theme-card" href="editor.html"><span class="tc-accent" style="background:#ff2e97"></span><span class="tc-title" style="color:#ff2e97">赛博霓虹</span><span class="tc-line" style="background:#ff2e97;opacity:.25"></span><span class="tc-line" style="background:#ff2e97;opacity:.18"></span><span class="tc-line short" style="background:#ff2e97;opacity:.12"></span></a>
+    </div>
+    <div class="themes-cta"><a class="btn-primary" href="editor.html">进编辑器挑主题 →</a></div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-inner">
+      <h2 class="cta-title">工具已经就位，就差你来写第一篇</h2>
+      <p class="cta-sub">打开就是编辑器，不需要注册，不需要联网，先写两行试试手感。</p>
+      <div class="cta-actions">
+        <a class="btn-light" href="editor.html">立即开始</a>
+        <a class="btn-outline" href="https://github.com/efarsoft/TypeDuck" target="_blank" rel="noopener">GitHub Star ⭐</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ（SEO / GEO 内容区） -->
+  <section id="faq" class="section">
+    <span class="eyebrow">FAQ</span>
+    <h2 class="section-title">常见问题</h2>
+    <p class="section-sub">关于排版鸭，被问得最多的五个问题。</p>
+    <div class="faq">
+      <div class="faq-item">
+        <h3 class="faq-q">排版鸭是什么？和 mdnice、Doocs md 有什么区别？</h3>
+        <p class="faq-a">
+          排版鸭（TypeDuck）是一款免费开源的微信公众号 Markdown 排版工具，MIT 协议。区别在于：不需要注册登录、数据 100%
+          存本地、AI 功能自带 Key 自助使用（BYOK）、提供桌面客户端，且从热点选题到草稿直发覆盖写作全流程。
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">复制到公众号后，样式会丢失吗？</h3>
+        <p class="faq-a">
+          不会。排版鸭把所有样式转成内联样式（inline style）并做加固，避开微信编辑器会剥离的 class 与 style
+          标签；标题、引用、代码高亮、表格粘贴后所见即所得。导出 Word 时自动切换为兼容样式。
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">需要注册或登录吗？我的文章存在哪里？</h3>
+        <p class="faq-a">
+          不需要注册登录。文档存在你浏览器的本地存储（IndexedDB）里，桌面版存在本机——全程不经过任何服务器，离线也能用。
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">AI 功能怎么收费？</h3>
+        <p class="faq-a">
+          排版鸭本身完全免费。AI 功能采用 BYOK（Bring Your Own
+          Key）模式：你在 DeepSeek、豆包、通义千问、GLM、Kimi 等厂商自助申请免费 API Key 填入即可，额度归你、账单归你、内容不经过排版鸭的服务器。
+        </p>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">支持哪些平台？</h3>
+        <p class="faq-a">
+          网页版打开即用（本页面「开始使用」）；桌面版支持 Windows、macOS、Linux，安装包发布在 GitHub
+          Releases，还额外支持热点抓取、公众号草稿箱直发等桌面专属能力。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 下载 -->
+  <section id="download" class="section">
+    <span class="eyebrow">下载</span>
+    <h2 class="section-title">带走一只鸭子</h2>
+    <p class="section-sub">桌面端离线可用、文档存本地，还多出热点抓取、草稿直发等专属能力。</p>
+    <div class="download-grid">
+      <div class="dl-card">
+        <span class="dl-icon"><svg viewBox="0 0 24 24"><path d="M3 4h14v9H3zM3 15h14v3H3zM5 6h.01M8 6h.01M11 6h.01M6 17v.01M12 17v.01"/></svg></span>
+        <h3 class="dl-os">Windows</h3>
+        <p class="dl-note">支持 Windows 10/11 · x64 · exe 安装包</p>
+        <a class="dl-btn" href="https://github.com/efarsoft/TypeDuck/releases" target="_blank" rel="noopener">去 GitHub 下载</a>
+      </div>
+      <div class="dl-card">
+        <span class="dl-icon"><svg viewBox="0 0 24 24"><path d="M12 3c2 2 3 4 3 6a4 4 0 1 1-8 0c0-2 1-4 3-6zM5 20h14v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4z"/></svg></span>
+        <h3 class="dl-os">macOS</h3>
+        <p class="dl-note">Apple Silicon / Intel · dmg</p>
+        <span class="dl-btn soon">即将推出</span>
+      </div>
+      <div class="dl-card">
+        <span class="dl-icon"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 7v5l3 2"/></svg></span>
+        <h3 class="dl-os">Linux</h3>
+        <p class="dl-note">AppImage · x86_64</p>
+        <span class="dl-btn soon">即将推出</span>
+      </div>
+    </div>
+    <p class="dl-foot">所有安装包发布于 GitHub Releases · Windows v0.1.0 已就绪，随首个 Release 放出</p>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span style="font-size: 24px">🦆</span>
+        <div>
+          <div class="footer-name">排版鸭 <span class="footer-en">TypeDuck</span></div>
+          <div class="footer-slogan">排版呀，交给我吧！</div>
+        </div>
+      </div>
+      <div class="footer-col nav-col">
+        <span class="footer-head">产品</span>
+        <a class="footer-link" href="editor.html">在线使用</a>
+        <a class="footer-link" href="#download">下载客户端</a>
+        <a class="footer-link" href="https://github.com/efarsoft/TypeDuck" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-head">关注</span>
+        <span class="footer-link strong">公众号「AI猿叔」</span>
+        <span class="footer-link dim">「人人可入门的 AI 开发课」连载中</span>
+        <span class="footer-link dim">本工具就是课程实战项目</span>
+      </div>
+    </div>
+    <p class="footer-copy">© 2026 排版鸭 TypeDuck · MIT License · 本地优先的公众号排版工具</p>
+  </footer>
+
+  <!-- 兼容旧 SPA 链接：/#/editor → editor.html（全站唯一的 JS） -->
+  <script>
+    if (location.hash === '#/editor') location.replace('editor.html')
+  </script>
 </body>
 </html>

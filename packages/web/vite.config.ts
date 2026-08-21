@@ -41,6 +41,12 @@ export default defineConfig({
   plugins: [vue(), devFetchProxy()],
   // 相对路径：桌面版 file:// 协议加载 dist 时，绝对路径 /assets 会指向磁盘根目录导致白屏
   base: './',
+  // MPA 双入口：index.html 是零 JS 静态首页（SEO/GEO 友好），editor.html 是编辑器 SPA
+  build: {
+    rollupOptions: {
+      input: { index: 'index.html', editor: 'editor.html' },
+    },
+  },
   server: {
     port: 5173,
   },

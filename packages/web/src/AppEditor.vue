@@ -45,9 +45,9 @@ function toggleRightView(view: 'theme' | 'history' | 'ai' | 'hot' | 'image') {
 }
 const viewMode = ref<'split' | 'editor' | 'preview'>('split')
 
-/** 顶栏品牌点击回首页 */
+/** 顶栏品牌点击回静态首页 */
 function goHome() {
-  location.hash = '#/'
+  location.href = 'index.html'
 }
 
 /** 视图模式：双栏 / 仅编辑 / 仅预览（分段图标切换） */

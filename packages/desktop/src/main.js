@@ -3,7 +3,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, shell, net } = require('elect
 const path = require('path')
 const fs = require('fs')
 
-const DEV_URL = 'http://localhost:5173'
+const DEV_URL = 'http://localhost:5173/editor.html'
 const isDev = !app.isPackaged
 
 /** 轮询等待 dev server 就绪（超时后仍尝试加载一次，让错误可见） */
@@ -43,8 +43,9 @@ async function createWindow() {
     await mainWindow.loadURL(DEV_URL)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
-    // 打包后 web 构建产物在 resources/web/dist（extraResources，asar 外）
-    mainWindow.loadFile(path.join(process.resourcesPath, 'web', 'dist', 'index.html'))
+    // 打包后 web 构建产物在 resources/web/dist（extraResources，asar 外）；
+    // index.html 是静态官网首页，编辑器入口在 editor.html
+    mainWindow.loadFile(path.join(process.resourcesPath, 'web', 'dist', 'editor.html'))
   }
 
   // 外部链接用系统浏览器打开，不在应用内跳走
