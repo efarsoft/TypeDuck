@@ -118,7 +118,7 @@ packages/
 
 <div align="center">
 
-<img src="docs/images/wechat-qrcode.jpg" width="240" alt="关注公众号二维码" />
+<img src="brand/wechat-qrcode.jpg" width="240" alt="关注公众号二维码" />
 
 **「扫码关注，一起造轮子」**
 
