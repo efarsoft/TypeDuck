@@ -5,3 +5,9 @@ dist/
 .zcode/
 vite.config.ts.timestamp-*
 packages/desktop/release*/
+
+# 品牌资产：brand/ 为唯一源，以下为构建时同步产物
+packages/web/public/*.png
+packages/web/public/*.jpg
+packages/web/public/*.webp
+packages/desktop/build/
