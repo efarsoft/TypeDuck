@@ -188,7 +188,7 @@ Markdown 源码
 
 现在能直接玩：
 
-> 🦆 在线地址：https://typeduck.vercel.app/
+> 🦆 在线地址：https://typeduck.efarsoft.com/
 > 📦 开源仓库：https://github.com/efarsoft/TypeDuck
 >
 > 打开 → 左边写 Markdown → 右边换主题 → 点"复制到公众号" → 粘贴后台。

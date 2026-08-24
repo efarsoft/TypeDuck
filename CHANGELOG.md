@@ -35,7 +35,7 @@
 
 ### 🖥 平台
 
-- **网页版**：[typeduck.vercel.app](https://typeduck.vercel.app/)（PWA 可安装）
+- **网页版**：[typeduck.efarsoft.com](https://typeduck.efarsoft.com/)（PWA 可安装）
 - **Windows**：本页安装包（Win10/11 x64）
 - **macOS**：本页 dmg（Apple Silicon / Intel）
 
@@ -59,7 +59,7 @@
 
 ### 🖥 平台
 
-- **网页版**：[typeduck.vercel.app](https://typeduck.vercel.app/) 打开即用
+- **网页版**：[typeduck.efarsoft.com](https://typeduck.efarsoft.com/) 打开即用
 - **Windows 桌面版**：本页安装包（支持 Win10/11 x64），额外支持热点抓取、草稿直发等能力
 - macOS 版计划中
 

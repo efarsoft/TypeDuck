@@ -81,7 +81,7 @@ if (existsSync(join(brandDir, 'logo.svg'))) {
     <rect width="1200" height="630" fill="url(#glow)"/>
     <text x="120" y="300" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="84" font-weight="bold" fill="#ffffff">排版呀，交给我吧！</text>
     <text x="122" y="372" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="30" fill="#d9f5e5">Markdown → 公众号精美排版 · 32+ 主题 · AI 辅助写作 · 永久免费开源</text>
-    <text x="122" y="520" font-family="Consolas, monospace" font-size="26" letter-spacing="4" fill="rgba(255,255,255,0.75)">TypeDuck · typeduck.vercel.app</text>
+    <text x="122" y="520" font-family="Consolas, monospace" font-size="26" letter-spacing="4" fill="rgba(255,255,255,0.75)">TypeDuck · typeduck.efarsoft.com</text>
   </svg>`
   await sharp(Buffer.from(card))
     .composite([{ input: logoBuf, left: 890, top: 220 }])
