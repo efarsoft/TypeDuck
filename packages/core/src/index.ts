@@ -25,7 +25,7 @@ export type { WechatConfig, WechatRequester, WechatCoverFile, WechatDraftArticle
 export { ossUpload, ossObjectName, OSS_PRESETS } from './image/oss'
 export type { OssConfig } from './image/oss'
 export { AI_PRESETS, getPreset, defaultConfig } from './ai/presets'
-export { AI_ACTIONS, buildMessages, parseTitles } from './ai/prompts'
+export { AI_ACTIONS, buildMessages, parseTitles, WRITE_STYLES } from './ai/prompts'
 export type { AiActionId, ActionInput } from './ai/prompts'
 export type { AiConfig, AiMessage, StreamOptions } from './ai/types'
 export { AiApiError } from './ai/types'

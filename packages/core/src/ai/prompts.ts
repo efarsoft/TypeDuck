@@ -12,6 +12,7 @@ export type AiActionId =
   | 'digest'
   | 'theme'
   | 'rewrite'
+  | 'write'
 
 export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boolean }> = {
   polish: { label: 'AI 润色', needsSelection: true },
@@ -24,6 +25,7 @@ export const AI_ACTIONS: Record<AiActionId, { label: string; needsSelection: boo
   digest: { label: '生成摘要', needsSelection: false },
   theme: { label: '生成主题', needsSelection: false },
   rewrite: { label: 'AI 改写', needsSelection: false },
+  write: { label: 'AI 写文章', needsSelection: false },
 }
 
 const BASE_STYLE =
@@ -40,12 +42,16 @@ export interface ActionInput {
   instruction?: string
   /** 大纲主题 */
   topic?: string
-  /** 大纲风格 */
+  /** 大纲/写作风格 */
   style?: string
   /** AI 主题的风格描述 */
   description?: string
   /** AI 主题的布局模板 */
   template?: string
+  /** AI 写文章的目标读者 */
+  audience?: string
+  /** AI 写文章的期望字数 */
+  wordCount?: string
 }
 
 /** 分层 Prompt：每个动作一组消息，system 定风格、user 给素材 */
@@ -107,6 +113,17 @@ export function buildMessages(action: AiActionId, input: ActionInput): AiMessage
         {
           role: 'user',
           content: `${input.instruction ? `风格要求：${input.instruction}\n\n` : ''}${input.title ? `原文标题：${input.title}\n\n` : ''}原文：\n\n${(input.selection ?? '').slice(0, 12000)}`,
+        },
+      ]
+    case 'write':
+      return [
+        {
+          role: 'system',
+          content: buildWritePrompt(input.style),
+        },
+        {
+          role: 'user',
+          content: `主题：${input.topic ?? ''}\n${input.audience ? `目标读者：${input.audience}\n` : ''}字数：${input.wordCount || '1500'} 字左右\n\n请写一篇完整的公众号文章。`,
         },
       ]
     case 'custom':
@@ -186,4 +203,57 @@ function buildThemeTokenPrompt(): string {
     '}',
     '设计要求：主强调色鲜明但不刺眼；正文色与背景对比度足够；深色背景时正文色必须用浅色；整体协调、适合微信公众号长文阅读。',
   ].join('\n')
+}
+
+/** 「AI 写文章」的写作风格模板——每种风格对应一种文章结构 */
+export const WRITE_STYLES = [
+  { id: 'general', name: '通用' },
+  { id: 'tutorial', name: '技术教程' },
+  { id: 'review', name: '产品测评' },
+  { id: 'opinion', name: '观点评论' },
+  { id: 'recommend', name: '好物推荐' },
+] as const
+
+function buildWritePrompt(style?: string): string {
+  const base = `${BASE_STYLE}你是一位资深公众号写手，根据给定主题写一篇完整的文章。要求：有吸引人的标题（## 开头）、有小标题分节、语言口语化、观点鲜明、结尾有总结或金句。直接输出 Markdown，不要解释。`
+
+  switch (style) {
+    case 'tutorial':
+      return `${base}
+文章结构要求（技术教程风格）：
+1. 问题引入——用一个具体场景让读者产生共鸣
+2. 方案概述——你要教什么，学完能干什么
+3. 分步实现——每个步骤一个 H3 小节，附代码或操作截图描述
+4. 踩坑提醒——常见的坑和解决方法
+5. 总结——核心要点 + 延伸阅读建议`
+    case 'review':
+      return `${base}
+文章结构要求（产品测评风格）：
+1. 吸引开头——一句话说清产品最核心的价值
+2. 产品概览——它是什么、解决什么问题、和竞品的关键差异
+3. 优点——用具体场景说明，不要空洞夸
+4. 缺点——诚实指出不足，增加可信度
+5. 使用体验——真实感受，有细节
+6. 值不值得——明确结论，适合谁不适合谁`
+    case 'opinion':
+      return `${base}
+文章结构要求（观点评论风格）：
+1. 事件背景——最近发生了什么，为什么值得关注
+2. 核心观点——一句话说清你的立场
+3. 论据一——数据或案例支撑
+4. 论据二——逻辑推理
+5. 论据三——补充视角
+6. 反方观点——承认对立面的合理性，然后反驳或包容
+7. 结论——重申观点，留下思考`
+    case 'recommend':
+      return `${base}
+文章结构要求（好物推荐风格）：
+1. 痛点引入——没有这个东西之前多麻烦
+2. 为什么选它——对比同类，突出核心优势
+3. 怎么用——具体使用场景和技巧
+4. 购买建议——哪里买、多少钱、什么时候买划算
+5. 总结——一句话推荐理由`
+    default:
+      return base
+  }
 }

@@ -386,6 +386,12 @@ function onAiOutline(topic: string, style: string) {
   runAiTask('outline', { topic, style }, null)
 }
 
+/** AI 写文章：主题 + 风格 → 完整初稿 */
+function onAiWrite(topic: string, style: string, audience: string, wordCount: string) {
+  if (!ensureAiReady()) return
+  runAiTask('write', { topic, style, audience, wordCount }, null)
+}
+
 function onAiDigest() {
   if (!ensureAiReady()) return
   const doc = store.activeDoc
@@ -672,6 +678,7 @@ function onRemoveTheme(id: string) {
               @open-settings="showSettings = true"
               @run-custom="onAiCustom"
               @run-outline="onAiOutline"
+              @run-write="onAiWrite"
               @run-digest="onAiDigest"
               @run-theme="onAiThemeGen"
               @run-rewrite="onRewriteUrl"

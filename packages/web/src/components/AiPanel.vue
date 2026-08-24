@@ -13,6 +13,7 @@ const emit = defineEmits<{
   (e: 'open-settings'): void
   (e: 'run-custom', instruction: string): void
   (e: 'run-outline', topic: string, style: string): void
+  (e: 'run-write', topic: string, style: string, audience: string, wordCount: string): void
   (e: 'run-digest'): void
   (e: 'run-theme', description: string, template: string): void
   (e: 'run-rewrite', url: string, instruction: string): void
@@ -23,11 +24,25 @@ const emit = defineEmits<{
 
 /* ---------- 空态：功能菜单与内联表单 ---------- */
 
-const mode = ref<'menu' | 'custom' | 'outline' | 'theme' | 'rewrite'>('menu')
+const mode = ref<'menu' | 'custom' | 'outline' | 'theme' | 'rewrite' | 'write'>('menu')
 const customText = ref('')
 const outlineTopic = ref('')
 const outlineStyle = ref('通用')
 const themeDesc = ref('')
+
+/** AI 写文章表单 */
+const writeTopic = ref('')
+const writeStyle = ref('general')
+const writeAudience = ref('')
+const writeWordCount = ref('1500')
+const writeStyles = [
+  { id: 'general', name: '通用' },
+  { id: 'tutorial', name: '技术教程' },
+  { id: 'review', name: '产品测评' },
+  { id: 'opinion', name: '观点评论' },
+  { id: 'recommend', name: '好物推荐' },
+]
+const wordCounts = ['800', '1200', '1500', '2000', '3000']
 const themeTemplate = ref('clean')
 const rewriteUrl = ref('')
 const rewriteStyle = ref('')
@@ -56,6 +71,11 @@ function submitCustom() {
 function submitOutline() {
   if (outlineTopic.value.trim()) emit('run-outline', outlineTopic.value.trim(), outlineStyle.value)
 }
+function submitWrite() {
+  if (!writeTopic.value.trim()) return
+  emit('run-write', writeTopic.value.trim(), writeStyle.value, writeAudience.value.trim(), writeWordCount.value)
+}
+
 function submitTheme() {
   if (themeDesc.value.trim()) emit('run-theme', themeDesc.value.trim(), themeTemplate.value)
 }
@@ -147,6 +167,11 @@ watch(
     <!-- 空态：功能菜单 / 内联表单 -->
     <template v-if="!task">
       <div v-if="mode === 'menu'" class="menu-grid">
+        <button class="menu-card" @click="mode = 'write'">
+          <span class="mc-icon">✍️</span>
+          <span class="mc-name">AI 写文章</span>
+          <span class="mc-desc">给个主题，出一篇完整初稿</span>
+        </button>
         <button class="menu-card" @click="mode = 'custom'">
           <span class="mc-icon">✏️</span>
           <span class="mc-name">自定义指令</span>
@@ -177,6 +202,30 @@ watch(
         选中文字后，工具栏的 AI 润色 / AI 扩写 / AI 缩写 / AI 续写 随时可用；上方 ✨ 生成标题。BYOK：用你自己的
         Key，内容不经过任何服务器。
       </p>
+
+      <div v-else-if="mode === 'write'" class="form">
+        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <label>文章主题</label>
+        <input v-model="writeTopic" placeholder="例如：普通人如何用 AI 做副业" @keyup.enter="submitWrite" />
+        <label>写作风格</label>
+        <select v-model="writeStyle">
+          <option v-for="s in writeStyles" :key="s.id" :value="s.id">{{ s.name }}</option>
+        </select>
+        <div class="form-row-2">
+          <div>
+            <label>目标读者（可选）</label>
+            <input v-model="writeAudience" placeholder="如：职场新人" />
+          </div>
+          <div>
+            <label>字数</label>
+            <select v-model="writeWordCount">
+              <option v-for="w in wordCounts" :key="w" :value="w">{{ w }} 字</option>
+            </select>
+          </div>
+        </div>
+        <button class="run" :disabled="!writeTopic.trim()" @click="submitWrite">生成文章</button>
+        <p class="dim">AI 生成的是初稿，插入编辑器后请自行审阅修改。技术教程 / 产品测评 / 观点评论 / 好物推荐四种风格对应不同的文章结构。</p>
+      </div>
 
       <div v-else-if="mode === 'custom'" class="form">
         <button class="back" @click="mode = 'menu'">← 返回</button>
@@ -458,6 +507,12 @@ watch(
   font-weight: 600;
   color: #4e5969;
 }
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.form-row-2 label { margin-top: 8px; }
 .form textarea,
 .form input,
 .form select {
