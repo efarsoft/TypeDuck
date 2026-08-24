@@ -11,3 +11,4 @@ packages/web/public/*.png
 packages/web/public/*.jpg
 packages/web/public/*.webp
 packages/desktop/build/
+.tmp_pdf/
