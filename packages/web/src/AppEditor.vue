@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   AI_ACTIONS,
   buildMessages,
@@ -28,11 +28,11 @@ import { extractArticle } from './utils/article'
 import { insertImage, hydrateTdimgs, resolveTdimgs } from './utils/images'
 import HistoryPanel from './components/HistoryPanel.vue'
 import AiPanel from './components/AiPanel.vue'
-import AiSettings from './components/AiSettings.vue'
 import HotPanel from './components/HotPanel.vue'
 import ImagePanel from './components/ImagePanel.vue'
 import PublishDialog from './components/PublishDialog.vue'
 import OssSettings from './components/OssSettings.vue'
+import SettingsCenter from './components/SettingsCenter.vue'
 
 const store = useEditorStore()
 const aiStore = useAiStore()
@@ -40,12 +40,26 @@ const editorRef = ref<InstanceType<typeof DuckEditor>>()
 const previewRef = ref<InstanceType<typeof DuckPreview>>()
 const aiPanelRef = ref<InstanceType<typeof AiPanel>>()
 const rightView = ref<'theme' | 'history' | 'ai' | 'hot' | 'image' | null>('theme')
+const showSettings = ref(false)
 
 /** 右侧面板按钮：再次点击已激活的面板则整体收起（编辑区自动变宽） */
 function toggleRightView(view: 'theme' | 'history' | 'ai' | 'hot' | 'image') {
   rightView.value = rightView.value === view ? null : view
 }
-const viewMode = ref<'split' | 'editor' | 'preview'>('split')
+/** 读取偏好设置（SettingsCenter 保存到 localStorage） */
+function getPrefs(): { defaultView: string; syncScroll: boolean; compactSidebar: boolean } {
+  try {
+    const raw = localStorage.getItem('typeduck:preferences')
+    if (raw) return { defaultView: 'split', syncScroll: true, compactSidebar: false, ...JSON.parse(raw) }
+  } catch { /* 忽略 */ }
+  return { defaultView: 'split', syncScroll: true, compactSidebar: false }
+}
+
+const viewMode = ref<'split' | 'editor' | 'preview'>(
+  (['split', 'editor', 'preview'] as const).includes(getPrefs().defaultView as any)
+    ? (getPrefs().defaultView as 'split' | 'editor' | 'preview')
+    : 'split',
+)
 
 /** 顶栏品牌点击回静态首页 */
 function goHome() {
@@ -59,14 +73,22 @@ const viewModes = [
   { mode: 'preview', label: '仅预览', icon: '<path d="M5 4h8v14H5zM16 8l3 3-3 3"/>' },
 ] as const
 
-onMounted(() => {
-  store.load()
+const toolViews = [
+  { id: 'theme', label: '排版' },
+  { id: 'ai', label: 'AI 创作' },
+  { id: 'hot', label: '热点' },
+  { id: 'image', label: '素材' },
+  { id: 'history', label: '版本' },
+] as const
+
+onMounted(async () => {
+  await store.load()
   setupSyncScroll()
   document.addEventListener('click', onDocClickForExport)
   // 恢复上次保存的 AI 生成主题（localStorage → 运行时注册）
   loadSavedAiThemes().forEach(registerTheme)
-  // 恢复文档里的本地图片引用（tdimg → blob URL，供预览）
-  hydrateTdimgs(store.activeDoc?.content ?? '')
+  // 恢复文档里的本地图片引用（tdimg → blob URL，供预览）——必须在 load 之后
+  await hydrateTdimgs(store.activeDoc?.content ?? '')
   // 桌面版：接住原生菜单事件
   if (window.desktopAPI) {
     const api = window.desktopAPI
@@ -76,6 +98,28 @@ onMounted(() => {
     api.onMenu('menu:save-as', () => store.saveToDisk(true))
   }
 })
+
+/** 切换文档时重新恢复该文档的本地图片引用 */
+watch(
+  () => store.activeDoc?.id,
+  () => { hydrateTdimgs(store.activeDoc?.content ?? '') },
+)
+
+/** 偏好设置变化时实时生效（SettingsCenter 保存后 dispatch 通知） */
+function applyPrefs(prefs: { syncScroll?: boolean; compactSidebar?: boolean }) {
+  syncScrollEnabled = prefs.syncScroll !== false
+  document.querySelector('.sidebar')?.classList.toggle('compact', prefs.compactSidebar === true)
+}
+onMounted(() => {
+  applyPrefs(getPrefs())
+  window.addEventListener('typeduck:prefs-updated', (e) => applyPrefs((e as CustomEvent).detail))
+})
+
+// 切换文档时重新恢复该文档的本地图片引用
+watch(
+  () => store.activeDoc?.id,
+  () => { hydrateTdimgs(store.activeDoc?.content ?? '') },
+)
 
 /* ---------- 图片插入管线：图床上传或本地暂存，插入 markdown ---------- */
 
@@ -103,11 +147,12 @@ const previewHtml = computed(() => {
   return resolveTdimgs(store.renderedRichHtml)
 })
 
-/** 双栏按比例同步滚动（加锁防回环，rAF 防抖） */
+/** 双栏按比例同步滚动（加锁防回环，rAF 防抖，可被偏好设置关闭） */
+let syncScrollEnabled = getPrefs().syncScroll
 function setupSyncScroll() {
   let lock = false
   const sync = (from: HTMLElement, to: HTMLElement) => {
-    if (lock) return
+    if (lock || !syncScrollEnabled) return
     lock = true
     requestAnimationFrame(() => {
       const fromMax = from.scrollHeight - from.clientHeight
@@ -215,13 +260,6 @@ async function onCopy() {
 const charCount = computed(() => store.activeDoc?.content.length ?? 0)
 const lineCount = computed(() => store.activeDoc?.content.split('\n').length ?? 0)
 
-/** 标题输入框宽度 = 编辑器列宽度 − ✨ 按钮（32px）− 间距（12px）− 内边距（28px）；面板收起时编辑列变宽 */
-const titleInputWidth = computed(() => {
-  if (viewMode.value === 'editor') return 'calc(100% - 72px)'
-  const panel = rightView.value ? 300 : 0
-  return `calc((100% - ${panel}px) / 2 - 72px)`
-})
-
 function onExport() {
   if (!store.activeDoc) return
   exportHtmlFile(
@@ -287,14 +325,13 @@ async function onRemove(id: string) {
 
 /* ---------- AI 辅助写作（BYOK，一套 OpenAI 兼容协议接所有厂商） ---------- */
 
-const showAiSettings = ref(false)
 const aiTask = ref<AiTask | null>(null)
 let aiAbort: AbortController | undefined
 
 /** 未配置时弹设置 + 提示，已配置返回 true */
 function ensureAiReady(): boolean {
   if (aiStore.isConfigured) return true
-  showAiSettings.value = true
+  showSettings.value = true
   store.showToast('先配置 AI：选厂商、填你自己的 API Key')
   return false
 }
@@ -524,33 +561,21 @@ function onRemoveTheme(id: string) {
 
 <template>
   <div class="app">
-    <!-- 通栏顶栏：品牌 + 主操作（横贯整个窗口） -->
+    <!-- 通栏顶栏：品牌、当前文档与发布主操作 -->
     <header class="appbar">
       <div class="brand" role="button" tabindex="0" title="返回首页" @click="goHome" @keyup.enter="goHome">
         <img class="brand-img" src="/logo.png" alt="排版鸭" width="24" height="24" />
         <span class="brand-name">排版鸭</span>
         <span class="brand-slogan">排版呀，交给我吧！</span>
       </div>
+      <div class="top-document">
+        <input v-model="title" class="top-title-input" placeholder="无标题文档" />
+        <span class="top-save" :data-state="store.saveState"><i></i>{{ saveLabel }}</span>
+      </div>
       <div class="appbar-right">
-        <button class="copy-primary" :class="{ done: copied }" :disabled="copied" title="复制到公众号" @click="onCopy">
-          <svg v-if="!copied" class="ic" viewBox="0 0 22 22" aria-hidden="true">
-            <path d="M9 7l-4 4 4 4M13 7l4 4-4 4" />
-          </svg>
-          <span v-else class="check">✓</span>
-          {{ copied ? '已复制' : '复制到公众号' }}
+        <button class="top-icon" title="统一设置" @click="showSettings = true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 3.6h4.6l.6 2.1a6.8 6.8 0 0 1 1.4.8l2.1-.7 2.3 4-1.6 1.4a7 7 0 0 1 0 1.7l1.6 1.4-2.3 4-2.1-.7a6.8 6.8 0 0 1-1.4.8l-.6 2.1H9.7l-.6-2.1a6.8 6.8 0 0 1-1.4-.8l-2.1.7-2.3-4 1.6-1.4a7 7 0 0 1 0-1.7L3.3 9.8l2.3-4 2.1.7a6.8 6.8 0 0 1 1.4-.8l.6-2.1Z"/><circle cx="12" cy="12" r="2.7"/></svg>
         </button>
-        <!-- 一键发布到公众号草稿箱 -->
-        <button
-          style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 16px;border:1px solid #e5e6eb;border-radius:6px;background:#fff;color:#4e5969;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;"
-          title="一键发布到公众号草稿箱（需配置开发者信息）"
-          @click="showPublish = true"
-        >
-          <svg viewBox="0 0 22 22" style="width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;">
-            <path d="M3 11l16-7-5 14-4-5-7-2zM10 13l7-7" />
-          </svg>
-          草稿箱
-        </button>
-        <!-- 导出下拉：HTML / Markdown 可用，DOCX / PDF 占位 -->
         <div class="export-wrap">
           <button class="btn-export" title="导出" @click.stop="showExportMenu = !showExportMenu">
             导出
@@ -563,6 +588,13 @@ function onRemoveTheme(id: string) {
             <button class="export-item" @click="onExportAs('pdf')">导出为 PDF</button>
           </div>
         </div>
+        <button class="btn-publish" title="发布到公众号草稿箱" @click="showPublish = true">
+          <svg viewBox="0 0 22 22"><path d="M3 11l16-7-5 14-4-5-7-2zM10 13l7-7" /></svg>发布
+        </button>
+        <button class="copy-primary" :class="{ done: copied }" :disabled="copied" title="复制到公众号" @click="onCopy">
+          <svg v-if="!copied" class="ic" viewBox="0 0 22 22" aria-hidden="true"><path d="M9 7l-4 4 4 4M13 7l4 4-4 4" /></svg>
+          <span v-else class="check">✓</span>{{ copied ? '已复制' : '复制到公众号' }}
+        </button>
       </div>
     </header>
 
@@ -579,15 +611,10 @@ function onRemoveTheme(id: string) {
       </aside>
 
       <div class="workarea">
-        <!-- 子标题栏：与侧栏同一行（不通栏） -->
         <div class="subbar">
-          <!-- 宽度与编辑器列对齐（扣掉左右内边距 28px + ✨ 按钮 32px + 间距 12px） -->
-          <input
-            v-model="title"
-            class="title-input"
-            :style="{ width: titleInputWidth }"
-            placeholder="无标题文档"
-          />
+          <div class="workspace-tabs" aria-label="编辑视图">
+            <button v-for="v in viewModes" :key="v.mode" :class="{ active: viewMode === v.mode }" @click="viewMode = v.mode">{{ v.label.replace('仅', '') }}</button>
+          </div>
           <button class="icon-btn" title="AI 生成标题" @click="onGenerateTitles">
             <svg class="ic" viewBox="0 0 22 22">
               <path
@@ -596,79 +623,12 @@ function onRemoveTheme(id: string) {
             </svg>
           </button>
           <div class="subbar-right">
-            <!-- AI 助手面板 -->
-            <button
-              class="icon-btn"
-              :class="{ active: rightView === 'ai' }"
-              title="AI 助手"
-              @click="toggleRightView('ai')"
-            >
-              <svg class="ic" viewBox="0 0 22 22">
-                <path d="M4 5h14v10H9l-5 4zM8 10h.01M12 10h.01M16 10h.01" />
-              </svg>
-            </button>
-            <!-- 热点选题面板 -->
-            <button
-              class="icon-btn"
-              :class="{ active: rightView === 'hot' }"
-              title="热点选题"
-              @click="toggleRightView('hot')"
-            >
-              <svg class="ic" viewBox="0 0 22 22">
-                <path
-                  d="M12 3c2 2.5-.5 4.5-.5 6.5 0 1.2.9 2 2 2s2-.8 2-2C17 11 18 12.8 18 15a6 6 0 0 1-12 0c0-3.5 3-5 4.5-8C11.3 5.7 11.5 4.4 12 3z"
-                />
-              </svg>
-            </button>
-            <!-- 配图助手面板 -->
-            <button
-              class="icon-btn"
-              :class="{ active: rightView === 'image' }"
-              title="配图助手"
-              @click="toggleRightView('image')"
-            >
-              <svg class="ic" viewBox="0 0 22 22">
-                <path d="M3 5h16v12H3zM3 14l4-4 3 3 3-4 6 6" />
-                <circle cx="8" cy="8.5" r="1.4" />
-              </svg>
-            </button>
-            <!-- 视图切换：三枚图标分段选择，当前项高亮 -->
-            <div class="view-switch">
-              <button
-                v-for="v in viewModes"
-                :key="v.mode"
-                class="icon-btn"
-                :class="{ active: viewMode === v.mode }"
-                :title="v.label"
-                @click="viewMode = v.mode"
-              >
-                <svg class="ic" viewBox="0 0 22 22" v-html="v.icon"></svg>
-              </button>
-            </div>
-            <button
-              class="icon-btn"
-              :class="{ active: rightView === 'history' }"
-              title="历史版本"
-              @click="toggleRightView('history')"
-            >
-              <svg class="ic" viewBox="0 0 22 22">
-                <path d="M3 11a8 8 0 1 0 3-6M3 4v4h4M11 7v4l3 2" />
-              </svg>
-            </button>
-            <button
-              class="icon-btn"
-              :class="{ active: rightView === 'theme' }"
-              title="主题样式"
-              @click="toggleRightView('theme')"
-            >
-              <svg class="ic" viewBox="0 0 22 22">
-                <path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 1 0-16z" />
-              </svg>
-            </button>
+            <span class="tool-label">工具</span>
+            <button v-for="tool in toolViews" :key="tool.id" class="tool-tab" :class="{ active: rightView === tool.id }" @click="toggleRightView(tool.id)">{{ tool.label }}</button>
           </div>
         </div>
 
-        <div class="content">
+        <div class="content" :class="`view-${viewMode}`">
           <section v-show="viewMode !== 'preview'" class="pane editor-pane">
             <DuckEditor ref="editorRef" v-model="content" @ai="onAiAction" @insert-image="onInsertImages" />
           </section>
@@ -687,8 +647,8 @@ function onRemoveTheme(id: string) {
             />
           </section>
           <aside v-if="rightView" class="pane right-pane">
+            <div class="drawer-head"><div><strong>{{ toolViews.find((tool) => tool.id === rightView)?.label }}</strong><span>创作工具抽屉</span></div><button title="收起工具" @click="rightView = null">×</button></div>
             <template v-if="rightView === 'theme'">
-              <div class="panel-head"><span>主题样式</span></div>
               <div class="right-scroll">
                 <ThemeSelector v-model="themeId" @remove-theme="onRemoveTheme" />
               </div>
@@ -702,7 +662,7 @@ function onRemoveTheme(id: string) {
               @apply="onAiApply"
               @use-title="onAiUseTitle"
               @close="rightView = null"
-              @open-settings="showAiSettings = true"
+              @open-settings="showSettings = true"
               @run-custom="onAiCustom"
               @run-outline="onAiOutline"
               @run-digest="onAiDigest"
@@ -739,9 +699,9 @@ function onRemoveTheme(id: string) {
       <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
     </footer>
 
-    <AiSettings v-if="showAiSettings" @close="showAiSettings = false" />
     <PublishDialog v-if="showPublish" @close="showPublish = false" />
     <OssSettings :open="showOss" @close="showOss = false" />
+    <SettingsCenter v-if="showSettings" @close="showSettings = false" @open-oss="showSettings = false; showOss = true" />
 
     <transition name="toast">
       <div v-if="store.toast" class="toast">{{ store.toast }}</div>
@@ -773,6 +733,9 @@ function onRemoveTheme(id: string) {
   background: #fff;
   flex-shrink: 0;
 }
+.sidebar.compact {
+  width: 170px;
+}
 
 /* 顶栏 */
 .appbar {
@@ -785,6 +748,7 @@ function onRemoveTheme(id: string) {
   border-bottom: 1px solid #e5e6eb;
   background: #fff;
 }
+.top-document{min-width:0;flex:1;display:flex;align-items:center;gap:10px}.top-title-input{width:min(440px,100%);height:32px;border:0;outline:0;color:#1d2129;font-size:15px;font-weight:650;background:transparent}.top-save{display:inline-flex;align-items:center;gap:5px;color:#8b9690;font-size:11px;white-space:nowrap}.top-save i{width:6px;height:6px;border-radius:50%;background:#63b889}.top-save[data-state='unsaved']{color:#c27c2f}.top-save[data-state='unsaved'] i{background:#d8913e}.top-save[data-state='saving']{color:#5487ad}.top-save[data-state='saving'] i{background:#6fa7cc}.top-icon{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e6eb;border-radius:7px;background:#fff;color:#64716a;cursor:pointer}.top-icon:hover{border-color:#a8d5b9;background:#f4fbf7;color:#087c45}.top-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}.btn-publish{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border:1px solid #e5e6eb;border-radius:7px;background:#fff;color:#53605a;font-size:13px;font-weight:650;cursor:pointer}.btn-publish:hover{border-color:#a8d5b9;color:#087c45;background:#f4fbf7}.btn-publish svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .brand {
   display: flex;
   align-items: baseline;
@@ -949,6 +913,7 @@ function onRemoveTheme(id: string) {
   border-bottom: 1px solid #e5e6eb;
   background: #fff;
 }
+.workspace-tabs{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid #e5eae7;border-radius:7px;background:#f5f7f6}.workspace-tabs button{height:27px;padding:0 10px;border:0;border-radius:5px;background:transparent;color:#7d8983;font-size:12px;cursor:pointer}.workspace-tabs button.active{background:#fff;color:#1d2522;box-shadow:0 1px 3px rgba(20,40,29,.08);font-weight:650}.tool-label{color:#a0aaa5;font-size:11px;margin-right:1px}.tool-tab{height:28px;padding:0 9px;border:1px solid transparent;border-radius:6px;background:transparent;color:#68746e;font-size:12px;cursor:pointer}.tool-tab:hover{background:#f5f7f6;color:#1d2522}.tool-tab.active{border-color:#b8dfc7;background:#e7f7ee;color:#087c45;font-weight:650}
 .title-input {
   max-width: 100%;
   height: 32px;
@@ -1054,6 +1019,7 @@ function onRemoveTheme(id: string) {
   flex-direction: column;
   min-height: 0;
 }
+.drawer-head{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 14px;border-bottom:1px solid #e5eae7}.drawer-head div{display:grid;gap:1px}.drawer-head strong{color:#1d2522;font-size:13px}.drawer-head span{color:#a0aaa5;font-size:10px}.drawer-head button{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:#9aa59f;font-size:18px;cursor:pointer}.drawer-head button:hover{background:#f2f5f3;color:#4e5b54}
 .right-scroll {
   flex: 1;
   overflow-y: auto;
@@ -1099,4 +1065,7 @@ function onRemoveTheme(id: string) {
 .toast-leave-to {
   opacity: 0;
 }
+.right-pane :deep(.panel-head){display:none}
+@media (max-width:1060px){.brand-slogan,.btn-publish{display:none}.top-title-input{width:min(300px,100%)}.tool-tab{padding:0 6px}.tool-label{display:none}}
+@media (max-width:760px){.appbar{position:relative;height:52px;padding:0 10px;gap:8px}.brand{min-width:auto;gap:6px}.brand-name{font-size:14px}.top-document{position:absolute;left:10px;right:94px;top:58px;z-index:3}.top-title-input{width:100%;height:30px;border:1px solid #e5eae7;border-radius:6px;padding:0 8px;background:#fff;font-size:13px}.top-save{display:none}.appbar-right{gap:5px}.copy-primary{padding:0 10px;font-size:12px}.top-icon{width:30px;height:30px}.workarea{padding-top:42px}.subbar{height:44px;padding:0 8px;gap:6px;overflow-x:auto}.subbar-right{gap:3px}.tool-tab{padding:0 7px;font-size:11px}.workspace-tabs button{padding:0 8px}.right-pane{position:fixed;top:52px;right:0;bottom:30px;z-index:100;width:min(340px,92vw);box-shadow:-8px 0 24px rgba(20,35,27,.12)}.sidebar{display:none}.content{min-width:0}.content.view-editor .preview-pane,.content.view-split .preview-pane{display:none}.content.view-preview .editor-pane{display:none}.content.view-preview .preview-pane{display:flex;flex:1;border-right:0}.editor-pane{flex:1;border-right:0}}
 </style>

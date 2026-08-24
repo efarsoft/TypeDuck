@@ -59,6 +59,60 @@ export async function getImage(id: string): Promise<Blob | undefined> {
   return blob
 }
 
+async function deleteImageRecord(id: string): Promise<void> {
+  const db = await openDb()
+  await new Promise<void>((resolve) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    tx.objectStore(STORE_NAME).delete(id)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => resolve() // 删不掉不阻塞
+  })
+  db.close()
+}
+
+/** 释放 blob URL（防内存泄漏） */
+function revokeBlobUrl(id: string): void {
+  const url = blobUrls.get(id)
+  if (url) {
+    URL.revokeObjectURL(url)
+    blobUrls.delete(id)
+  }
+}
+
+/** 删除文档时清理其引用的所有本地图片（IndexedDB + blob URL） */
+export async function cleanupDocImages(content: string): Promise<void> {
+  const ids = [...content.matchAll(/tdimg:\/\/([\w-]+)/g)].map((m) => m[1])
+  for (const id of new Set(ids)) {
+    revokeBlobUrl(id)
+    await deleteImageRecord(id)
+  }
+}
+
+/** 全局 GC：扫描所有文档，清理不再被任何文档引用的残留图片 */
+export async function gcImages(allDocContents: string[]): Promise<number> {
+  const referenced = new Set<string>()
+  for (const content of allDocContents) {
+    for (const m of content.matchAll(/tdimg:\/\/([\w-]+)/g)) referenced.add(m[1])
+  }
+  const db = await openDb()
+  const allKeys = await new Promise<IDBValidKey[]>((resolve, reject) => {
+    const req = db.transaction(STORE_NAME).objectStore(STORE_NAME).getAllKeys()
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+  db.close()
+  let cleaned = 0
+  for (const key of allKeys) {
+    const id = String(key)
+    if (!referenced.has(id)) {
+      revokeBlobUrl(id)
+      await deleteImageRecord(id)
+      cleaned++
+    }
+  }
+  return cleaned
+}
+
 export function tdimgUrl(id: string): string {
   return `tdimg://${id}`
 }

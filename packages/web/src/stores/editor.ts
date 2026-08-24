@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { getTheme, render, scopeCss } from '@typeduck/core'
 import type { Doc, DocHistory } from '../db'
 import * as db from '../db'
+import { cleanupDocImages } from '../utils/images'
 
 /** crypto.randomUUID 仅在安全上下文可用（file:// 等），提供兜底 */
 function uuid(): string {
@@ -165,6 +166,10 @@ export const useEditorStore = defineStore('editor', () => {
       saveState.value = 'saved'
     }
     await db.deleteDoc(id)
+    // 清理该文档引用的本地图片（IndexedDB + blob URL）
+    if (target?.content) {
+      await cleanupDocImages(target.content)
+    }
     docs.value = docs.value.filter((d) => d.id !== id)
     if (activeDoc.value?.id === id) {
       activeDoc.value = docs.value[0] ?? null

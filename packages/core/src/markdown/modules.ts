@@ -3,7 +3,7 @@
  * 每个模块在 ThemeStyles 里对应一个键（如 moduleTip），主题可自定义样式。
  * 未定义的主题自动回退到内置默认样式（跟随主题主色）。
  */
-import type Theme from '../theme/types'
+import type { Theme } from '../theme/types'
 
 export type ModuleId = 'tip' | 'warning' | 'quote' | 'follow' | 'divider'
 
@@ -47,24 +47,5 @@ export function moduleDefaultStyle(id: ModuleId, theme: Theme): string {
       return `margin:1.8em 0;padding:16px 20px;text-align:center;background:${accent};color:#fff;border-radius:10px;font-weight:600;`
     case 'divider':
       return `margin:2em 0;text-align:center;color:${accent};letter-spacing:12px;font-size:18px;`
-  }
-}
-
-/** 渲染模块 HTML（markdown-it-container 的渲染规则用） */
-export function renderModule(id: ModuleId, innerTokensHtml: string, title: string | null, theme: Theme): string {
-  // 主题自定义优先，回退默认
-  const styleKey = `module${id.charAt(0).toUpperCase()}${id.slice(1)}`
-  const style = (theme.styles as Record<string, string>)[styleKey] || moduleDefaultStyle(id, theme)
-
-  switch (id) {
-    case 'divider':
-      return `<section style="${style}">❖ ❖ ❖</section>`
-    case 'tip':
-    case 'warning':
-      return `<section style="${style}">${title ? `<strong style="display:block;margin-bottom:4px;">${title}</strong>` : ''}${innerTokensHtml}</section>`
-    case 'quote':
-      return `<section style="${style}">「${innerTokensHtml}」</section>`
-    case 'follow':
-      return `<section style="${style}">${innerTokensHtml}</section>`
   }
 }

@@ -1,3 +1,6 @@
+/// <reference path="./task-lists.d.ts" />
+/// <reference path="./container.d.ts" />
+
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import taskLists from 'markdown-it-task-lists'
@@ -97,7 +100,9 @@ function injectInlineStyles(
       style = (theme.styles as Record<string, string>)[styleKey] || moduleDefaultStyle(modId, theme)
       const title = el.getAttribute('data-title')
       if (title) {
-        el.innerHTML = `<strong style="display:block;margin-bottom:4px;">${title}</strong>${el.innerHTML}`
+        // XSS 防护：标题是用户输入，必须 HTML 实体转义后才能拼 innerHTML
+        const safeTitle = title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        el.innerHTML = `<strong style="display:block;margin-bottom:4px;">${safeTitle}</strong>${el.innerHTML}`
       }
       if (modId === 'quote') {
         el.innerHTML = `「${el.innerHTML}」`

@@ -1,6 +1,6 @@
 /**
- * S3 兼容图床客户端（Cloudflare R2 / 阿里云 OSS / 腾讯云 COS / 七牛 / minio 等）。
- * 浏览器端直传：AWS Signature V4 签名用 Web Crypto 实现，密钥不经过任何服务器。
+ * 对象存储图床客户端（Cloudflare R2 / 阿里云 OSS / 腾讯云 COS / minio 等）。
+ * 浏览器端直传：AWS/OSS Signature V4 签名用 Web Crypto 实现，密钥不经过任何服务器。
  */
 
 export interface OssConfig {
@@ -55,10 +55,16 @@ export class OssError extends Error {}
 
 const enc = new TextEncoder()
 
+/** Web Crypto's BufferSource types require a concrete ArrayBuffer in newer TS DOM libs. */
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.slice().buffer
+}
+
 async function hmac(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayBuffer> {
+  const rawKey = key instanceof Uint8Array ? toArrayBuffer(key) : key
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key instanceof Uint8Array ? key : new Uint8Array(key),
+    rawKey,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign'],
@@ -66,9 +72,18 @@ async function hmac(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayB
   return crypto.subtle.sign('HMAC', cryptoKey, enc.encode(data))
 }
 async function sha256Hex(data: string | Uint8Array): Promise<string> {
-  const buf = typeof data === 'string' ? enc.encode(data) : data
+  const buf = typeof data === 'string' ? toArrayBuffer(enc.encode(data)) : toArrayBuffer(data)
   const digest = await crypto.subtle.digest('SHA-256', buf)
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/** RFC 3986 编码：保留对象路径分隔符，由调用方按 segment 拼接。 */
+function encodeUriSegment(segment: string): string {
+  return encodeURIComponent(segment).replace(/[!'()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
+}
+
+function hex(bytes: ArrayBuffer): string {
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 /** S3 兼容路径风格 PUT 上传（R2/OSS/COS 均支持 path-style 或自动兼容） */
@@ -84,7 +99,7 @@ export async function ossUpload(
   const url = new URL(config.endpoint.replace(/\/+$/, ''))
   const host = url.host
   // path-style：/<bucket>/<object>（R2 必须；OSS/COS 也兼容）
-  const canonicalPath = `/${config.bucket}/${objectName.split('/').map(encodeURIComponent).join('/')}`
+  const canonicalPath = `/${encodeUriSegment(config.bucket)}/${objectName.split('/').map(encodeUriSegment).join('/')}`
   const fullUrl = `${url.origin}${canonicalPath}`
 
   const now = new Date()
@@ -93,48 +108,65 @@ export async function ossUpload(
   const payloadHash = await sha256Hex(bytes)
 
   // 微妙但关键：path 的 URI 编码规则（SigV4 要求 / 不编码、其余按 RFC3986）
-  const canonicalUri = `/${config.bucket}/${objectName
+  const canonicalUri = `/${encodeUriSegment(config.bucket)}/${objectName
     .split('/')
-    .map((seg) => encodeURIComponent(seg))
+    .map(encodeUriSegment)
     .join('/')}`
 
-  const canonicalHeaders =
-    `host:${host}\n` + `x-amz-content-sha256:${payloadHash}\n` + `x-amz-date:${amzDate}\n`
-  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date'
+  const isAliyun = config.provider === 'aliyun'
+  const signedPayload = isAliyun ? 'UNSIGNED-PAYLOAD' : payloadHash
+  const headerPrefix = isAliyun ? 'x-oss' : 'x-amz'
+  const dateHeader = `${headerPrefix}-date`
+  const payloadHeader = `${headerPrefix}-content-sha256`
+  const requestHeaders: Record<string, string> = isAliyun
+    ? {
+        'content-type': contentType,
+        [payloadHeader]: signedPayload,
+        [dateHeader]: amzDate,
+      }
+    : {
+        host,
+        [payloadHeader]: signedPayload,
+        [dateHeader]: amzDate,
+      }
 
-  const canonicalRequest = [
-    'PUT',
-    canonicalUri,
-    '',
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash,
-  ].join('\n')
+  const canonicalHeaders = Object.keys(requestHeaders)
+    .sort()
+    .map((name) => `${name}:${requestHeaders[name].trim()}\n`)
+    .join('')
+  const signedHeaders = Object.keys(requestHeaders).sort().join(';')
+  const canonicalRequest = isAliyun
+    ? ['PUT', canonicalUri, '', canonicalHeaders, '', signedPayload].join('\n')
+    : ['PUT', canonicalUri, '', canonicalHeaders, signedHeaders, signedPayload].join('\n')
 
-  const scope = `${dateStamp}/${config.region}/s3/aws4_request`
+  const service = isAliyun ? 'oss' : 's3'
+  const terminal = isAliyun ? 'aliyun_v4_request' : 'aws4_request'
+  const scope = `${dateStamp}/${config.region}/${service}/${terminal}`
   const stringToSign = [
-    'AWS4-HMAC-SHA256',
+    isAliyun ? 'OSS4-HMAC-SHA256' : 'AWS4-HMAC-SHA256',
     amzDate,
     scope,
     await sha256Hex(canonicalRequest),
   ].join('\n')
 
-  const kDate = await hmac(enc.encode(`AWS4${config.secretAccessKey}`), dateStamp)
+  const kDate = await hmac(enc.encode(`${isAliyun ? 'aliyun_v4' : 'AWS4'}${config.secretAccessKey}`), dateStamp)
   const kRegion = await hmac(kDate, config.region)
-  const kService = await hmac(kRegion, 's3')
-  const kSigning = await hmac(kService, 'aws4_request')
-  const signature = [...new Uint8Array(await hmac(kSigning, stringToSign))]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
+  const kService = await hmac(kRegion, service)
+  const kSigning = await hmac(kService, terminal)
+  const signature = hex(await hmac(kSigning, stringToSign))
+
+  const authorization = isAliyun
+    ? `OSS4-HMAC-SHA256 Credential=${config.accessKeyId}/${scope}, Signature=${signature}`
+    : `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
   let res: Response
   try {
     res = await fetch(fullUrl, {
       method: 'PUT',
       headers: {
-        Authorization: `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
-        'x-amz-content-sha256': payloadHash,
-        'x-amz-date': amzDate,
+        Authorization: authorization,
+        [payloadHeader]: signedPayload,
+        [dateHeader]: amzDate,
         'Content-Type': contentType,
       },
       body: bytes as BodyInit,
@@ -148,7 +180,8 @@ export async function ossUpload(
   }
 
   const publicBase = config.publicBaseUrl.replace(/\/+$/, '')
-  return publicBase ? `${publicBase}/${objectName}` : `${url.origin}/${config.bucket}/${objectName}`
+  const publicPath = objectName.split('/').map(encodeUriSegment).join('/')
+  return publicBase ? `${publicBase}/${publicPath}` : `${url.origin}/${encodeUriSegment(config.bucket)}/${publicPath}`
 }
 
 /** 生成对象名：<prefix>typeduck-<时间戳>-<随机>.<ext> */
