@@ -64,10 +64,11 @@ ${css}</head>
   };${rootStyle}">
 ${bodyHtml}
 </section>
-<script>window.onload = function () { window.focus(); window.print(); }</script>
 </body>
 </html>`)
   win.document.close()
+  // 不用内联 script（会被 CSP 拦截），由 opener 侧触发打印
+  setTimeout(() => { win.focus(); win.print() }, 100)
 }
 
 function sanitizeFilename(name: string): string {

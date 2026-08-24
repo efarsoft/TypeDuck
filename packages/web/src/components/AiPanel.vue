@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { AI_ACTIONS, parseTitles } from '@typeduck/core'
+import { AI_ACTIONS, parseTitles, WRITE_STYLES } from '@typeduck/core'
 import type { AiTask } from '../stores/ai'
 
 const props = defineProps<{ task: AiTask | null }>()
@@ -35,13 +35,7 @@ const writeTopic = ref('')
 const writeStyle = ref('general')
 const writeAudience = ref('')
 const writeWordCount = ref('1500')
-const writeStyles = [
-  { id: 'general', name: '通用' },
-  { id: 'tutorial', name: '技术教程' },
-  { id: 'review', name: '产品测评' },
-  { id: 'opinion', name: '观点评论' },
-  { id: 'recommend', name: '好物推荐' },
-]
+const writeStyles = WRITE_STYLES
 const wordCounts = ['800', '1200', '1500', '2000', '3000']
 const themeTemplate = ref('clean')
 const rewriteUrl = ref('')

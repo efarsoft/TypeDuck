@@ -116,12 +116,6 @@ onMounted(() => {
   window.addEventListener('typeduck:prefs-updated', (e) => applyPrefs((e as CustomEvent).detail))
 })
 
-// 切换文档时重新恢复该文档的本地图片引用
-watch(
-  () => store.activeDoc?.id,
-  () => { hydrateTdimgs(store.activeDoc?.content ?? '') },
-)
-
 /* ---------- 图片插入管线：图床上传或本地暂存，插入 markdown ---------- */
 
 const imgVersion = ref(0)

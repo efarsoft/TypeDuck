@@ -23,8 +23,10 @@ if (!existsSync(brandDir)) {
 mkdirSync(publicDir, { recursive: true })
 mkdirSync(desktopIconDir, { recursive: true })
 
-// 位图资产直接复制
-const bitmaps = readdirSync(brandDir).filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f))
+// 位图资产复制（排除编辑器截图 PNG 原图——HTML 只用 webp 版，PNG 不需要进 dist）
+const bitmaps = readdirSync(brandDir).filter(
+  (f) => /\.(png|jpe?g|webp|gif)$/i.test(f) && !/^editor-shot.*\.png$/i.test(f) && f !== 'logo-h.png',
+)
 for (const f of bitmaps) {
   copyFileSync(join(brandDir, f), join(publicDir, f))
   console.log(`brand/${f} → web/public/`)
