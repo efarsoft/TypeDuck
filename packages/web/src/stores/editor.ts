@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, customRef, ref, watch } from 'vue'
 import { getTheme, render, scopeCss } from '@typeduck/core'
 import type { Doc, DocHistory } from '../db'
 import * as db from '../db'
@@ -89,9 +89,33 @@ export const useEditorStore = defineStore('editor', () => {
       ? render(activeDoc.value.content, theme.value, { important: false })
       : '',
   )
+  /** 防抖后的正文内容：预览渲染用这个（150ms 间隔，避免每次按键全量重渲） */
+  const debouncedContent = customRef<string>((track, trigger) => {
+    let value = ''
+    let timer: ReturnType<typeof setTimeout> | undefined
+    return {
+      get() {
+        track()
+        return value
+      },
+      set(newVal: string) {
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          value = newVal
+          trigger()
+        }, 150)
+      },
+    }
+  })
+  watch(
+    () => activeDoc.value?.content ?? '',
+    (c) => { debouncedContent.value = c },
+    { immediate: true },
+  )
+
   /** 进阶渲染版（rich）：保留 class、不加 !important，供网页预览 / HTML / PDF 导出使用，customCss 可覆盖 */
   const renderedRichHtml = computed(() =>
-    activeDoc.value ? render(activeDoc.value.content, theme.value, { rich: true }) : '',
+    activeDoc.value ? render(debouncedContent.value, theme.value, { rich: true }) : '',
   )
   /** 当前主题的 customCss，已加 .td-rich 作用域；公众号复制与 Word 导出不使用 */
   const customCss = computed(() => scopeCss(theme.value.customCss ?? '', '.td-rich'))

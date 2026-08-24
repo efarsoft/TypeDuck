@@ -243,6 +243,12 @@ function detectTitleDuplicate(): boolean {
 
 async function onCopy() {
   if (copied.value) return
+  // 检测本地图片：tdimg:// 转的 blob URL 粘贴到公众号后台必然裂图
+  const localImgs = (store.activeDoc?.content ?? '').match(/tdimg:\/\/[\w-]+/g)?.length ?? 0
+  if (localImgs > 0) {
+    store.showToast(`⚠️ 文章含 ${localImgs} 张本地图片，直接粘贴会裂图——请用「草稿箱」发布（自动转传素材库），或到配图助手配置图床`)
+    return
+  }
   const ok = await copyHtmlToClipboard(`<section style="${rootStyle.value}">${resolveTdimgs(store.renderedHtml)}</section>`)
   if (ok) {
     copied.value = true

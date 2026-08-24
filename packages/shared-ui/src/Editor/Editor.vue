@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
+import { keymap } from '@codemirror/view'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { undo, redo } from '@codemirror/commands'
@@ -180,6 +181,12 @@ onMounted(() => {
         '.cm-gutters': { backgroundColor: '#fafbfc', borderColor: '#edf0f2' },
         '.cm-activeLine': { backgroundColor: 'rgba(7,193,96,0.04)' },
       }),
+      // Markdown 格式快捷键：Ctrl+B 加粗 / Ctrl+I 斜体 / Ctrl+K 链接
+      keymap.of([
+        { key: 'Mod-b', run: () => { doWrap('**', '**'); return true } },
+        { key: 'Mod-i', run: () => { doWrap('*', '*'); return true } },
+        { key: 'Mod-k', run: () => { doInsert('[标题](https://)'); return true } },
+      ]),
     ],
     parent: host.value!,
   })
