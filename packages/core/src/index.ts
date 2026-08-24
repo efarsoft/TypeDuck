@@ -1,6 +1,4 @@
 export { render, withImportant, scopeCss } from './markdown/render'
-export { MODULES, moduleDefaultStyle } from './markdown/modules'
-export type { ModuleId } from './markdown/modules'
 export { themes, getTheme, registerTheme, unregisterTheme } from './theme/registry'
 export type { Theme, ThemeCategory, ThemeStyles } from './theme/types'
 export {
