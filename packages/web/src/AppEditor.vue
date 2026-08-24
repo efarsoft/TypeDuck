@@ -41,6 +41,7 @@ const previewRef = ref<InstanceType<typeof DuckPreview>>()
 const aiPanelRef = ref<InstanceType<typeof AiPanel>>()
 const rightView = ref<'theme' | 'history' | 'ai' | 'hot' | 'image' | null>('theme')
 const showSettings = ref(false)
+const settingsSection = ref<string>('overview')
 
 /** 右侧面板按钮：再次点击已激活的面板则整体收起（编辑区自动变宽） */
 function toggleRightView(view: 'theme' | 'history' | 'ai' | 'hot' | 'image') {
@@ -678,12 +679,13 @@ function onRemoveTheme(id: string) {
               @save-theme="onAiSaveTheme"
               @discard="onAiDiscard"
             />
-            <HotPanel v-else-if="rightView === 'hot'" @close="rightView = null" @rewrite="onHotRewrite" />
+            <HotPanel v-else-if="rightView === 'hot'" @close="rightView = null" @rewrite="onHotRewrite" @open-settings="settingsSection = 'hot'; showSettings = true" />
             <ImagePanel
               v-else-if="rightView === 'image'"
               @close="rightView = null"
               @insert="(md: string) => editorRef?.insert(md)"
               @open-oss="showOss = true"
+              @open-settings="settingsSection = 'media'; showSettings = true"
             />
             <HistoryPanel
               v-else
@@ -705,9 +707,9 @@ function onRemoveTheme(id: string) {
       <span class="status-save" :data-state="store.saveState">{{ saveLabel }}</span>
     </footer>
 
-    <PublishDialog v-if="showPublish" @close="showPublish = false" />
+    <PublishDialog v-if="showPublish" @close="showPublish = false" @open-settings="settingsSection = 'publish'; showSettings = true" />
     <OssSettings :open="showOss" @close="showOss = false" />
-    <SettingsCenter v-if="showSettings" @close="showSettings = false" @open-oss="showSettings = false; showOss = true" />
+    <SettingsCenter v-if="showSettings" :initial-section="settingsSection as any" @close="showSettings = false" @open-oss="showSettings = false; showOss = true" />
 
     <transition name="toast">
       <div v-if="store.toast" class="toast">{{ store.toast }}</div>

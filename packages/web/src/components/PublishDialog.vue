@@ -13,7 +13,7 @@ import { useEditorStore } from '../stores/editor'
 import { useAiStore } from '../stores/ai'
 import { fetchImageBytes, getOssConfig } from '../utils/images'
 
-const emit = defineEmits<{ (e: 'close'): void }>()
+const emit = defineEmits<{ (e: 'close'): void; (e: 'open-settings'): void }>()
 const editor = useEditorStore()
 const aiStore = useAiStore()
 
@@ -243,23 +243,16 @@ async function publish() {
       </header>
 
       <div class="dlg-body">
-        <!-- 开发者配置 -->
+        <!-- 未配置：引导去设置中心 -->
         <div v-if="showConfig" class="cfg-form">
           <p class="cfg-intro">
-            填写公众号的开发者信息（后台「设置与开发 → 基本配置」里获取）。信息只存本机；
-            首次使用需把本机 IP 加入后台的 IP 白名单，点「测试连接」会告诉你怎么做。
+            发布到草稿箱需要先配置公众号的开发者信息（AppID / AppSecret）。<br/>
+            路径：设置 → 公众号发布。首次使用需把本机 IP 加入后台白名单。
           </p>
-          <label>AppID</label>
-          <input v-model="appIdInput" placeholder="如 wx1234567890abcdef" spellcheck="false" />
-          <label>AppSecret</label>
-          <input v-model="appSecretInput" type="password" placeholder="开发者密码" spellcheck="false" />
-          <div class="cfg-ops">
-            <button class="test-btn" :disabled="testing" @click="testConnection">
-              {{ testing ? '测试中…' : '保存并测试连接' }}
-            </button>
-            <button v-if="configured" class="cancel-btn" @click="showConfig = false">返回发布</button>
-          </div>
-          <p v-if="testMsg" class="test-msg" :data-state="testState">{{ testMsg }}</p>
+          <button class="test-btn" @click="emit('open-settings')">⚙ 去设置中心配置</button>
+          <p v-if="configured" class="cfg-intro" style="margin-top:12px">
+            已有配置，<a href="javascript:void(0)" style="color:#07c160" @click="showConfig = false">返回发布</a>
+          </p>
         </div>
 
         <!-- 发布表单 -->

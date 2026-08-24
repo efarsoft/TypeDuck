@@ -5,6 +5,7 @@ import { useEditorStore } from '../stores/editor'
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'open-settings'): void
   (e: 'rewrite', item: { title: string; url: string }): void
 }>()
 
@@ -116,20 +117,13 @@ onMounted(() => {
   </div>
 
   <div class="hot-scroll">
-    <!-- 未配置 Key -->
+    <!-- 未配置：引导去设置中心 -->
     <div v-if="!hasKey" class="key-form">
       <p class="dim">
-        填写 allnet.hot 的 API Key（免费注册，每日 2000 次调用），即可订阅知乎热榜、微博热搜等约 50 个热点源。
+        使用热点功能需要先配置 allnet.hot 的 API Key（免费注册，每日 2000 次调用）。
       </p>
-      <input
-        v-model="keyInput"
-        type="password"
-        placeholder="粘贴你的 X-API-Key"
-        spellcheck="false"
-        @keyup.enter="saveKey"
-      />
-      <button class="run" :disabled="!keyInput.trim()" @click="saveKey">保 存</button>
-      <a class="key-link" href="https://allnet.hot/" target="_blank" rel="noopener">去 allnet.hot 获取 Key ↗</a>
+      <button class="run" @click="emit('open-settings')">⚙ 去设置中心配置</button>
+      <p class="dim">设置 → 热点服务 → 填入 API Key</p>
     </div>
 
     <template v-else>

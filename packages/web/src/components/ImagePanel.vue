@@ -9,6 +9,7 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'insert', markdown: string): void
   (e: 'open-oss'): void
+  (e: 'open-settings'): void
 }>()
 
 const editor = useEditorStore()
@@ -157,38 +158,17 @@ onMounted(() => {
   <div class="panel-head">
     <span>🖼 配图助手</span>
     <span class="head-btns">
-      <button class="mini-btn" title="图床设置（S3 兼容，可选）" @click="emit('open-oss')">☁</button>
+      <button class="mini-btn" title="图床与图库设置" @click="emit('open-settings')">⚙</button>
       <button class="mini-btn" title="收起面板" @click="emit('close')">✕</button>
     </span>
   </div>
 
   <div class="img-scroll">
-    <!-- 未配置 Key -->
+    <!-- 未配置：引导去设置中心（不再内嵌表单） -->
     <div v-if="!hasKey" class="key-form">
-      <p class="dim">选择图库并填写免费 API Key（注册即得），即可搜索高清免费配图。</p>
-      <div class="provider-row">
-        <button
-          v-for="(g, p) in KEY_GUIDES"
-          :key="p"
-          class="provider-btn"
-          :class="{ active: provider === p }"
-          @click="switchProvider(p as ImageProvider)"
-        >
-          {{ g.name }}
-        </button>
-      </div>
-      <input
-        v-model="keyInput"
-        type="password"
-        placeholder="粘贴图库 API Key"
-        spellcheck="false"
-        @keyup.enter="saveKey"
-      />
-      <button class="run" :disabled="!keyInput.trim()" @click="saveKey">保 存</button>
-      <a class="key-link" :href="KEY_GUIDES[provider].url" target="_blank" rel="noopener">
-        去 {{ KEY_GUIDES[provider].name }} 获取 Key ↗
-      </a>
-      <p class="dim">{{ KEY_GUIDES[provider].note }}</p>
+      <p class="dim">使用配图功能需要先配置图库 API Key（免费注册即得）。</p>
+      <button class="run" @click="emit('open-settings')">⚙ 去设置中心配置</button>
+      <p class="dim">设置 → 图片与图床 → 填入 Unsplash 或 Pexels 的 Key</p>
     </div>
 
     <template v-else>
