@@ -1,6 +1,0 @@
-{
-  "name": "typeduck-api",
-  "version": "0.2.0",
-  "private": true,
-  "scripts": { "start": "node server.js" }
-}

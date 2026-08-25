@@ -8,6 +8,8 @@ importers:
 
   .: {}
 
+  packages/api-server: {}
+
   packages/core:
     dependencies:
       highlight.js:
