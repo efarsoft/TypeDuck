@@ -492,7 +492,13 @@ async function doRewrite(url: string, title?: string, instruction?: string) {
   try {
     html = await fetchText(url)
   } catch {
-    fallbackToPaste(url, instruction, '抓取失败：请在新窗口打开原文，复制内容粘贴到面板')
+    fallbackToPaste(
+      url,
+      instruction,
+      window.desktopAPI
+        ? '抓取失败：请在新窗口打开原文，复制内容粘贴到面板'
+        : '网页版受跨域限制，建议用桌面版体验链接改写——或直接粘贴正文到下方',
+    )
     return
   }
   const article = extractArticle(html, url)
