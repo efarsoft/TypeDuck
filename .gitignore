@@ -12,3 +12,4 @@ packages/web/public/*.jpg
 packages/web/public/*.webp
 packages/desktop/build/
 .tmp_pdf/
+packages/web/dist.zip
