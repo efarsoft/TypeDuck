@@ -12,7 +12,7 @@ export type { AiThemeTokens, AiThemeTemplate } from './theme/aiTheme'
 export { copyHtmlToClipboard } from './clipboard/copy'
 export { exportHtmlFile } from './exporter/exportHtml'
 export { exportWordDoc, exportPrintPdf } from './exporter/exportOffice'
-export { streamChat, listModels } from './ai/client'
+export { streamChat, listModels, testConnection } from './ai/client'
 export { fetchHotSources, fetchHotItems } from './hot/allnet'
 export { HotApiError } from './hot/allnet'
 export type { HotSource, HotItem } from './hot/allnet'
@@ -29,3 +29,12 @@ export { AI_ACTIONS, buildMessages, parseTitles, WRITE_STYLES } from './ai/promp
 export type { AiActionId, ActionInput } from './ai/prompts'
 export type { AiConfig, AiMessage, StreamOptions } from './ai/types'
 export { AiApiError } from './ai/types'
+export {
+  isHtmlContent,
+  checkWechatCompatibility,
+  cleanPasteStyles,
+  formatHtml,
+  toWechatHtml,
+  WECHAT_ARTICLE_CSS,
+} from './html'
+export type { CompatibilityIssue } from './html'

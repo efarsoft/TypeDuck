@@ -101,6 +101,34 @@ export async function streamChat(
   return full
 }
 
+/**
+ * 连接测试：用一次最小 chat 请求验证 Base URL / API Key / 模型 三项配置。
+ * 成功返回耗时（毫秒），失败抛 AiApiError（错误信息可直接展示给用户）。
+ */
+export async function testConnection(config: AiConfig): Promise<number> {
+  if (!config.baseUrl) throw new AiApiError('未配置 Base URL，请先在 AI 设置中填写', 0)
+  if (!config.apiKey) throw new AiApiError('未配置 API Key，请先在 AI 设置中填写', 0)
+  if (!config.model) throw new AiApiError('未配置模型，请先在 AI 设置中填写', 0)
+
+  let res: Response
+  const started = performance.now()
+  try {
+    res = await fetch(joinUrl(config.baseUrl, '/chat/completions'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      // 最小请求即可连通并校验模型；不设 max_tokens 以避免个别推理模型的参数限制
+      body: JSON.stringify({ model: config.model, messages: [{ role: 'user', content: 'ping' }] }),
+    })
+  } catch {
+    throw new AiApiError('网络错误：无法连接接口（断网、跨域受限或地址错误）', 0)
+  }
+  if (!res.ok) throw toApiError(res.status, await res.text())
+  return Math.round(performance.now() - started)
+}
+
 /** 拉取模型列表（OpenAI 兼容 GET /models），用于设置页下拉 */
 export async function listModels(config: AiConfig): Promise<string[]> {
   if (!config.baseUrl || !config.apiKey) throw new AiApiError('请先填写 Base URL 和 API Key', 0)

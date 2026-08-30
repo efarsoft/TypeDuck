@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
+import { Compartment } from '@codemirror/state'
 import { keymap } from '@codemirror/view'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
+import { html } from '@codemirror/lang-html'
 import { languages } from '@codemirror/language-data'
 import { undo, redo } from '@codemirror/commands'
+import { cleanPasteStyles, formatHtml } from '@typeduck/core'
 import type { AiActionId } from '@typeduck/core'
 
-const props = defineProps<{ modelValue: string }>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: string
+    /** true = HTML 源码模式（语言高亮切换 + 工具栏换成 HTML 操作） */
+    htmlMode?: boolean
+  }>(),
+  { htmlMode: false },
+)
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'ai', action: AiActionId): void
@@ -23,6 +33,19 @@ const hasSelection = ref(false)
 /** 编辑器滚动容器，供双栏同步滚动使用 */
 function getScrollEl(): HTMLElement | null {
   return view?.dom.querySelector('.cm-scroller') ?? null
+}
+
+/**
+ * 按比例滚动到对应位置（双栏同步滚动用）。
+ * 走 CM 内部机制（行块定位 + scrollIntoView）而不是直接写 scrollTop：
+ * 直接写 scroller.scrollTop 会与 CM 的虚拟滚动测量竞争——测量完成后 scrollHeight
+ * 变化导致浏览器 clamp 滚动位置，表现为松手后内容回弹。
+ */
+function scrollToRatio(ratio: number) {
+  if (!view) return
+  const target = ratio * view.scrollDOM.scrollHeight
+  const line = view.lineBlockAtHeight(target)
+  view.dispatch({ effects: EditorView.scrollIntoView(line.from, { y: 'start' }) })
 }
 
 /** 在光标处插入文本 */
@@ -118,7 +141,7 @@ const icons: Record<string, string> = {
 }
 
 /** 快速格式按钮：按「标题 / 文字格式 / 块级 / 插入 / AI / 历史」分组（label 为文字按钮，icon 为图标按钮） */
-const buttonGroups: {
+const markdownGroups: {
   icon?: string
   label?: string
   title: string
@@ -161,12 +184,68 @@ const buttonGroups: {
   ],
 ]
 
+/** HTML 模式工具栏：AI 润色/续写 + 清理粘贴样式 + 撤销重做 */
+const htmlGroups: {
+  icon?: string
+  label?: string
+  title: string
+  action: () => void
+  ai?: boolean
+  disabled?: () => boolean
+}[][] = [
+  [
+    { label: 'AI 润色', title: 'AI 润色选中文字', ai: true, action: () => emit('ai', 'polish'), disabled: () => !hasSelection.value },
+    { label: 'AI 扩写', title: 'AI 扩写选中文字', ai: true, action: () => emit('ai', 'expand'), disabled: () => !hasSelection.value },
+    { label: 'AI 缩写', title: 'AI 缩写选中文字', ai: true, action: () => emit('ai', 'shorten'), disabled: () => !hasSelection.value },
+    { label: 'AI 续写', title: 'AI 从光标处续写', ai: true, action: () => emit('ai', 'continue') },
+  ],
+  [
+    { label: '✨ 格式化', title: '格式化 HTML（缩进重排，代码块原样保留）', action: formatDoc },
+    { label: '🧹 清理样式', title: '清理粘贴带来的 Word/网页垃圾样式（保留结构）', action: cleanPaste },
+  ],
+  [
+    { icon: 'undo', title: '撤销 (Ctrl+Z)', action: () => view && undo(view) },
+    { icon: 'redo', title: '重做 (Ctrl+Y)', action: () => view && redo(view) },
+  ],
+]
+
+/** 按模式显示对应工具栏 */
+const buttonGroups = computed(() => (props.htmlMode ? htmlGroups : markdownGroups))
+
+/** 一键清理粘贴垃圾样式：作用于整个文档 */
+function cleanPaste() {
+  if (!view) return
+  const cleaned = cleanPasteStyles(view.state.doc.toString())
+  if (cleaned !== view.state.doc.toString()) {
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: cleaned } })
+  }
+  view.focus()
+}
+
+/** 格式化整个文档的 HTML（缩进重排） */
+function formatDoc() {
+  if (!view) return
+  const formatted = formatHtml(view.state.doc.toString())
+  if (formatted !== view.state.doc.toString()) {
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: formatted } })
+  }
+  view.focus()
+}
+
+/** 语言扩展隔离舱：markdown ↔ html 动态切换 */
+const langCompartment = new Compartment()
+function markdownLang() {
+  return markdown({ codeLanguages: languages, base: markdownLanguage })
+}
+
 onMounted(() => {
   view = new EditorView({
     doc: props.modelValue,
     extensions: [
       basicSetup,
-      markdown({ codeLanguages: languages, base: markdownLanguage }),
+      langCompartment.of(props.htmlMode ? html() : markdownLang()),
+      // 长行自动换行：内容始终完整显示在编辑区内，不会超出右缘
+      EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           emit('update:modelValue', update.state.doc.toString())
@@ -194,6 +273,14 @@ onMounted(() => {
 
 onUnmounted(() => view?.destroy())
 
+/** htmlMode 变化：热切换语言扩展（不丢失内容与光标） */
+watch(
+  () => props.htmlMode,
+  (m) => {
+    if (view) view.dispatch({ effects: langCompartment.reconfigure(m ? html() : markdownLang()) })
+  },
+)
+
 watch(
   () => props.modelValue,
   (value) => {
@@ -205,6 +292,7 @@ watch(
 
 defineExpose({
   getScrollEl,
+  scrollToRatio,
   insert: doInsert,
   wrapSelection: doWrap,
   getSelectionInfo,
@@ -215,6 +303,9 @@ defineExpose({
 <template>
   <section class="editor-panel">
     <div class="format-bar">
+      <span class="mode-badge" :class="props.htmlMode ? 'html' : 'md'" :title="props.htmlMode ? '当前为 HTML 源码模式（微信要求样式内联）' : '当前为 Markdown 写作模式'">
+        {{ props.htmlMode ? 'HTML' : 'Markdown' }}
+      </span>
       <template v-for="(group, gi) in buttonGroups" :key="gi">
         <!-- AI 组前面的分隔符占满整行，强制 AI 按钮另起一行 -->
         <span
@@ -251,6 +342,9 @@ defineExpose({
 <style scoped>
 .editor-panel {
   height: 100%;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* 允许随编辑区收缩，避免长行把内容撑出右边界 */
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -263,6 +357,8 @@ defineExpose({
 }
 .editor-host :deep(.cm-editor) {
   height: 100%;
+  width: 100%;
+  min-width: 0;
 }
 .format-bar {
   display: flex;
@@ -273,6 +369,24 @@ defineExpose({
   background: #fff;
   flex-wrap: wrap;
   flex-shrink: 0;
+}
+/* 编辑模式徽标：HTML（橙）/ Markdown（灰） */
+.mode-badge {
+  flex-shrink: 0;
+  margin-right: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.mode-badge.md {
+  background: #f2f3f5;
+  color: #68746e;
+}
+.mode-badge.html {
+  background: #fff3e0;
+  color: #b06000;
 }
 .fdivider {
   width: 1px;

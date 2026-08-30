@@ -41,12 +41,18 @@ importers:
       '@codemirror/commands':
         specifier: ^6.11.0
         version: 6.11.0
+      '@codemirror/lang-html':
+        specifier: ^6.4.9
+        version: 6.4.12
       '@codemirror/lang-markdown':
         specifier: ^6.0.0
         version: 6.5.2
       '@codemirror/language-data':
         specifier: ^6.0.0
         version: 6.5.2
+      '@codemirror/state':
+        specifier: ^6.0.0
+        version: 6.7.1
       '@codemirror/view':
         specifier: ^6.43.9
         version: 6.43.9

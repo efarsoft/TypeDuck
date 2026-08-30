@@ -2,8 +2,10 @@
 import { computed, ref } from 'vue'
 import {
   getWechatAccessToken,
+  isHtmlContent,
   publishWechatDraft,
   streamChat,
+  toWechatHtml,
   transferImagesToWechat,
   uploadWechatCover,
   withImportant,
@@ -80,7 +82,12 @@ async function testConnection() {
 
 const doc = computed(() => editor.activeDoc)
 const title = computed(() => doc.value?.title?.trim() || '')
+/** HTML 内容：复制与 API 发布在公众号不生效，只能注入 */
+const isHtml = computed(() => isHtmlContent(doc.value?.content ?? ''))
 const author = ref(editor.accountName || '')
+/** 作者名限制 8 个字（按码点计数，emoji 不拆对） */
+const authorLen = computed(() => [...author.value].length)
+const authorTooLong = computed(() => authorLen.value > 8)
 const digest = ref('')
 const cover = ref<{ name: string; type: string; bytes: ArrayBuffer; dataUrl: string } | null>(null)
 
@@ -146,14 +153,20 @@ const checks = computed<CheckItem[]>(() => {
   const items: CheckItem[] = []
   const t = title.value
   const c = doc.value?.content ?? ''
+  const isHtml = isHtmlContent(c)
   // 标题
   if (!t) items.push({ label: '标题为空', state: 'fail' })
   else if (t.length > 64) items.push({ label: `标题超长（${t.length}/64）`, state: 'fail' })
   else items.push({ label: `标题 ${t.length}/64 字`, state: 'ok' })
-  // 正文
-  const words = c.replace(/\s/g, '').length
+  // 作者（最多 8 字）
+  if (authorTooLong.value) items.push({ label: `作者超长（${authorLen.value}/8）`, state: 'fail' })
+  else items.push({ label: author.value.trim() ? `作者 ${authorLen.value}/8 字` : '作者留空', state: 'ok' })
+  // 正文（HTML 模式按去标签后的正文统计）
+  const words = (isHtml ? c.replace(/<[^>]*>/g, '') : c).replace(/\s/g, '').length
   if (words < 30) items.push({ label: '正文太短', state: 'warn' })
   else items.push({ label: `正文约 ${words} 字`, state: 'ok' })
+  // HTML 模式：发布时自动转换为微信渲染安全格式
+  if (isHtml) items.push({ label: 'HTML 模式：复制/API 发布不生效，请用「注入到公众号」', state: 'ok' })
   // 摘要
   if (!digest.value.trim()) items.push({ label: '摘要为空（发布时需手填或留空默认）', state: 'warn' })
   else items.push({ label: `摘要 ${digest.value.length}/120 字`, state: 'ok' })
@@ -161,8 +174,10 @@ const checks = computed<CheckItem[]>(() => {
   items.push(cover.value
     ? { label: '封面已选择', state: 'ok' }
     : { label: '封面未选择（必填）', state: 'fail' })
-  // 外链图片
-  const imgs = [...c.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]).filter((s) => !s.includes('mmbiz.qpic.cn'))
+  // 外链图片（Markdown 语法 或 HTML <img>）
+  const imgs = isHtml
+    ? [...c.matchAll(/<img\s[^>]*src="(https?[^"]+)"/gi)].map((m) => m[1]).filter((s) => !s.includes('mmbiz.qpic.cn'))
+    : [...c.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]).filter((s) => !s.includes('mmbiz.qpic.cn'))
   if (imgs.length) items.push({ label: `${imgs.length} 张图片将自动转传素材库`, state: 'warn' })
   else items.push({ label: '无外链图片', state: 'ok' })
   // 图床
@@ -172,10 +187,26 @@ const checks = computed<CheckItem[]>(() => {
   return items
 })
 
+/** 发布/注入共用的内容 HTML：HTML 模式转换后直发（微信服务端渲染），Markdown 模式主题内联 */
+function buildContentHtml(): string {
+  if (!doc.value) return ''
+  return isHtmlContent(doc.value.content)
+    ? toWechatHtml(doc.value.content).html
+    : `<section style="${withImportant(editor.theme.styles.root)}">${editor.renderedHtml}</section>`
+}
+
 async function publish() {
   error.value = ''
+  if (isHtml.value) {
+    error.value = 'HTML 内容复制与 API 发布在公众号不生效——请使用「注入到公众号」'
+    return
+  }
   if (title.value.length > 64) {
     error.value = `标题超长（${title.value.length}/64 字），先改短一点`
+    return
+  }
+  if (authorTooLong.value) {
+    error.value = `作者名不能超过 8 个字（当前 ${authorLen.value} 字）`
     return
   }
   if (!doc.value || doc.value.content.trim().length < 30) {
@@ -189,7 +220,7 @@ async function publish() {
   step.value = 'working'
   try {
     stepLabel.value = '正在获取 access_token…'
-    let contentHtml = `<section style="${withImportant(editor.theme.styles.root)}">${editor.renderedHtml}</section>`
+    let contentHtml = buildContentHtml()
     const coverFile: WechatCoverFile = { name: cover.value.name, type: cover.value.type, bytes: cover.value.bytes }
 
     // 外链/本地图片 → 公众号素材库（HTML 层回写，markdown 源不被污染）
@@ -232,6 +263,29 @@ async function publish() {
     error.value = err instanceof Error ? err.message : String(err)
   }
 }
+
+/** 注入到公众号编辑器（桌面版）：不需要 AppID/AppSecret，微信后台登录态即可 */
+async function inject() {
+  if (!window.desktopAPI?.injectWechat) {
+    error.value = '注入功能仅桌面版可用，请使用排版鸭桌面版'
+    return
+  }
+  if (!doc.value || doc.value.content.trim().length < 30) {
+    error.value = '正文是空的，注入个寂寞？'
+    return
+  }
+  const res = await window.desktopAPI.injectWechat(buildContentHtml(), title.value)
+  if (res.ok) {
+    editor.showToast('已注入公众号编辑器 🦆')
+    emit('close')
+  } else if (res.needPage) {
+    error.value = (res.msg || '未找到编辑器') + '——在公众号后台打开「图文编辑」页后再点一次注入'
+    editor.showToast('请在公众号后台图文编辑页再次点击注入')
+  } else {
+    error.value = res.msg || '注入失败'
+    editor.showToast(res.msg || '注入失败')
+  }
+}
 </script>
 
 <template>
@@ -269,57 +323,68 @@ async function publish() {
 
           <!-- 表单态 -->
           <template v-else>
-            <div class="fld-row">
-              <label class="fld-label">标题</label>
-              <span class="fld-value" :class="{ warn: title.length > 64 }">{{ title || '（文档没有标题，先去起一个）' }}（{{ title.length }}/64）</span>
-            </div>
+            <div class="pub-grid">
+              <div class="form-col">
+                <div class="fld-row">
+                  <label class="fld-label">标题</label>
+                  <span class="fld-value" :class="{ warn: title.length > 64 }">{{ title || '（文档没有标题，先去起一个）' }}（{{ title.length }}/64）</span>
+                </div>
 
-            <label class="fld-label">作者</label>
-            <input v-model="author" class="fld" placeholder="显示在作者栏" />
+                <label class="fld-label">作者<span class="fld-count" :class="{ over: authorTooLong }">{{ authorLen }}/8</span></label>
+                <input v-model="author" class="fld" :class="{ error: authorTooLong }" placeholder="显示在作者栏，最多 8 个字" />
+                <p v-if="authorTooLong" class="fld-tip error">作者名不能超过 8 个字（当前 {{ authorLen }} 字），请删减后再发布</p>
 
-            <label class="fld-label">
-              摘要（{{ digest.length }}/120，可留空）
-              <button class="mini-ai" :disabled="digesting" @click="genDigest">
-                {{ digesting ? 'AI 生成中…' : '✨ AI 生成' }}
-              </button>
-            </label>
-            <textarea v-model="digest" class="fld" rows="3" maxlength="120" placeholder="发布时的摘要栏内容"></textarea>
-
-            <label class="fld-label">封面图片（必填）</label>
-            <div class="cover-row">
-              <img v-if="cover" :src="cover.dataUrl" class="cover-preview" alt="封面预览" />
-              <div v-else class="cover-empty">900×383<br />(2.35:1)</div>
-              <div class="cover-ops">
-                <label class="pick-btn">
-                  选择图片
-                  <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" hidden @change="pickCover" />
+                <label class="fld-label">
+                  摘要（{{ digest.length }}/120，可留空）
+                  <button class="mini-ai" :disabled="digesting" @click="genDigest">
+                    {{ digesting ? 'AI 生成中…' : '✨ AI 生成' }}
+                  </button>
                 </label>
-                <p class="cover-hint">建议用配图助手的「封面」裁剪导出</p>
+                <textarea v-model="digest" class="fld" rows="3" maxlength="120" placeholder="发布时的摘要栏内容"></textarea>
+
+                <label class="fld-label">封面图片（必填）</label>
+                <div class="cover-row">
+                  <img v-if="cover" :src="cover.dataUrl" class="cover-preview" alt="封面预览" />
+                  <div v-else class="cover-empty">900×383<br />(2.35:1)</div>
+                  <div class="cover-ops">
+                    <label class="pick-btn">
+                      选择图片
+                      <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" hidden @change="pickCover" />
+                    </label>
+                    <p class="cover-hint">建议用配图助手的「封面」裁剪导出</p>
+                  </div>
+                </div>
+
+                <p v-if="error" class="error-msg">{{ error }}</p>
               </div>
+
+              <!-- 右侧：发布前体检 -->
+              <aside class="check-col">
+                <div v-if="step === 'idle'" class="checklist">
+                  <span class="check-title">📋 发布前体检</span>
+                  <ul class="check-list">
+                    <li v-for="(c, i) in checks" :key="i" :data-state="c.state">
+                      <span class="check-icon">{{ c.state === 'ok' ? '✓' : c.state === 'warn' ? '⚠' : '✕' }}</span>
+                      {{ c.label }}
+                    </li>
+                  </ul>
+                </div>
+                <p v-if="step === 'working'" class="working">{{ stepLabel }}</p>
+              </aside>
             </div>
-
-            <p v-if="error" class="error-msg">{{ error }}</p>
-
-            <!-- 发布前体检 -->
-            <div v-if="step === 'idle'" class="checklist">
-              <span class="check-title">📋 发布前体检</span>
-              <ul class="check-list">
-                <li v-for="(c, i) in checks" :key="i" :data-state="c.state">
-                  <span class="check-icon">{{ c.state === 'ok' ? '✓' : c.state === 'warn' ? '⚠' : '✕' }}</span>
-                  {{ c.label }}
-                </li>
-              </ul>
-            </div>
-
-            <p v-if="step === 'working'" class="working">{{ stepLabel }}</p>
           </template>
         </template>
       </div>
 
       <footer v-if="!showConfig && step !== 'done'" class="dlg-foot">
-        <button class="ghost" title="修改开发者配置" @click="showConfig = true">⚙ 公众号配置</button>
-        <button class="primary" :disabled="step === 'working'" @click="publish">
-          {{ step === 'working' ? '发布中…' : '发布到草稿箱' }}
+        <div class="foot-left">
+          <button class="ghost" title="修改开发者配置" @click="showConfig = true">⚙ 公众号配置</button>
+          <button v-if="editor.isDesktop && !isHtml" class="ghost" title="打开公众号后台并注入内容到编辑器（登录态即可，无需 AppID）" @click="inject"><span class="code-ic">&lt;/&gt;</span>注入到公众号</button>
+        </div>
+        <button class="primary" :disabled="step === 'working'" @click="isHtml ? inject() : publish()">
+          <template v-if="step === 'working'">发布中…</template>
+          <template v-else-if="isHtml"><span class="code-ic">&lt;/&gt;</span>注入到公众号</template>
+          <template v-else>发布到草稿箱</template>
         </button>
       </footer>
     </div>
@@ -338,7 +403,7 @@ async function publish() {
   padding: 20px;
 }
 .pub-dialog {
-  width: 460px;
+  width: 640px;
   max-width: 100%;
   max-height: 90vh;
   display: flex;
@@ -498,6 +563,32 @@ async function publish() {
 .fld:focus {
   border-color: #07c160;
 }
+.fld.error {
+  border-color: #e5554e;
+  background: #fffafa;
+}
+.fld.error:focus {
+  border-color: #e5554e;
+  box-shadow: 0 0 0 2px rgba(229, 85, 78, 0.12);
+}
+.fld-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a8adb5;
+}
+.fld-count.over {
+  color: #e5554e;
+}
+.fld-tip {
+  font-size: 11.5px;
+  color: #a8adb5;
+  margin: 5px 0 0;
+  line-height: 1.5;
+}
+.fld-tip.error {
+  color: #e5554e;
+}
 textarea.fld {
   resize: vertical;
   line-height: 1.6;
@@ -552,6 +643,9 @@ textarea.fld {
 }
 .pick-btn {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 30px;
   padding: 0 14px;
   border: 1px solid #e5e6eb;
@@ -577,8 +671,12 @@ textarea.fld {
   color: #e5554e;
   line-height: 1.6;
 }
+/* 双栏布局：左表单 + 右体检 */
+.pub-grid { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 20px; align-items: start; }
+.form-col { min-width: 0; }
+.check-col { display: grid; gap: 10px; }
 /* 发布前体检 */
-.checklist { margin-top: 14px; padding: 12px 14px; background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px; }
+.checklist { padding: 12px 14px; background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px; }
 .check-title { font-size: 12.5px; font-weight: 700; color: #4e5969; }
 .check-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .check-list li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #4e5960; padding: 4px 0; }
@@ -625,6 +723,28 @@ textarea.fld {
   padding: 12px 18px;
   border-top: 1px solid #e5e6eb;
   flex-shrink: 0;
+}
+.foot-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* 注入按钮的代码图标 </> */
+.code-ic {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #f2f3f5;
+  border: 1px solid #e5e6eb;
+  color: #4e5969;
+  font-family: Consolas, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .pub-grid { grid-template-columns: 1fr; }
 }
 .ghost {
   border: none;

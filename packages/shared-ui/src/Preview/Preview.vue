@@ -50,12 +50,12 @@ function getScrollEl(): HTMLElement | null {
   return scrollEl.value ?? null
 }
 
-/** 预览宽度：手机屏宽 / 公众号正文全宽 */
+/** 预览宽度：公众号正文全宽 / 手机屏宽（默认公众号） */
 const sizes = [
-  { label: '手机', value: 390 },
   { label: '公众号', value: 677 },
+  { label: '手机', value: 390 },
 ] as const
-const activeSize = ref<number>(390)
+const activeSize = ref<number>(677)
 
 const rootHtml = computed(() => {
   const styleTag = props.customCss ? `<style>${props.customCss}</style>` : ''
@@ -71,6 +71,7 @@ defineExpose({ getScrollEl })
       <button class="preview-tag" title="点击切换主题" @click="emit('open-theme')">
         预览<template v-if="themeName"> · {{ themeName }}</template> ▸
       </button>
+      <div class="bar-center"><slot name="bar-center" /></div>
       <div class="size-switch">
         <button
           v-for="s in sizes"
@@ -127,6 +128,7 @@ defineExpose({ getScrollEl })
   flex-direction: column;
 }
 .preview-bar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -134,6 +136,15 @@ defineExpose({ getScrollEl })
   background: #fff;
   border-bottom: 1px solid #ebedf0;
   flex-shrink: 0;
+}
+/* 中间插槽：相对整条头部绝对居中，与左右元素无关 */
+.bar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
 }
 .preview-tag {
   border: none;

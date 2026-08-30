@@ -1,6 +1,6 @@
 {
   "name": "typeduck-desktop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "排版鸭桌面版（Electron 封装，复用 web 应用）",
   "main": "src/main.js",
@@ -14,5 +14,5 @@
     "electron": "^33.0.0",
     "electron-builder": "^24.0.0"
   },
-  "author": "efarh"
+  "author": "TypeDuck"
 }

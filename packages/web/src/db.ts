@@ -127,3 +127,34 @@ export async function getHistory(docId: string): Promise<DocHistory[]> {
 export function deleteHistory(id: string): Promise<void> {
   return tx(HISTORY_STORE, 'readwrite', (s) => s.delete(id)).then(() => undefined)
 }
+
+/** 清空全部文档与历史版本（清除数据 / 备份恢复前的覆盖用），操作不可撤销 */
+export async function clearAll(): Promise<void> {
+  const db = await openDB()
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction([DOC_STORE, HISTORY_STORE], 'readwrite')
+    transaction.objectStore(DOC_STORE).clear()
+    transaction.objectStore(HISTORY_STORE).clear()
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+  })
+}
+
+/** 备份恢复：先清空现有数据，再批量写入备份里的文档与历史版本 */
+export async function importDocs(docs: Doc[], history: DocHistory[] = []): Promise<void> {
+  const db = await openDB()
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction([DOC_STORE, HISTORY_STORE], 'readwrite')
+    transaction.objectStore(DOC_STORE).clear()
+    transaction.objectStore(HISTORY_STORE).clear()
+    for (const doc of docs) transaction.objectStore(DOC_STORE).put(purify(doc))
+    for (const entry of history) transaction.objectStore(HISTORY_STORE).put(purify(entry))
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+  })
+}
+
+/** 全部历史版本（备份导出用） */
+export function getAllHistory(): Promise<DocHistory[]> {
+  return tx<DocHistory[]>(HISTORY_STORE, 'readonly', (s) => s.getAll())
+}

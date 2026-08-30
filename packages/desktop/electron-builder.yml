@@ -8,6 +8,8 @@ publish:
   releaseType: draft
 directories:
   output: release
+# 打包完成后、制作安装器前执行（图标注入见 scripts/after-pack.js）
+afterPack: scripts/after-pack.js
 files:
   - src/**/*
   - package.json
@@ -18,9 +20,12 @@ extraResources:
     filter: ['**/*']
 win:
   target: nsis
+  # 鸭子品牌图标（.ico 含多尺寸；安装器图标也会用这个）
+  icon: build/icon.ico
   # 文件名用英文品牌名（中文文件名在部分下载器/浏览器会转码异常）；应用显示名仍是「排版鸭」
   artifactName: TypeDuck-${version}-${arch}-setup.${ext}
-  # 未做代码签名：跳过签名与图标编辑，规避 winCodeSign 解压需要符号链接权限的问题
+  # winCodeSign 工具包在本机解压失败（darwin 符号链接无权限），自动注入会中止构建；
+  # 关闭后由 afterPack 钩子（scripts/after-pack.js）用内置 rcedit 手动注入图标
   signAndEditExecutable: false
 nsis:
   oneClick: false

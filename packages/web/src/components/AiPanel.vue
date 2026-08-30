@@ -97,6 +97,7 @@ defineExpose({ openRewritePaste })
 /* ---------- 任务展示 ---------- */
 
 const scrollEl = ref<HTMLElement>()
+
 const statusLabel = computed(
   () => ({ streaming: '生成中…', done: '已完成', error: '出错' })[props.task?.status ?? 'streaming'],
 )
@@ -198,7 +199,7 @@ watch(
       </p>
 
       <div v-else-if="mode === 'write'" class="form">
-        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <button class="back" @click="mode = 'menu'">< 返回</button>
         <label>文章主题</label>
         <input v-model="writeTopic" placeholder="例如：普通人如何用 AI 做副业" @keyup.enter="submitWrite" />
         <label>写作风格</label>
@@ -222,14 +223,14 @@ watch(
       </div>
 
       <div v-else-if="mode === 'custom'" class="form">
-        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <button class="back" @click="mode = 'menu'">< 返回</button>
         <label>你的指令（先在编辑器选中文字）</label>
         <textarea v-model="customText" rows="3" placeholder="例如：改成小红书风格，多加 emoji；或：把这段改得更犀利"></textarea>
         <button class="run" @click="submitCustom">执 行</button>
       </div>
 
       <div v-else-if="mode === 'outline'" class="form">
-        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <button class="back" @click="mode = 'menu'">< 返回</button>
         <label>文章主题</label>
         <input v-model="outlineTopic" placeholder="例如：普通人如何用 AI 做副业" @keyup.enter="submitOutline" />
         <label>风格</label>
@@ -240,7 +241,7 @@ watch(
       </div>
 
       <div v-else-if="mode === 'rewrite'" class="form">
-        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <button class="back" @click="mode = 'menu'">< 返回</button>
         <label>文章链接</label>
         <input v-model="rewriteUrl" placeholder="https:// 任意文章地址（公众号/博客/新闻）" @keyup.enter="submitRewrite" />
         <label>风格要求（可选）</label>
@@ -273,7 +274,7 @@ watch(
       </div>
 
       <div v-else class="form">
-        <button class="back" @click="mode = 'menu'">← 返回</button>
+        <button class="back" @click="mode = 'menu'">< 返回</button>
         <label>描述你想要的风格</label>
         <textarea
           v-model="themeDesc"

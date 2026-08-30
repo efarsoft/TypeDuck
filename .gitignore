@@ -13,3 +13,7 @@ packages/web/public/*.webp
 packages/desktop/build/
 .tmp_pdf/
 packages/web/dist.zip
+
+# 本地工作文档与工具目录（不入库）
+.claude/
+docs/

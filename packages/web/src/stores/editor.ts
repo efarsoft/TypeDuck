@@ -60,8 +60,17 @@ function countWords(text: string): number {
 }
 
 /** 从内容提取标题：优先一级/二级标题，其次首个非空行（去除 Markdown 记号）。
+ *  HTML 文档（以 < 开头）：优先 <h1> / <title> 文本，其次去标签后的首行。
  *  不做长度截断——列表/输入框的显示省略交给 CSS，公众号标题栏上限 64 字 */
 function extractTitle(content: string): string {
+  if (/^\s*<[a-z!\/]/i.test(content)) {
+    const h1 = content.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+    if (h1) return h1[1].trim()
+    const titleTag = content.match(/<title[^>]*>([^<]+)<\/title>/i)
+    if (titleTag) return titleTag[1].trim()
+    const firstLine = content.split('\n').find((l) => l.trim()) || ''
+    return firstLine.replace(/<[^>]+>/g, '').trim()
+  }
   const heading = content.match(/^#{1,3}\s+(.+)$/m)
   return (heading ? heading[1] : content.split('\n').find((l) => l.trim()) || '')
     .replace(/[#*`~>\[\]()!]/g, '')
@@ -76,8 +85,15 @@ export const useEditorStore = defineStore('editor', () => {
   const toast = ref('')
 
   /** 公众号名称：预览头部模拟用，localStorage 持久化 */
-  const accountName = ref(localStorage.getItem('typeduck:accountName') || 'AI猿叔')
+  const accountName = ref(localStorage.getItem('typeduck:accountName') || '排版鸭')
   watch(accountName, (v) => localStorage.setItem('typeduck:accountName', v))
+
+  /** 桌面版文档存储文件夹（镜像模式）：文档以 .md 同步到该文件夹，启动时优先从文件夹加载 */
+  const dataDir = ref(localStorage.getItem('typeduck:dataDir') || '')
+  watch(dataDir, (v) => {
+    if (v) localStorage.setItem('typeduck:dataDir', v)
+    else localStorage.removeItem('typeduck:dataDir')
+  })
 
   const theme = computed(() => getTheme(activeDoc.value?.themeId ?? 'minimal-white'))
   const renderedHtml = computed(() =>
@@ -130,14 +146,50 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   async function load() {
-    docs.value = await db.getAllDocs()
-    // 历史遗留修复：无标题文档回填；被旧版 24 字截断的标题还原为全文
-    for (const doc of docs.value) {
-      const full = extractTitle(doc.content)
-      const truncated = doc.title.endsWith('…') && full.startsWith(doc.title.slice(0, -1))
-      if (!doc.title || truncated) {
-        doc.title = full
-        await db.putDoc(doc)
+    let loadedFromDir = false
+    // 桌面版：配置了存储文件夹时优先从文件夹加载（文件夹为主存储，IndexedDB 作缓存）
+    if (window.desktopAPI && dataDir.value) {
+      try {
+        await window.desktopAPI.authorizeDataDir(dataDir.value)
+        const fromDir = await window.desktopAPI.readDataDir(dataDir.value)
+        if (fromDir && fromDir.docs.length > 0) {
+          const metas = new Map(fromDir.index.docs.map((m) => [m.file, m]))
+          const now = Date.now()
+          docs.value = fromDir.docs.map(({ file, content }) => {
+            const meta = metas.get(file)
+            return {
+              id: meta?.id ?? uuid(),
+              title: meta?.title || file.replace(/\.md$/i, ''),
+              content,
+              themeId: 'minimal-white',
+              createdAt: meta?.updatedAt ?? now,
+              updatedAt: meta?.updatedAt ?? now,
+              tags: [],
+              status: 'draft',
+              wordCount: countWords(content),
+              estimatedReadTime: Math.max(1, Math.ceil(countWords(content) / 400)),
+            }
+          })
+          await db.clearAll()
+          await db.importDocs(docs.value)
+          loadedFromDir = true
+        }
+      } catch {
+        // 目录失效（被删除/移动）：回退默认存储并告知
+        dataDir.value = ''
+        showToast('文档存储文件夹不可用，已恢复为默认存储')
+      }
+    }
+    if (!loadedFromDir) {
+      docs.value = await db.getAllDocs()
+      // 历史遗留修复：无标题文档回填；被旧版 24 字截断的标题还原为全文
+      for (const doc of docs.value) {
+        const full = extractTitle(doc.content)
+        const truncated = doc.title.endsWith('…') && full.startsWith(doc.title.slice(0, -1))
+        if (!doc.title || truncated) {
+          doc.title = full
+          await db.putDoc(doc)
+        }
       }
     }
     if (docs.value.length === 0) {
@@ -199,6 +251,7 @@ export const useEditorStore = defineStore('editor', () => {
       activeDoc.value = docs.value[0] ?? null
       if (!activeDoc.value) await createDoc()
     }
+    syncToDataDir()
   }
 
   function markUnsaved() {
@@ -229,16 +282,40 @@ export const useEditorStore = defineStore('editor', () => {
       return
     }
     await snapshotIfChanged(doc)
+    syncToDataDir()
   }
 
-  const lastSnapshotAt = new Map<string, { at: number; content: string }>()
+  /** 已设置存储文件夹时，把全部文档全量镜像到文件夹（异步执行，失败静默不打扰写作） */
+  function syncToDataDir() {
+    const api = window.desktopAPI
+    if (!api || !dataDir.value) return
+    void api
+      .writeDataDir(
+        dataDir.value,
+        docs.value.map((d) => ({ id: d.id, title: d.title || '未命名文档', content: d.content })),
+      )
+      .catch(() => {
+        /* 镜像同步失败不打断写作，下次保存会重试 */
+      })
+  }
 
-  /** 内容有变化时落历史版本：间隔至少 60s，且与上一版内容相同则跳过 */
+  const lastSnapshotAt = new Map<string, number>()
+
+  /**
+   * 内容有变化时落历史版本：
+   * 1. 与已存的最近一条快照内容相同则跳过（数据库基准，应用重启后依然有效）
+   * 2. 两次快照间隔至少 60s，避免高频编辑产生大量版本
+   */
   async function snapshotIfChanged(doc: Doc) {
-    const last = lastSnapshotAt.get(doc.id)
-    if (last && last.content === doc.content) return
-    if (last && Date.now() - last.at < 60_000) return
-    lastSnapshotAt.set(doc.id, { at: Date.now(), content: doc.content })
+    const lastAt = lastSnapshotAt.get(doc.id)
+    if (lastAt && Date.now() - lastAt < 60_000) return
+    // 数据库基准去重：最近一条历史内容相同说明没有实际变化
+    const latest = (await db.getHistory(doc.id))[0]
+    if (latest && latest.content === doc.content) {
+      lastSnapshotAt.set(doc.id, Date.now())
+      return
+    }
+    lastSnapshotAt.set(doc.id, Date.now())
     await db.addHistory(doc)
     if (activeDoc.value?.id === doc.id) await refreshHistory()
   }
@@ -260,12 +337,19 @@ export const useEditorStore = defineStore('editor', () => {
     if (!doc) return
     // 覆盖前先把当前内容留一版快照，保证「撤销恢复」有路可退
     await db.addHistory(doc)
-    lastSnapshotAt.set(doc.id, { at: Date.now(), content: doc.content })
+    lastSnapshotAt.set(doc.id, Date.now())
     doc.content = entry.content
     doc.title = entry.title
     markUnsaved()
     await refreshHistory()
     showToast('已恢复到历史版本')
+  }
+
+  /** 删除一条历史版本（用户主动删除） */
+  async function removeHistory(entry: DocHistory) {
+    await db.deleteHistory(entry.id)
+    await refreshHistory()
+    showToast('已删除该历史版本')
   }
 
   watch(
@@ -344,6 +428,7 @@ export const useEditorStore = defineStore('editor', () => {
     renderedRichHtml,
     customCss,
     accountName,
+    dataDir,
     isDesktop,
     load,
     createDoc,
@@ -351,6 +436,7 @@ export const useEditorStore = defineStore('editor', () => {
     removeDoc,
     markUnsaved,
     restoreHistory,
+    removeHistory,
     showToast,
     openFromDisk,
     saveToDisk,

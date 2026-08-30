@@ -48,3 +48,9 @@ body,
   font-weight: 600;
   color: #4e5969;
 }
+
+/* 分栏拖拽中：全局列缩放光标 + 禁止选中文本 */
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}

@@ -5,6 +5,7 @@ defineProps<{ history: DocHistory[] }>()
 
 const emit = defineEmits<{
   (e: 'restore', entry: DocHistory): void
+  (e: 'delete', entry: DocHistory): void
   (e: 'close'): void
 }>()
 
@@ -17,10 +18,6 @@ function formatTime(ts: number): string {
 
 <template>
   <div class="history-panel">
-    <div class="panel-header">
-      <span>历史版本（最近 30 版）</span>
-      <button class="close-btn" @click="emit('close')">✕</button>
-    </div>
     <div class="panel-body">
       <div v-if="history.length === 0" class="empty">
         暂无历史版本，编辑过程中会自动保存快照
@@ -30,7 +27,10 @@ function formatTime(ts: number): string {
           <div class="history-title">{{ entry.title || '无标题文档' }}</div>
           <div class="history-time">{{ formatTime(entry.savedAt) }}</div>
         </div>
-        <button class="restore-btn" @click="emit('restore', entry)">恢复</button>
+        <div class="history-actions">
+          <button class="del-btn" title="删除该版本" @click="emit('delete', entry)">删除</button>
+          <button class="restore-btn" @click="emit('restore', entry)">恢复</button>
+        </div>
       </div>
     </div>
   </div>
@@ -38,28 +38,12 @@ function formatTime(ts: number): string {
 
 <style scoped>
 .history-panel {
-  width: 280px;
-  border-left: 1px solid #e5e6eb;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   background: #fff;
   display: flex;
   flex-direction: column;
-  height: 100%;
-}
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  font-weight: 600;
-  font-size: 13px;
-  border-bottom: 1px solid #e5e6eb;
-}
-.close-btn {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: #999;
-  font-size: 13px;
 }
 .panel-body {
   flex: 1;
@@ -93,6 +77,29 @@ function formatTime(ts: number): string {
   color: #999;
   margin-top: 2px;
 }
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.del-btn {
+  border: 1px solid #efd3d0;
+  color: #c44d43;
+  background: transparent;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.history-item:hover .del-btn {
+  opacity: 1;
+}
+.del-btn:hover {
+  background: #fff4f3;
+}
 .restore-btn {
   border: 1px solid #07c160;
   color: #07c160;
@@ -101,6 +108,7 @@ function formatTime(ts: number): string {
   padding: 3px 10px;
   font-size: 12px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .restore-btn:hover {
   background: #e7f7ee;
